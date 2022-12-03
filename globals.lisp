@@ -22,11 +22,12 @@
 
 (in-package :cl-orgelctl)
 
+(defparameter *debug* t)
 (defparameter *num-orgel* 6) ;;; total num of organs
 
 ;;; the current state of all orgel vars:
 
-(defvar *curr-state*
+(defparameter *curr-state*
   (make-array
    *num-orgel*
    :element-type 'orgel

@@ -20,6 +20,9 @@
 
 (in-package :cl-orgelctl)
 
+;;; *orgel-presets* currently just contains the static positions of
+;;; all faders/numboxes, but no routing/relation of faders!
+
 (defvar *orgel-presets*
   (make-array
    128
@@ -67,9 +70,6 @@
 
 (defun load-presets (file)
   (load file))
-
-(defun r-elt (seq)
-  (elt seq (random (length seq))))
 
 ;;; (orgel-ctl 1 :level 1 (random 128))
 

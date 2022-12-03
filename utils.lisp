@@ -19,3 +19,19 @@
 ;;; **********************************************************************
 
 (in-package :cl-orgelctl)
+
+(defun r-elt (seq)
+  (elt seq (random (length seq))))
+
+(defun reset-orgel-global ()
+  (loop for orgel from 1 to 6 do
+    (progn
+      (orgel-ctl-global orgel :ramp-up 249)
+      (orgel-ctl-global orgel :ramp-down 249)
+      (orgel-ctl-global orgel :exp-base 0.3)
+      (orgel-ctl-global orgel :min-amp 0)
+      (orgel-ctl-global orgel :max-amp 1)
+      (orgel-ctl-global orgel :phase 1)
+      (orgel-ctl-global orgel :base-freq 117))))
+
+;;; (reset-orgel-global)

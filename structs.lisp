@@ -20,7 +20,7 @@
 
 (in-package :cl-orgelctl)
 
-(defparameter *orgel-single-targets*
+(defparameter *orgel-global-targets*
   '(:base-freq :phase :main :min-amp :max-amp :ramp-up :ramp-down :exp-base :bias))
 
 (defparameter *orgel-fader-targets*
@@ -39,11 +39,11 @@
   (ramp-up 0.0 :type float)
   (ramp-down 0.0 :type float)
   (exp-base 0.0 :type float)
-  (level (make-array 16) :type simple-array)
-  (delay (make-array 16) :type simple-array)
-  (q (make-array 16) :type simple-array)
-  (gain (make-array 16) :type simple-array)
-  (osc-level (make-array 16) :type simple-array))
+  (level (make-array 16 :initial-element 0.0) :type simple-array)
+  (delay (make-array 16 :initial-element 0.0) :type simple-array)
+  (q (make-array 16 :initial-element 0.0) :type simple-array)
+  (gain (make-array 16 :initial-element 0.0) :type simple-array)
+  (osc-level (make-array 16 :initial-element 0.0) :type simple-array))
 
 (defun copy-orgel (original)
   (make-orgel
@@ -68,13 +68,13 @@
 
 (defun orgel-slot-name (target)
   "convert keyword to symbol"
-  (intern (string-upcase (format nil "~a" target))))
+  (read-from-string (format nil "orgel-~a" target)))
 
 ;;; utility shorthand fns
 
 (defmacro define-orgel-fader-access-fn (target)
   `(defun ,(intern (string-upcase (format nil "~a" target))) (orgelnummer idx)
-     (aref (,(intern (string-upcase (format nil "orgel-~a" target))) (aref *curr-state* orgelnummer)) idx)))
+     (aref (,(intern (string-upcase (format nil "orgel-~a" target))) (aref *curr-state* (1- orgelnummer))) (1- idx))))
 
 (define-orgel-fader-access-fn :level)
 (define-orgel-fader-access-fn :gain)
@@ -90,3 +90,23 @@
 (setf (fdefinition 'ramp-down) #'orgel-ramp-down)
 (setf (fdefinition 'exp-base) #'orgel-exp-base)
 (setf (fdefinition 'main) #'orgel-main)
+
+(defun mlevel (orgelnummer idx)
+  (aref (aref *orgel-mlevel* (1- orgelnummer)) (1- idx)))
+
+(defstruct orgel-registry
+  base-freq
+  phase
+  bias
+  main
+  min-amp
+  max-amp
+  ramp-up
+  ramp-down
+  exp-base
+  (level (make-array 16 :initial-element nil) :type simple-array)
+  (delay (make-array 16 :initial-element nil) :type simple-array)
+  (q (make-array 16 :initial-element nil) :type simple-array)
+  (gain (make-array 16 :initial-element nil) :type simple-array)
+  (osc-level (make-array 16 :initial-element nil) :type simple-array)
+  (mlevel (make-array 16 :initial-element nil) :type simple-array))
