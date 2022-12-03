@@ -20,6 +20,15 @@
 
 (in-package :cl-orgelctl)
 
+(defparameter *orgel-single-targets*
+  '(:base-freq :phase :main :min-amp :max-amp :ramp-up :ramp-down :exp-base :bias))
+
+(defparameter *orgel-fader-targets*
+  '(:level :delay :q :gain :osc-level))
+
+(defparameter *orgel-measure-targets*
+  '(:mlevel))
+
 (defstruct orgel
   (base-freq 0.0 :type float)
   (phase 0.0 :type float)
@@ -54,16 +63,30 @@
    :osc-level (copy-seq (orgel-osc-level original))))
 
 (defun orgel-access-fn (target)
+  "retrieve function object by keyword of its name."
   (symbol-function (intern (string-upcase (format nil "orgel-~a" target)))))
 
 (defun orgel-slot-name (target)
+  "convert keyword to symbol"
   (intern (string-upcase (format nil "~a" target))))
 
+;;; utility shorthand fns
 
-;;; (gethash :level *orgel-slots*)
+(defmacro define-orgel-fader-access-fn (target)
+  `(defun ,(intern (string-upcase (format nil "~a" target))) (orgelnummer idx)
+     (aref (,(intern (string-upcase (format nil "orgel-~a" target))) (aref *curr-state* orgelnummer)) idx)))
 
-(defvar *curr-state*
-  (make-array
-   5
-   :element-type 'orgel
-   :initial-contents (loop for i below 5 collect (make-orgel))))
+(define-orgel-fader-access-fn :level)
+(define-orgel-fader-access-fn :gain)
+(define-orgel-fader-access-fn :delay)
+(define-orgel-fader-access-fn :q)
+(define-orgel-fader-access-fn :osc-level)
+
+(setf (fdefinition 'ophase) #'orgel-phase)
+(setf (fdefinition 'min-amp) #'orgel-min-amp)
+(setf (fdefinition 'max-amp) #'orgel-max-amp)
+(setf (fdefinition 'base-freq) #'orgel-base-freq)
+(setf (fdefinition 'ramp-up) #'orgel-ramp-up)
+(setf (fdefinition 'ramp-down) #'orgel-ramp-down)
+(setf (fdefinition 'exp-base) #'orgel-exp-base)
+(setf (fdefinition 'main) #'orgel-main)

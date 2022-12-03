@@ -11,4 +11,6 @@
                (:file "structs")
                (:file "presets")
                (:file "osc")
+               (:file "globals")
+               (:file "utils")
                (:file "cl-orgelctl")))

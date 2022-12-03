@@ -167,3 +167,22 @@
 (setf *orgel-presets* nil)
 
 (aref *curr-state* 1)
+
+(defun digest-preset)
+
+
+(digest-preset
+ :orgel-preset 1
+ :orgel01
+ (:level01 (+ (mlevel 1 1) (gain 1 1) 2)))
+
+
+;;; feedback vermeiden!!!
+
+(progn
+  (let ((fn))
+    (lambda () (orgel-ctl 1 :level 1 (+ (mlevel 1 1) (gain 1 1) 2)))
+    (push fn (observed (mlevel 1 1)))
+    (push fn (observed (gain 1 1)))))
+
+(observed adds fn to responders of input)

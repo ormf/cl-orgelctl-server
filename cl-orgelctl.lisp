@@ -4,7 +4,7 @@
 
 (incudine:remove-all-responders *oscin*)
 
-(dotimes (idx 5)
+(dotimes (idx *num-orgel*)
   (make-responders idx))
 
 (let ((test (make-orgel)))

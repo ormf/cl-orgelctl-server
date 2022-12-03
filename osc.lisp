@@ -37,7 +37,7 @@
 
 
 (defun make-responders (orgelidx &optional (stream *oscin*))
-  (dolist (target '(:level :delay :q :gain :osc-level))
+  (dolist (target *orgel-fader-targets*)
     (let* ((target target))
       (setf (gethash (ou:make-keyword (format nil "orgel~2,'0d" (1+ orgelidx))) *orgel-osc-responder*)
             (let ((fn (orgel-access-fn target)))
@@ -48,9 +48,9 @@
                                (setf (aref (funcall fn (aref *curr-state* orgelidx))
                                            (round (1- i)))
                                      f)
-                               (format t "orgel~2,'0d: ~a ~a ~a~%" (1+ orgelidx) target i f))))
+                               (format t "orgel~2,'0d: ~a ~a ~a~%" (1+ orgelidx) target (round i) f))))
                       (gethash (ou:make-keyword (format nil "orgel~2,'0d" (1+ orgelidx))) *orgel-osc-responder*))))))
-  (dolist (target '(:base-freq :phase :bias :main :min-amp :max-amp :ramp-up :ramp-down :exp-base))
+  (dolist (target *orgel-single-targets*)
     (setf (gethash (ou:make-keyword (format nil "orgel~2,'0d" (1+ orgelidx))) *orgel-osc-responder*)
           (append (list target
                         (let ((slot (orgel-slot-name target)))
@@ -59,7 +59,21 @@
                            (lambda (f)
                              (setf (slot-value (aref *curr-state* orgelidx) slot) f)
                              (format t "orgel~2,'0d: ~a ~a~%" (1+ orgelidx) target f)))))
-                  (gethash (ou:make-keyword (format nil "orgel~2,'0d" (1+ orgelidx))) *orgel-osc-responder*)))))
+                  (gethash (ou:make-keyword (format nil "orgel~2,'0d" (1+ orgelidx))) *orgel-osc-responder*))))
+  (dolist (target *orgel-measure-targets*)
+    (let* ((target target))
+      (setf (gethash (ou:make-keyword (format nil "orgel~2,'0d" (1+ orgelidx))) *orgel-osc-responder*)
+            (let (;; (fn (orgel-access-fn target))
+                  )
+              (append (list target
+                            (incudine::make-osc-responder
+                             stream (format nil "/orgel~2,'0d/~a" (1+ orgelidx) target) "ff"
+                             (lambda (i f)
+                               ;; (setf (aref (funcall fn (aref *curr-state* orgelidx))
+                               ;;             (round (1- i)))
+                               ;;       f)
+                               (format t "orgel~2,'0d: ~a ~a ~a~%" (1+ orgelidx) target (round i) f))))
+                      (gethash (ou:make-keyword (format nil "orgel~2,'0d" (1+ orgelidx))) *orgel-osc-responder*)))))))
 
 ;;; (incudine.osc:close *oscout*)
 ;;; (incudine.osc:close *oscin*)
