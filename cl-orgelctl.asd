@@ -9,9 +9,9 @@
   :serial t
   :components ((:file "package")
                (:file "structs")
-               (:file "presets")
 ;;;               (:file "preset-parser")
                (:file "globals")
+               (:file "presets")
                (:file "osc")
                (:file "utils")
                (:file "cl-orgelctl")))

@@ -22,7 +22,11 @@
 
 (copy-preset *curr-state* (aref *orgel-presets* 1))
 
-(save-presets "/home/orm/work/unterricht/frankfurt/ws_22_23/musikinformatik/lisp/cl-orgelctl/orgel-presets.lisp")
+(save-presets "/home/orm/work/unterricht/frankfurt/ws_22_23/musikinformatik/papierorgel/lisp/cl-orgelctl/presets/presets.lisp")
+
+(load-presets "/home/orm/work/unterricht/frankfurt/ws_22_23/musikinformatik/papierorgel/lisp/cl-orgelctl/presets/presets.lisp")
+
+
 
 (defparameter *test* (make-orgel))
 
@@ -112,12 +116,44 @@
    (setf (slot-value (aref *curr-state* orgelidx) (gethash target *orgel-slots*)) f)))
 
 
+(defparameter *target-ranges* (make-hash-table))
+
+(loop for (target vals) on
+      '(:ramp-up (200 300.0)
+        :ramp-down (200 300.0)
+        :base-freq (100.0 900.0)
+        :exp-base (0.3 0.8)
+        :max-amp (1 1)
+        :min-amp (0 0)
+        :bias (1 16.0)
+        :main (0.5 1.0))
+      by #'cddr
+      do (setf (gethash target *target-ranges*) vals))
+
 (defun orgel-automation (orgel target)
+  (let ((target (r-elt '(:bias :main :ramp-up :ramp-down :base-freq :exp-base :max-amp :min-amp))))
+    (orgel-ctl-global (1+ (random 6)) target
+                      (apply #'cm:between (gethash target *target-ranges*))))
   (dotimes (idx 16)
     (orgel-ctl (1+ orgel) target (1+ idx) (random 128)))
-  (cm::at (+ (cm::now) 0.01) #'orgel-automation (random 5)
-          (r-elt '(:level :delay :q :gain)))
-  )
+  (cm::at (+ (cm::now) 0.01) #'orgel-automation (random 6)
+          (r-elt '(:level :delay :q :gain))))
+
+(orgel-automation 0 :level)
+
+(setf *debug* t)
+(copy-preset *curr-state* (aref *orgel-presets* 0))
+(setf *debug* t)
+(recall-preset 0)
+(recall-preset 1)
+(incudine:flush-pending)
+
+*oscin*
+
+(save-presets "/home/orm/work/unterricht/frankfurt/ws_22_23/musikinformatik/papierorgel/lisp/cl-orgelctl/presets/presets.lisp")
+
+(incudine:flush-pending)
+(incudine.osc:open)
 
 (defun struct-accessor (struct-name slot instance)
   `(,(intern (string-upcase (format nil "~a-~a" struct-name slot))) ,instance))
@@ -138,7 +174,6 @@
   (incudine::make-osc-responder
    stream (format nil "/orgel~2,'0d/~a" (1+ orgelidx) target) "ff" fn))
 
-(orgel-automation 0 :level)
 
 (orgel-ctl-single 1 :base-freq 110.8)
 

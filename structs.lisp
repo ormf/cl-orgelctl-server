@@ -64,7 +64,7 @@
 
 (defun orgel-access-fn (target)
   "retrieve function object by keyword of its name."
-  (symbol-function (intern (string-upcase (format nil "orgel-~a" target)))))
+  (symbol-function (intern (string-upcase (format nil "orgel-~a" target)) :cl-orgelctl)))
 
 (defun orgel-slot-name (target)
   "convert keyword to symbol"
@@ -74,7 +74,7 @@
 
 (defmacro define-orgel-fader-access-fn (target)
   `(defun ,(intern (string-upcase (format nil "~a" target))) (orgelnummer idx)
-     (aref (,(intern (string-upcase (format nil "orgel-~a" target))) (aref *curr-state* (1- orgelnummer))) (1- idx))))
+     (aref (,(intern (string-upcase (format nil "orgel-~a" target)) :cl-orgelctl) (aref *curr-state* (1- orgelnummer))) (1- idx))))
 
 (define-orgel-fader-access-fn :level)
 (define-orgel-fader-access-fn :gain)

@@ -20,9 +20,13 @@
 
 (in-package :cl-orgelctl)
 
-(defvar *oscout* (incudine.osc:open :port 3010 :direction :output))
-(defvar *oscin* (incudine.osc:open :port 3011 :host "127.0.0.1" :direction :input))
-(defvar *orgel-osc-responder* (make-hash-table)) ;;; a hashtable with the handles of all orgel responders
+(defparameter *oscout* (incudine.osc:open :port 3010 :direction :output :protocol :udp))
+(defparameter *oscin* (incudine.osc:open :port 3011 :host "127.0.0.1" :direction :input :protocol :udp))
+(defparameter *orgel-osc-responder* (make-hash-table)) ;;; a hashtable with the handles of all orgel responders
+
+;; (progn
+;;   (incudine.osc:close *oscout*)
+;;   (incudine.osc:close *oscin*))
 
 ;;; registry for functions to be called on incoming osc messages
 
@@ -103,7 +107,7 @@ collect `(setf (,(read-from-string (format nil "orgel-registry-~a" target)) (are
 (defmacro define-orgel-global-responder (stream orgelidx target)
   `(list ,target
          (incudine::make-osc-responder
-          ,stream ,(format nil "/orgel~2,'0d/~a" (1+ orgelidx) (symbol-value target)) "ff"
+          ,stream ,(format nil "/orgel~2,'0d/~a" (1+ orgelidx) (symbol-value target)) "f"
           (lambda (f)
             (setf (,(orgel-slot-name (symbol-value target)) (aref *curr-state* ,orgelidx)) f)
             (mapcar #'funcall (,(read-from-string (format nil "orgel-registry-~a" (symbol-value target)))

@@ -23,42 +23,57 @@
 ;;; *orgel-presets* currently just contains the static positions of
 ;;; all faders/numboxes, but no routing/relation of faders!
 
-(defvar *orgel-presets*
+(defparameter *orgel-presets*
   (make-array
    128
    :initial-contents
    (loop
      for i below 128
      collect (make-array
-              5
+              *num-orgel*
               :initial-contents
               (loop
-                for x below 5
+                for x below *num-orgel*
                 collect (make-orgel))))))
 
 (defun copy-preset (src target)
-  (dotimes (i 5)
+  (dotimes (i *num-orgel*)
     (setf (aref target i)
           (copy-orgel (aref src i)))))
 
 ;;; (copy-preset *curr-state* (aref *orgel-presets* 0))
 ;;;(aref *curr-state* 1)
 
+(defun recall-orgel (orgel num)
+  (dolist (slot '(:level :delay :q :gain :osc-level))
+    (dotimes (i 16)
+      (if *debug* (format t "sending: orgel~2,'0d: ~a ~a ~a~%" (1+ orgel) slot (1+ i)
+                          (aref
+                           (funcall
+                            (orgel-access-fn slot)
+                            (aref (aref *orgel-presets* num) orgel))
+                           i)))
+      (orgel-ctl (1+ orgel) slot (1+ i)
+                 (aref
+                  (funcall
+                   (orgel-access-fn slot)
+                   (aref (aref *orgel-presets* num) orgel))
+                  i))))
+  (dolist (slot '(:base-freq :phase :bias :main :min-amp :max-amp :ramp-up :ramp-down :exp-base))
+    (if *debug* (format t "sending: orgel~2,'0d: ~a ~a~%" (1+ orgel) slot
+                        (funcall
+                         (orgel-access-fn slot)
+                         (aref (aref *orgel-presets* num) orgel))))
+    (orgel-ctl-global (1+ orgel) slot
+                      (funcall
+                       (orgel-access-fn slot)
+                       (aref (aref *orgel-presets* num) orgel)))))
+
 (defun recall-preset (num)
-  (dotimes (orgel 5)
-    (dolist (slot '(:level :delay :q :gain :osc-level))
-      (dotimes (i 16)
-        (orgel-ctl (1+ orgel) slot (1+ i)
-                   (aref
-                    (funcall
-                     (gethash slot *orgel-fns*)
-                     (aref (aref *orgel-presets* num) orgel))
-                    i))))
-    (dolist (slot '(:base-freq :phase :bias :main :min-amp :max-amp :ramp-up :ramp-down :exp-base))
-      (orgel-ctl-single (1+ orgel) slot
-                 (funcall
-                  (gethash slot *orgel-fns*)
-                  (aref (aref *orgel-presets* num) orgel))))))
+  (loop for orgel below *num-orgel*
+        for time from 0 by 0.005
+        do (let ((orgel orgel))
+             (cm:at (+ (cm:now) time) (lambda () (recall-orgel orgel num))))))
 
 ;;; (recall-preset 1)
 

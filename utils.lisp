@@ -35,3 +35,9 @@
       (orgel-ctl-global orgel :base-freq 117))))
 
 ;;; (reset-orgel-global)
+
+(defun orgel-slot-fn (slot)
+  "get the access function of slot keyword."
+  (symbol-function (read-from-string (format nil "orgel-~a" slot))))
+
+;;; (orgel-slot-fn :level)
