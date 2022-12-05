@@ -41,3 +41,15 @@
                 for i below *num-orgel*
                 collect (make-array 16 :element-type 'float
                                        :initial-contents (loop for x below 16 collect 0.0)))))
+
+(defparameter *orgel-global-targets*
+  '(:base-freq :phase :main :min-amp :max-amp :ramp-up :ramp-down :exp-base :bias))
+
+(defparameter *orgel-fader-targets*
+  '(:level :delay :q :gain :osc-level))
+
+(defparameter *orgel-measure-targets*
+  '(:mlevel))
+
+(defparameter *midi-targets*
+  '())

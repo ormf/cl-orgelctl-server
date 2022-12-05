@@ -22,9 +22,45 @@
 
 (copy-preset *curr-state* (aref *orgel-presets* 1))
 
-(save-presets "/home/orm/work/unterricht/frankfurt/ws_22_23/musikinformatik/papierorgel/lisp/cl-orgelctl/presets/presets.lisp")
 
-(load-presets "/home/orm/work/unterricht/frankfurt/ws_22_23/musikinformatik/papierorgel/lisp/cl-orgelctl/presets/presets.lisp")
+(make-pathname)
+
+(save-presets "./presets/presets.lisp")
+
+(load-presets "./presets/presets.lisp")
+
+(defparameter *target-ranges* (make-hash-table))
+
+(loop for (target vals) on
+      '(:ramp-up (200 300.0)
+        :ramp-down (200 300.0)
+        :base-freq (100.0 900.0)
+        :exp-base (0.3 0.8)
+        :max-amp (1 1)
+        :min-amp (0 0)
+        :bias (1 16.0)
+        :main (0.5 1.0))
+      by #'cddr
+      do (setf (gethash target *target-ranges*) vals))
+
+(defun orgel-automation (orgel target)
+  (let ((target (r-elt '(:bias :main :ramp-up :ramp-down :base-freq :exp-base :max-amp :min-amp))))
+    (orgel-ctl-global (1+ (random 6)) target
+                      (apply #'cm:between (gethash target *target-ranges*))))
+  (dotimes (idx 16)
+    (orgel-ctl (1+ orgel) target (1+ idx) (random 128)))
+  (cm::at (+ (cm::now) 0.01) #'orgel-automation (random 6)
+          (r-elt '(:level :delay :q :gain))))
+
+(orgel-automation 0 :level)
+
+(setf *debug* t)
+(setf *debug* nil)
+(copy-preset *curr-state* (aref *orgel-presets* 0))
+(setf *debug* t)
+(recall-preset 0)
+(recall-preset 1)
+(recall-preset 2)
 
 
 
@@ -116,36 +152,6 @@
    (setf (slot-value (aref *curr-state* orgelidx) (gethash target *orgel-slots*)) f)))
 
 
-(defparameter *target-ranges* (make-hash-table))
-
-(loop for (target vals) on
-      '(:ramp-up (200 300.0)
-        :ramp-down (200 300.0)
-        :base-freq (100.0 900.0)
-        :exp-base (0.3 0.8)
-        :max-amp (1 1)
-        :min-amp (0 0)
-        :bias (1 16.0)
-        :main (0.5 1.0))
-      by #'cddr
-      do (setf (gethash target *target-ranges*) vals))
-
-(defun orgel-automation (orgel target)
-  (let ((target (r-elt '(:bias :main :ramp-up :ramp-down :base-freq :exp-base :max-amp :min-amp))))
-    (orgel-ctl-global (1+ (random 6)) target
-                      (apply #'cm:between (gethash target *target-ranges*))))
-  (dotimes (idx 16)
-    (orgel-ctl (1+ orgel) target (1+ idx) (random 128)))
-  (cm::at (+ (cm::now) 0.01) #'orgel-automation (random 6)
-          (r-elt '(:level :delay :q :gain))))
-
-(orgel-automation 0 :level)
-
-(setf *debug* t)
-(copy-preset *curr-state* (aref *orgel-presets* 0))
-(setf *debug* t)
-(recall-preset 0)
-(recall-preset 1)
 (incudine:flush-pending)
 
 *oscin*
@@ -170,8 +176,8 @@
 (let ((target :level))
   (define-orgel-responder 0 target))
 
-(let ((fn '(lambda (x) x)))
-  (incudine::make-osc-responder
+(let ((fn '(lambda (x) x))) 
+ (incudine::make-osc-responder
    stream (format nil "/orgel~2,'0d/~a" (1+ orgelidx) target) "ff" fn))
 
 
@@ -259,6 +265,8 @@
 (defmacro test (key idx expr)
   `,(make-ctl-fn key idx expr))
 
+(setf *debug* nil)
+#'level
 (funcall (test :level11 1 (+ (mlevel 1 1) -13)))
 
 (let ((orgelidx 1))
@@ -274,17 +282,7 @@
 (setf *debug* t)
 
 
-(setf (aref (orgel-registry-level (aref *osc-responder-registry* 1)) 0) nil)
-(setf (aref (orgel-registry-mlevel (aref *osc-responder-registry* 0)) 0) nil)
-
-(push (lambda () (orgel-ctl 1 :level 1 (+ (mlevel 1 1) (level 2 1) 10)))
-      (aref (orgel-registry-level (aref *osc-responder-registry* 1)) 0))
-
-(push (lambda () (orgel-ctl 1 :level 1 (+ (mlevel 1 1) (level 2 1) 10)))
-      (aref (orgel-registry-mlevel (aref *osc-responder-registry* 0)) 0))
-
-(funcall (first (aref (orgel-registry-level (aref *osc-responder-registry* 0)) 0)))
-
+(symbol-function 'level)
 (orgel-ctl 1 :level 1)
 
 *curr-state*
@@ -378,8 +376,6 @@
 
 (define-orgel-responder :level)
 
-
-
 (collect-orgel-responder-defs *orgel-fader-targets*)
 
 (defmacro make-orgel-responders (targets)
@@ -441,3 +437,42 @@
                                (setf (aref (aref *orgel-mlevel* orgelidx) (round (1- i))) f)
                                (if *debug* (format t "orgel~2,'0d: ~a ~a ~a~%" (1+ orgelidx) target (round i) f)))))
                       (gethash (ou:make-keyword (format nil "orgel~2,'0d" (1+ orgelidx))) *orgel-osc-responder*)))))))
+
+*osc-responder-registry*
+
+
+
+(setf (aref (orgel-registry-level (aref *osc-responder-registry* 1)) 0) nil)
+(setf (aref (orgel-registry-mlevel (aref *osc-responder-registry* 0)) 0) nil)
+
+(push (lambda () (orgel-ctl 1 :level 1 (+ (mlevel 1 1) (level 2 1) 10)))
+      (aref (orgel-registry-level (aref *osc-responder-registry* 1)) 0))
+
+(push (lambda () (orgel-ctl 1 :level 1 (+ (mlevel 1 1) (level 2 1) 10)))
+      (aref (orgel-registry-mlevel (aref *osc-responder-registry* 0)) 0))
+
+(gethash :level01 *orgel-preset-def-lookup*)
+
+
+
+(get-orgel-no :orgel01)
+
+
+
+(setf *test* (eval '(lambda () (orgel-ctl 3 :level 3 (+ (gain 1 3) (gain 2 1) 10)))))
+
+(funcall *test*)
+
+(defparameter *test* (get-fn :level03 :orgel03 '(+ (gain 1 3) (gain 2 1) 10)))
+
+(funcall *test*)
+
+
+(funcall (first (aref (orgel-registry-level (aref *osc-responder-registry* 0)) 0)))
+
+(let ((assigns (gethash :level01 *orgel-preset-def-lookup*))
+      (orgelno 1))
+  (funcall (first assigns) orgelno (second assigns) (third assigns) 64))
+
+(orgel-ctl)
+

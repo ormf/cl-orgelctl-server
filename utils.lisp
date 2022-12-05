@@ -41,3 +41,8 @@
   (symbol-function (read-from-string (format nil "orgel-~a" slot))))
 
 ;;; (orgel-slot-fn :level)
+
+(defun get-orgel-no (key)
+  (let* ((n (symbol-name key))
+         (len (length n)))
+    (read-from-string (subseq n (- len 2) len))))

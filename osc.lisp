@@ -34,7 +34,7 @@
   (make-array *num-orgel*
               :initial-contents (loop
                                   for i below *num-orgel*
-                                  collect (make-orgel-registry))))
+                                  collect (make-instance 'orgel-registry))))
 #|
 (loop for target in *orgel-global-targets*
 collect `(setf (,(read-from-string (format nil "orgel-registry-~a" target)) (aref *orgel-responder-registry* orgelidx)) nil))
@@ -48,28 +48,27 @@ collect `(setf (,(read-from-string (format nil "orgel-registry-~a" target)) (are
   (loop
     for orgelidx below *num-orgel*
     do (progn
-         (setf (orgel-registry-base-freq (aref *osc-responder-registry* orgelidx)) nil)
-         (setf (orgel-registry-phase (aref *osc-responder-registry* orgelidx)) nil)
-         (setf (orgel-registry-main (aref *osc-responder-registry* orgelidx)) nil)
-         (setf (orgel-registry-min-amp (aref *osc-responder-registry* orgelidx)) nil)
-         (setf (orgel-registry-max-amp (aref *osc-responder-registry* orgelidx)) nil)
-         (setf (orgel-registry-ramp-up (aref *osc-responder-registry* orgelidx)) nil)
-         (setf (orgel-registry-ramp-down (aref *osc-responder-registry* orgelidx)) nil)
-         (setf (orgel-registry-exp-base (aref *osc-responder-registry* orgelidx)) nil)
-         (setf (orgel-registry-bias (aref *osc-responder-registry* orgelidx)) nil)
-         (setf (orgel-registry-base-freq (aref *osc-responder-registry* orgelidx)) nil)
+         (setf (slot-value (aref *osc-responder-registry* orgelidx) 'base-freq) nil)
+         (setf (slot-value (aref *osc-responder-registry* orgelidx) 'phase) nil)
+         (setf (slot-value (aref *osc-responder-registry* orgelidx) 'main) nil)
+         (setf (slot-value (aref *osc-responder-registry* orgelidx) 'min-amp) nil)
+         (setf (slot-value (aref *osc-responder-registry* orgelidx) 'max-amp) nil)
+         (setf (slot-value (aref *osc-responder-registry* orgelidx) 'ramp-up) nil)
+         (setf (slot-value (aref *osc-responder-registry* orgelidx) 'ramp-down) nil)
+         (setf (slot-value (aref *osc-responder-registry* orgelidx) 'exp-base) nil)
+         (setf (slot-value (aref *osc-responder-registry* orgelidx) 'bias) nil)
          (dotimes (idx 16)
-           (setf (aref (orgel-registry-level (aref *osc-responder-registry* orgelidx)) idx) nil))
+           (setf (aref (slot-value (aref *osc-responder-registry* orgelidx) 'level) idx) nil))
          (dotimes (idx 16)
-           (setf (aref (orgel-registry-mlevel (aref *osc-responder-registry* orgelidx)) idx) nil))
+           (setf (aref (slot-value (aref *osc-responder-registry* orgelidx) 'mlevel) idx) nil))
          (dotimes (idx 16)
-           (setf (aref (orgel-registry-delay (aref *osc-responder-registry* orgelidx)) idx) nil))
+           (setf (aref (slot-value (aref *osc-responder-registry* orgelidx) 'delay) idx) nil))
          (dotimes (idx 16)
-           (setf (aref (orgel-registry-q (aref *osc-responder-registry* orgelidx)) idx) nil))
+           (setf (aref (slot-value (aref *osc-responder-registry* orgelidx) 'q) idx) nil))
          (dotimes (idx 16)
-           (setf (aref (orgel-registry-gain (aref *osc-responder-registry* orgelidx)) idx) nil))
+           (setf (aref (slot-value (aref *osc-responder-registry* orgelidx) 'gain) idx) nil))
          (dotimes (idx 16)
-           (setf (aref (orgel-registry-osc-level (aref *osc-responder-registry* orgelidx)) idx) nil)))))
+           (setf (aref (slot-value (aref *osc-responder-registry* orgelidx) 'osc-level) idx) nil)))))
 
 
 #|
@@ -80,11 +79,26 @@ collect `(setf (,(read-from-string (format nil "orgel-registry-~a" target)) (are
 
 (defun struct-accessor (struct-name slot instance)
   (list (intern (string-upcase (format nil "~a-~a" struct-name slot))) instance))
-|#
 
 (let ((orgelidx 1))
   (mapcar #'funcall (orgel-registry-base-freq
                      (aref *osc-responder-registry* (1- orgelidx)))))
+|#
+
+;;; registry of orgel-responder functions:
+
+;;; We define generic responders for all incoming osc messages. They
+;;; simply map over all functions of the respective entry of the
+;;; incoming message in *osc-responder-registry*.
+;;;
+;;; To make this more efficient, macros are used to expand all the
+;;; function definition code in order to reduce indirection/lookup
+;;; overhead. On intialisation of the package, the macro
+;;; make-all-responders should be called once with the number of
+;;; organs to observe.
+;;;
+;;; Installing functions to be called boils down to pushing them to
+;;; the lists of the respective entries in *osc-responder-registry*.
 
 
 (defmacro define-orgel-fader-responder (stream orgelidx target)
@@ -94,8 +108,8 @@ collect `(setf (,(read-from-string (format nil "orgel-registry-~a" target)) (are
           (lambda (i f)
             (setf (aref (,(orgel-slot-name (symbol-value target)) (aref *curr-state* ,orgelidx)) (round (1- i))) f)
             (mapcar #'funcall (aref
-                               (,(read-from-string (format nil "orgel-registry-~a" (symbol-value target)))
-                                (aref *osc-responder-registry* ,orgelidx))
+                               (slot-value (aref *osc-responder-registry* ,orgelidx)
+                                          ',(read-from-string (format nil "~a" (symbol-value target))))
                                (round (1- i))))
             (if *debug* (format t "orgel~2,'0d: ~a ~a ~a~%" ,(1+ orgelidx) ,target (round i) f))))))
 
@@ -110,8 +124,8 @@ collect `(setf (,(read-from-string (format nil "orgel-registry-~a" target)) (are
           ,stream ,(format nil "/orgel~2,'0d/~a" (1+ orgelidx) (symbol-value target)) "f"
           (lambda (f)
             (setf (,(orgel-slot-name (symbol-value target)) (aref *curr-state* ,orgelidx)) f)
-            (mapcar #'funcall (,(read-from-string (format nil "orgel-registry-~a" (symbol-value target)))
-                               (aref *osc-responder-registry* ,orgelidx)))
+            (mapcar #'funcall (slot-value (aref *osc-responder-registry* ,orgelidx)
+                                          ',(read-from-string (format nil "~a" (symbol-value target)))))
             (if *debug* (format t "orgel~2,'0d: ~a ~a~%" ,(1+ orgelidx) ,target f))))))
 
 (defmacro get-orgel-global-responders (stream orgelidx targets)
@@ -126,8 +140,8 @@ collect `(setf (,(read-from-string (format nil "orgel-registry-~a" target)) (are
           (lambda (i f)
             (setf (aref (aref *orgel-mlevel* ,orgelidx) (round (1- i))) f)
             (mapcar #'funcall (aref
-                               (,(read-from-string (format nil "orgel-registry-~a" (symbol-value target)))
-                                (aref *osc-responder-registry* ,orgelidx))
+                               (slot-value (aref *osc-responder-registry* ,orgelidx)
+                                           ',(read-from-string (format nil "~a" (symbol-value target))))
                                (round (1- i))))
             (if *debug* (format t "orgel~2,'0d: ~a ~a ~a~%" ,(1+ orgelidx) , target (round i) f))))))
 
@@ -135,6 +149,8 @@ collect `(setf (,(read-from-string (format nil "orgel-registry-~a" target)) (are
   `(append
      ,@(loop for target in (symbol-value targets)
              collect `(define-orgel-measure-responder ,stream ,orgelidx ,target))))
+
+;;; (define-orgel-measure-responder *oscin* 0 :mlevel)
 
 (defmacro make-all-responders (maxorgel stream)
   (let ((maxorgel (eval maxorgel)))
@@ -147,7 +163,7 @@ collect `(setf (,(read-from-string (format nil "orgel-registry-~a" target)) (are
                            (get-orgel-global-responders ,stream ,orgelidx *orgel-global-targets*)
                            (get-orgel-measure-responders ,stream ,orgelidx *orgel-measure-targets*)))))))
 
-
+;;; call this in the init file: (make-all-responders *num-orgel* *oscin*)
 
 #|
 (defun make-responders (orgelidx &optional (stream *oscin*))
