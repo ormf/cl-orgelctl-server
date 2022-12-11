@@ -25,6 +25,11 @@
 (defparameter *debug* t)
 (defparameter *num-orgel* 6) ;;; total num of organs
 
+(defconstant +notch+ 1)
+(defconstant +bandp+ 0)
+(defconstant +phase+ 1)
+(defconstant +invert+ -1)
+
 ;;; the current state of all orgel vars:
 
 (defparameter *curr-state*
@@ -42,11 +47,16 @@
                 collect (make-array 16 :element-type 'float
                                        :initial-contents (loop for x below 16 collect 0.0)))))
 
+(defparameter *orgeltargets* (make-hash-table))
+
+(dotimes (i *num-orgel*)
+  (setf (gethash (read-from-string (format nil ":orgel~2,'0d" (1+ i))) *orgeltargets*) i))
+
 (defparameter *orgel-global-targets*
-  '(:base-freq :phase :main :min-amp :max-amp :ramp-up :ramp-down :exp-base :bias))
+  '(:base-freq :phase :bias-pos :bias-bw :bias-type :main :min-amp :max-amp :ramp-up :ramp-down :exp-base))
 
 (defparameter *orgel-fader-targets*
-  '(:level :delay :q :gain :osc-level))
+  '(:level :bias-level :delay :q :gain :osc-level :bias-level))
 
 (defparameter *orgel-measure-targets*
   '(:mlevel))

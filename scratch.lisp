@@ -18,12 +18,53 @@
 ;;;
 ;;; **********************************************************************
 
+(ql:quickload "cl-orgelctl")
 (in-package :cl-orgelctl)
 
 (copy-preset *curr-state* (aref *orgel-presets* 1))
+(copy-preset *curr-state* (aref *orgel-presets* 0))
 
+(set-faders :orgel01 :level (bias-cos (/ (1- 12) 15) 0.1))
 
+(funcall (bias-cos 2 4) 3)
+(make-orgel-responder)
+
+(orgel-ctl 1 :level 4 64)
+
+(clip 17 15 16)
+
+(ql:quickload "cl-plot")
+
+(cl-plot:plot
+ (let ((bw 1)
+       (bias-pos 1))
+   (lambda (x) (+ 0.5 (* 0.5 (cos (clip (* (/ (- x 0) 15.0) (/ bw)) (* -1 pi) pi)))))) :region '(-1 16) :num-values 1000)
+
+(cl-plot:plot
+ (let* ((bw 1)
+        (bias-pos 16)
+        (fader-interp (- (clip bw 15 16) 15)))
+   (lambda (x) (+ fader-interp
+             (* (- 1 fader-interp) (+ 0.5 (* 0.5 (cos (clip (* pi (/ (- x bias-pos) 15) (+ 16 (* -1 bw)))
+                                                           (* -1 pi) pi))))))
+     )) :region '(0 17) :num-values 1000)
+
+(progn
+  (orgel-ctl-global 1 :base-freq 103.6)
+  (orgel-ctl-global 1 :ramp-up 239.5)
+  (orgel-ctl-global 1 :ramp-down 239.5)
+  (orgel-ctl-global 1 :max-amp 1)
+  (orgel-ctl-global 1 :exp-base 0.3)
+  (dotimes (idx 16)
+    (orgel-ctl 1 :gain (1+ idx) 64))
+  (dotimes (idx 16)
+    (orgel-ctl 1 :level (1+ idx) 0)))
+
+(setf *debug* t)
+(recall-preset 0)
 (make-pathname)
+
+(orgel- 1 :level 1 0)
 
 (save-presets "./presets/presets.lisp")
 
@@ -474,5 +515,43 @@
       (orgelno 1))
   (funcall (first assigns) orgelno (second assigns) (third assigns) 64))
 
-(orgel-ctl)
+(orgel-ctl 1 :level 1 64)
 
+(:preset 1
+         :routes
+          (:orgel01
+           (:level01 (+ (mlevel 1 1) (delay 1 1) -14)
+            :level02 (+ (level 1 1) (* -1 (q 1 1)) 5)
+            :level03 (+ (level 1 2) (* -1 (q 1 2)) -13)
+            :level04 (+ (level 1 3) 5))))
+
+(parse-observed
+ '(apply-notch (bias-type 1) (bias-wippe (bias-pos 1) (bias-bw 1))))
+
+(replace-keywords
+ '(apply-notch :level01 (bias-wippe :bias-pos :bias-bw)) 1)
+
+
+(parse-observed '(apply-notch (level 2 1) (bias-cos (bias-pos 1) (bias-bw 1))))
+
+(orgel-ctl-global 1 :bias-type +notch+)
+(orgel-ctl-global 1 :bias-type +bandp+)
+
+(orgel-ctl :orgel01 :phase +phase+)
+(orgel-ctl :orgel01 :phase +invert+)
+
+(orgel-ctl :orgel01 :level01 0.5)
+
+(orgel-ctl :orgel01 :delay02 0.5)
+
+
+(gethash :level01 )
+
+(gethash :level01 *observed*)
+
+(gethash :base-freq *observed*)
+
+(let ((orgel-registry (aref *osc-responder-registry* 0)))
+  (member (first (slot-value (aref *osc-responder-registry* 0) 'bias-pos))
+          (slot-value orgel-registry 'bias-pos))
+  )

@@ -56,7 +56,7 @@
                      (aref (funcall (orgel-access-fn slot) (aref (aref *orgel-presets* num) orgel)) i))))
         (if *debug* (format t "sending: orgel~2,'0d: ~a ~a ~a~%" (1+ orgel) slot (1+ i) val))
         (orgel-ctl (1+ orgel) slot (1+ i) val))))
-  (dolist (slot '(:base-freq :phase :bias :main :min-amp :max-amp :ramp-up :ramp-down :exp-base))
+  (dolist (slot *orgel-global-targets*)
     (let ((val (if next
                     (+
                      (* (if interp (- 1 interp) 0.5)

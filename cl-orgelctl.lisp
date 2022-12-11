@@ -5,7 +5,7 @@
 (setf *debug* nil)
 
 (cm:cd "/home/orm/work/unterricht/frankfurt/ws_22_23/musikinformatik/papierorgel/lisp/cl-orgelctl")
-(load-presets "./presets/presets.lisp")
+;;; (load-presets "./presets/presets.lisp")
 
 
 (incudine:remove-all-responders *oscin*)
