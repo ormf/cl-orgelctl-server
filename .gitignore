@@ -1,4 +1,3 @@
 *~
 *.fasl
-./lisp/cl-orgelctl/curr-preset.lisp
 curr-preset.lisp
