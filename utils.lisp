@@ -42,10 +42,11 @@
 
 ;;; (orgel-slot-fn :level)
 
-(defun get-orgel-no (key)
-  (let* ((n (symbol-name key))
-         (len (length n)))
-    (read-from-string (subseq n (- len 2) len))))
+(defun orgel-nr (key)
+  (getf *orgel-nr-lookup* key))
+
+(defun orgel-name (idx)
+  (aref *orgel-name-lookup* idx))
 
 (defun clip (x min max)
   "clip x to the interval [min max]"

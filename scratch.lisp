@@ -24,8 +24,14 @@
 (copy-preset *curr-state* (aref *orgel-presets* 1))
 (copy-preset *curr-state* (aref *orgel-presets* 0))
 
+(recall-preset 0)
+(clear-routes)
+
+(setf *debug* t)
 (set-faders :orgel01 :level (bias-cos (/ (1- 12) 15) 0.1))
 
+(set-faders :orgel01 :level (lambda (x) x 0))
+(set-faders :orgel01 :bias-level (lambda (x) x 0))
 (funcall (bias-cos 2 4) 3)
 (make-orgel-responder)
 

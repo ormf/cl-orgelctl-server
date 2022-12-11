@@ -1,5 +1,122 @@
 (in-package :cl-orgelctl)
 
+(digest-route-preset
+ 0
+ `(:preset 0
+   :routes nil))
+
+(digest-route-preset
+ 1
+ `(:preset nil
+   :routes (:orgel01
+            (:level (bias-cos :bias-pos :bias-bw)))))
+
+(digest-route-preset
+ 2
+ `(:preset nil
+   :routes (:orgel01
+            (:level (apply-notch :bias-type (bias-cos :bias-pos :bias-bw))))))
+
+(digest-route-preset
+ 3
+ `(:preset nil
+   :routes (:orgel01
+            (:level (apply-notch :bias-type (bias-wippe :bias-pos :bias-bw))))))
+
+(digest-route-preset
+ 4
+ `(:preset nil
+   :routes (:orgel01
+            (:level (apply-notch
+                     :bias-type (bias-cos :bias-pos :bias-bw
+                                          :levels #(0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1)))))))
+(digest-route-preset
+ 5
+ `(:preset nil
+   :routes (:orgel01
+            (:level (apply-notch
+                     :bias-type (bias-cos :bias-pos :bias-bw
+                                          :levels #(1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0)))))))
+(digest-route-preset
+ 6
+ `(:preset nil
+   :routes (:orgel01
+            (:level (apply-notch
+                     :bias-type (bias-wippe :bias-pos :bias-bw
+                                            :levels #(0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1)))))))
+
+(digest-route-preset
+ 7
+ `(:preset nil
+   :routes (:orgel01
+            (:level (apply-notch
+                     :bias-type (bias-wippe :bias-pos :bias-bw
+                                            :levels #(0.5 1 0.5 1 0.5 1 0.5 1 0.5 1 0.5 1 0.5 1 0.5 1)))))))
+
+(digest-route-preset
+ 8
+ `(:preset nil
+   :routes (:orgel01
+            (:level (apply-notch :bias-type (bias-wippe :bias-pos :bias-bw
+                                                        :levels #(0.5 1 0.5 1 0.5 1 0.5 1 0.5 1 0.5 1 0.5 1 0.5 1)))
+             :delay (apply-notch :bias-type (bias-cos :bias-pos :bias-bw
+                                                      :levels #(1 0.5 1 0.5 1 0.5 1 0.5 1 0.5 1 0.5 1 0.5 1 0.5)))))))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+(save-route-presets)
+
+(load-route-presets)
+
+(recall-route-preset 0)
+
+
+(digest-routes nil)
+
+
+
 (recall-preset 0 1 0.5)
 (recall-preset 0)
 (recall-preset 1)
@@ -70,11 +187,23 @@ Zitronenreibe Microplane
 
 (clear-routes)
 
+(digest-routes
+ `(:orgel01
+   (:level (bias-cos :bias-pos :bias-bw))))
 
+(digest-routes
+ `(:orgel01
+   (:level (apply-notch :bias-type (bias-cos :bias-pos :bias-bw)))))
+
+(digest-routes
+ `(:orgel01
+   (:level (apply-notch :bias-type (bias-cos :bias-pos :bias-bw)))))
 
 (digest-routes
  `(:orgel01
    (:level (apply-notch :bias-type (bias-wippe :bias-pos :bias-bw)))))
+
+(set-faders :orgel01 :level (lambda (x) x 0))
 
 (digest-routes
  `(:orgel01
@@ -115,8 +244,3 @@ Zitronenreibe Microplane
              :level02 (+ (level 1 1) (* -1 (q 1 1)) 5)
              :level03 (+ (level 1 2) (* -1 (q 1 2)) -13)
              :level04 (+ (level 1 3) 5)))))
-
-(save-route-presets)
-
-
-(digest-routes nil)

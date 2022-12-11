@@ -63,3 +63,15 @@
 
 (defparameter *midi-targets*
   '())
+
+(defparameter *orgel-nr-lookup* nil)
+
+(defparameter *orgel-name-lookup* nil)
+
+(setf *orgel-nr-lookup*
+      (loop for idx below *num-orgel*
+            for name = (read-from-string (format nil ":orgel~2,'0d" (1+ idx)))
+            append (list name (1+ idx))))
+
+(setf *orgel-name-lookup*
+      (coerce (cons nil (loop for (name idx) on *orgel-nr-lookup* by #'cddr collect name)) 'vector))

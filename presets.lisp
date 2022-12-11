@@ -44,34 +44,35 @@
 ;;; (copy-preset *curr-state* (aref *orgel-presets* 0))
 ;;;(aref *curr-state* 1)
 
-(defun recall-orgel (orgel num &optional next interp)
+(defun recall-orgel (orgelidx num &optional next interp)
   (dolist (slot '(:level :delay :q :gain :osc-level))
     (dotimes (i 16)
       (let ((val (if next
                      (+
                       (* (if interp (- 1 interp) 0.5)
-                         (aref (funcall (orgel-access-fn slot) (aref (aref *orgel-presets* num) orgel)) i))
+                         (aref (funcall (orgel-access-fn slot) (aref (aref *orgel-presets* num) orgelidx)) i))
                       (* (or interp 0.5)
-                         (aref (funcall (orgel-access-fn slot) (aref (aref *orgel-presets* next) orgel)) i)))
-                     (aref (funcall (orgel-access-fn slot) (aref (aref *orgel-presets* num) orgel)) i))))
-        (if *debug* (format t "sending: orgel~2,'0d: ~a ~a ~a~%" (1+ orgel) slot (1+ i) val))
-        (orgel-ctl (1+ orgel) slot (1+ i) val))))
+                         (aref (funcall (orgel-access-fn slot) (aref (aref *orgel-presets* next) orgelidx)) i)))
+                     (aref (funcall (orgel-access-fn slot) (aref (aref *orgel-presets* num) orgelidx)) i))))
+        (if *debug* (format t "sending: orgel~2,'0d: ~a ~a ~a~%" (1+ orgelidx) slot (1+ i) val))
+        (orgel-ctl-fader (orgel-name (1+ orgelidx)) slot (1+ i) val))))
   (dolist (slot *orgel-global-targets*)
     (let ((val (if next
                     (+
                      (* (if interp (- 1 interp) 0.5)
-                        (funcall (orgel-access-fn slot) (aref (aref *orgel-presets* num) orgel)))
+                        (funcall (orgel-access-fn slot) (aref (aref *orgel-presets* num) orgelidx)))
                      (* (or interp 0.5)
-                        (funcall (orgel-access-fn slot) (aref (aref *orgel-presets* next) orgel))))
-                    (funcall (orgel-access-fn slot) (aref (aref *orgel-presets* num) orgel)))))
-      (if *debug* (format t "sending: orgel~2,'0d: ~a ~a~%" (1+ orgel) slot val))
-      (orgel-ctl-global (1+ orgel) slot val))))
+                        (funcall (orgel-access-fn slot) (aref (aref *orgel-presets* next) orgelidx))))
+                    (funcall (orgel-access-fn slot) (aref (aref *orgel-presets* num) orgelidx)))))
+      (if *debug* (format t "sending: orgel~2,'0d: ~a ~a~%" (1+ orgelidx) slot val))
+      (orgel-ctl (orgel-name (1+ orgelidx)) slot val))))
 
 (defun recall-preset (num &optional next interp)
-  (loop for orgel below *num-orgel*
-        for time from 0 by 0.005
-        do (let ((orgel orgel))
-             (cm:at (+ (cm:now) time) (lambda () (recall-orgel orgel num next interp))))))
+  (when num
+      (loop for orgel below *num-orgel*
+            for time from 0 by 0.005
+            do (let ((orgel orgel))
+                 (cm:at (+ (cm:now) time) (lambda () (recall-orgel orgel num next interp)))))))
 
 ;;; (recall-preset 1)
 
@@ -97,6 +98,9 @@
 (defun save-route-presets (&optional (file "./presets/route-presets.lisp"))
   (with-open-file (out file :direction :output :if-exists :supersede)
     (format out "(in-package :cl-orgelctl)~%~%(setf *route-presets*~%~a)" *route-presets*)))
+
+(defun load-route-presets (&optional (file "./presets/route-presets.lisp"))
+  (load file))
 
 (defun recall-route-preset (num)
   (let ((form (aref *route-presets* num)))

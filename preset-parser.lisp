@@ -56,7 +56,8 @@
   (mapcar (lambda (x) (setf (gethash (read-from-string (format nil ":~a" x)) *observed*)
                        `(,(read-from-string (format nil "~a" x)))))
           *orgel-global-targets*))
-        
+
+#|
 (defun parse-observed (form)
   "extract all forms containing observed targets from form, replacing
 keywords with their expanded access functions."
@@ -68,7 +69,8 @@ keywords with their expanded access functions."
           (list (first form))
           (parse-observed (car form)))
       (parse-observed (cdr form))))
-    (:else (parse-observed (cdr form)))))
+(:else (parse-observed (cdr form)))))
+|#
 
 (defun replace-keywords (form orgelno)
   (cond
@@ -112,11 +114,12 @@ keywords with their expanded access functions."
 
 (defun get-fn (target orgel form)
   (let* ((call-spec (gethash target *orgel-preset-def-lookup*))
-         (orgeltarget (if (member (first call-spec) '(set-faders))
-                          orgel
-                          orgel
-;;;                          (get-orgel-no orgel)
-                          )))
+         (orgeltarget orgel
+                      ;; (if (member (first call-spec) '(set-faders))
+                      ;;     orgel
+                      ;;     orgel
+                      ;;     )
+                      ))
     (eval `(lambda () (,(first call-spec) ,orgeltarget
                   ,@(rest call-spec) ,form)))))
 
@@ -128,7 +131,7 @@ keywords with their expanded access functions."
 
 (defun register-responders (target orgel form reset)
   (let* ((registered-fns '())
-         (new-form (replace-keywords form (get-orgel-no orgel)))
+         (new-form (replace-keywords form (orgel-nr orgel)))
          (fn (get-fn target orgel new-form)))
     (dolist (observed (parse-observed new-form))
       (register-responder fn observed)
