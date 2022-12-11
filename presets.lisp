@@ -111,3 +111,53 @@
 ;;; (recall-route-preset 0)
 ;;; (save-route-presets)
 
+(defparameter *emcs-conn* swank::*emacs-connection*)
+
+(defun define-elisp-code ()
+  (let ((swank::*emacs-connection* *emcs-conn*))
+    (swank::eval-in-emacs
+     `(progn
+        (setq orgel-preset-file ,(namestring (merge-pathnames "curr-preset.lisp" (asdf:system-source-directory :cl-orgelctl))))
+        (find-file orgel-preset-file)
+        (set-window-dedicated-p (get-buffer-window "curr-preset.lisp" t) t)
+        (load ,(namestring (merge-pathnames "edit-orgel-presets.el" (asdf:system-source-directory :cl-orgelctl))))
+        ) t)))
+
+(define-elisp-code)
+
+(defun preset->string (preset-form ref)
+  (format nil "(digest-route-preset~%~d~%`(~S ~d~%~S ~S))"
+          ref
+          (first preset-form)
+          (second preset-form)
+          (third preset-form)
+          (fourth preset-form)))
+
+
+(defun edit-preset-in-emacs (ref &key (presets *route-presets*))
+  (let ((swank::*emacs-connection* *emcs-conn*))
+    (if (numberp ref)
+        (swank::eval-in-emacs
+         `(edit-orgelctl-preset
+           ,(progn
+              (in-package :cl-orgelctl)
+              (defparameter swank::*send-counter* 0)
+              (preset->string (aref presets ref) ref))
+           ,ref) t)
+        (swank::eval-in-emacs
+         `(save-excursion
+           (switch-to-buffer (get-buffer "curr-preset.lisp"))) t))))
+
+(defparameter *curr-preset-nr* 0)
+(defparameter *max-preset-nr* 127)
+
+(defun next-preset ()
+  (if (< *curr-preset-nr* *max-preset-nr*)
+      (edit-preset-in-emacs (incf *curr-preset-nr*))))
+
+(defun previous-preset ()
+  (if (> *curr-preset-nr* 0)
+      (edit-preset-in-emacs (decf *curr-preset-nr*))))
+
+(previous-preset)
+(next-preset)
