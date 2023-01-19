@@ -69,13 +69,18 @@ respect to the range [0..1] (0->1, 1->0, 0.5->0.5, 0.2-0.8) if
       fn))
 
 (defun permute (fn permutation)
-  ""
-  (lambda (x) (funcall fn (aref permutation (1- x)))))
+  "permute a fader idxs (1-16) according to permutation."
+  (let ((permutatio (make-array (length permutation) :element-type 'fixnum)))
+    (loop
+      for n from 1
+      for idx across permutation
+      do (setf (aref permutatio (1- idx)) n))
+    (lambda (x) (funcall fn (aref permutatio (1- x))))))
 
-
-
+#|
 (let ((permutation #(1 16 2 15 3 14 4 13 5 12 6 11 7 10 8 9)))
   (loop for x below 16 collect (aref permutation x)))
+|#
 
 (defmacro n-exp (x min max)
   (let ((quot (if (zerop min) 0 (/ max min))))
