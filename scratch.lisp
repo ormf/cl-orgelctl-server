@@ -21,14 +21,34 @@
 (ql:quickload "cl-orgelctl")
 (in-package :cl-orgelctl)
 
-(copy-preset *curr-state* (aref *orgel-presets* 1))
+(copy-preset *curr-state* (aref *orgel-presets* 2))
 (copy-preset *curr-state* (aref *orgel-presets* 0))
-
-(recall-preset 0)
+(save-presets)
+(recall-preset 1)
 (clear-routes)
 
+
+(defun permute (fn permutation)
+  ""
+  (let ((array
+          (loop for x across permutation
+                for idx from 0
+                with array = (make-array (length permutation) :initial-element 0.0)
+                do (setf (aref array (1- x)) (1+ idx))
+                finally (return array))))
+    (lambda (x) (funcall fn (aref array (1- x))))))
+
+(funcall
+ (permute (bias-cos (bias-pos 1) (bias-bw 1))
+          #(1 16 2 15 3 14 4 13 5 12 6 11 7 10 8 9)) 2)
+*curr-state*
+(setf *debug* nil)
 (setf *debug* t)
 (set-faders :orgel01 :level (bias-cos (/ (1- 12) 15) 0.1))
+
+#xFF
+
+#b1011
 
 (set-faders :orgel01 :level (lambda (x) x 0))
 (set-faders :orgel01 :bias-level (lambda (x) x 0))
@@ -44,7 +64,8 @@
 (cl-plot:plot
  (let ((bw 1)
        (bias-pos 1))
-   (lambda (x) (+ 0.5 (* 0.5 (cos (clip (* (/ (- x 0) 15.0) (/ bw)) (* -1 pi) pi)))))) :region '(-1 16) :num-values 1000)
+   (lambda (x) (+ 0.5 (* 0.5 (cos (clip (* (/ (- x 0) 15.0) (/ bw)) (* -1 pi) pi))))))
+ :region '(-1 16) :num-values 1000)
 
 (cl-plot:plot
  (let* ((bw 1)

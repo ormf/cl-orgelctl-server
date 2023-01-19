@@ -72,7 +72,7 @@
       (loop for orgel below *num-orgel*
             for time from 0 by 0.005
             do (let ((orgel orgel))
-                 (cm:at (+ (cm:now) time) (lambda () (recall-orgel orgel num next interp)))))))
+                 (cm::at (+ (cm:now) time) (lambda () (recall-orgel orgel num next interp)))))))
 
 ;;; (recall-preset 1)
 
@@ -97,7 +97,7 @@
 
 (defun save-route-presets (&optional (file "./presets/route-presets.lisp"))
   (with-open-file (out file :direction :output :if-exists :supersede)
-    (format out "(in-package :cl-orgelctl)~%~%(setf *route-presets*~%~a)" *route-presets*)))
+    (format out "(in-package :cl-orgelctl)~%~%(setf *route-presets*~%~S)" *route-presets*)))
 
 (defun load-route-presets (&optional (file "./presets/route-presets.lisp"))
   (load file))

@@ -114,12 +114,7 @@ keywords with their expanded access functions."
 
 (defun get-fn (target orgel form)
   (let* ((call-spec (gethash target *orgel-preset-def-lookup*))
-         (orgeltarget orgel
-                      ;; (if (member (first call-spec) '(set-faders))
-                      ;;     orgel
-                      ;;     orgel
-                      ;;     )
-                      ))
+         (orgeltarget orgel))
     (eval `(lambda () (,(first call-spec) ,orgeltarget
                   ,@(rest call-spec) ,form)))))
 
@@ -141,7 +136,6 @@ keywords with their expanded access functions."
 
 (defun digest-route (orgel form reset)
   (loop
-    with orgelno = (get-orgel-no orgel)
     for (target form) on form by #'cddr
     do (register-responders target orgel form reset)))
 

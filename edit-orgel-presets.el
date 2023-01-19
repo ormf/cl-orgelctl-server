@@ -6,7 +6,7 @@
   (insert (replace-regexp-in-string "cl-orgelctl::" ""
                                     (replace-regexp-in-string "orm-utils:" "" str)))
 ;;;  (insert (format "\n\n(state-store-curr-preset %s)" ref))
-  (insert "\n\n(save-route-presets)")
+  (insert "\n\n;;; (save-route-presets)")
   (delete-region (point) (point-max))
   (goto-char 34)
   (forward-line)

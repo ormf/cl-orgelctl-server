@@ -62,11 +62,20 @@ determined by fn, called on all partials."
 
 (defun apply-notch (bias-type fn)
   "return a function by composing fn with an inverter of values with
-respect to the range [0..127] (0->127, 127->0, 64->63, 63->64) if
+respect to the range [0..1] (0->1, 1->0, 0.5->0.5, 0.2-0.8) if
 (= bias-type 1), otherwise don't invert."
   (if (= bias-type 1)
       (lambda (x) (+ 1 (* -1 (funcall fn x))))
       fn))
+
+(defun permute (fn permutation)
+  ""
+  (lambda (x) (funcall fn (aref permutation (1- x)))))
+
+
+
+(let ((permutation #(1 16 2 15 3 14 4 13 5 12 6 11 7 10 8 9)))
+  (loop for x below 16 collect (aref permutation x)))
 
 (defmacro n-exp (x min max)
   (let ((quot (if (zerop min) 0 (/ max min))))
@@ -77,8 +86,6 @@ respect to the range [0..127] (0->127, 127->0, 64->63, 63->64) if
 (defmacro n-lin (x min max)
   (let ((diff (- max min)))
     `(+ ,min (* ,diff ,x))))
-
-(expt 0 1)
 
 (defun recalc-bw (bw)
   (n-lin bw 0.5 16))
