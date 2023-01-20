@@ -15,4 +15,5 @@
                (:file "preset-parser")
                (:file "presets")
                (:file "utils")
+               (:file "database")
                (:file "cl-orgelctl")))
