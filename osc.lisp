@@ -213,9 +213,14 @@ collect `(setf (,(read-from-string (format nil "orgel-registry-~a" target)) (are
   (unless (gethash orgel *orgeltargets*) (error "Orgel \"~S\" doesn't exist" orgel))
   (incudine.osc:message *oscout* (format nil "/~a/~a" orgel target) "if" (round idx) (float val 1.0)))
 
+(declaim (inline target-key))
+(defun target-key (target)
+  (if (keywordp target) target
+      (format nil "orgel~2,'0d" target)))
+
 (defun orgel-ctl (orgeltarget target val)
-  (let ((form (gethash target *observed*)))
-    (unless (gethash orgeltarget *orgeltargets*) (error "Orgel \"~S\" doesn't exist" orgeltarget))
+  (let ((form (if (listp target) target (gethash target *observed*)))
+        (orgeltarget (target-key orgeltarget)))
     (unless form (error "target ~S doesn't exist" target))
     (if (cdr form)
         (incudine.osc:message *oscout* (format nil "/~a/~a" orgeltarget (first form)) "if" (second form) (float val 1.0))

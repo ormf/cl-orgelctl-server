@@ -1,7 +1,7 @@
 ;;;; cl-orgelctl.asd
 
 (asdf:defsystem #:cl-orgelctl
-  :description "Controller für HfMDK Orgelprojekt 2022"
+  :description "Controller für HfMDK Orgelprojekt 2022/23"
   :author "Orm Finnendahl <orm.finnendahl@selma.hfmdk-frankfurt.de>"
   :depends-on (#:incudine #:cm-all)
   :license  "GPL 2.0 or later"

@@ -50,7 +50,8 @@
 (defparameter *orgeltargets* (make-hash-table))
 
 (dotimes (i *num-orgel*)
-  (setf (gethash (read-from-string (format nil ":orgel~2,'0d" (1+ i))) *orgeltargets*) i))
+  (setf (gethash (read-from-string (format nil ":orgel~2,'0d" (1+ i))) *orgeltargets*) i)
+  (setf (gethash (1+ i) *orgeltargets*) i))
 
 (defparameter *orgel-global-targets*
   '(:base-freq :phase :bias-pos :bias-bw :bias-type :main :min-amp :max-amp :ramp-up :ramp-down :exp-base))
