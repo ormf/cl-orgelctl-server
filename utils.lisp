@@ -58,7 +58,18 @@
 determined by fn, called on all partials."
   (loop
     for fader from 1 to 16
-    do (orgel-ctl-fader orgel target fader (funcall fn fader))))
+    for x from 0 by 1/15
+    do (orgel-ctl-fader orgel target fader (funcall fn x))))
+
+(defun set-global-faders (targets fn)
+  "set faders of <targets> to the values determined by fn, called on all
+targets with the idx of the target as arg."
+  (loop
+    for target in targets
+    for x from 0 by (/ (1- (length targets)))
+    do (case (length target)
+         (2 (orgel-ctl (orgel-name (second target)) (first target) (funcall fn x)))
+         (3 (orgel-ctl-fader (orgel-name (second target)) (first target) (third target) (funcall fn x))))))
 
 (defun apply-notch (bias-type fn)
   "return a function by composing fn with an inverter of values with
@@ -70,12 +81,14 @@ respect to the range [0..1] (0->1, 1->0, 0.5->0.5, 0.2-0.8) if
 
 (defun permute (fn permutation)
   "permute a fader idxs (1-16) according to permutation."
-  (let ((permutatio (make-array (length permutation) :element-type 'fixnum)))
+  (let* ((len (length permutation))
+         (permutatio (make-array len :element-type 'fixnum))
+         (n-1 (1- len)))
     (loop
       for n from 1
       for idx across permutation
       do (setf (aref permutatio (1- idx)) n))
-    (lambda (x) (funcall fn (aref permutatio (1- x))))))
+    (lambda (x) (funcall fn (/ (1- (aref permutatio (round (* x n-1)))) n-1)))))
 
 #|
 (let ((permutation #(1 16 2 15 3 14 4 13 5 12 6 11 7 10 8 9)))
@@ -88,24 +101,29 @@ respect to the range [0..1] (0->1, 1->0, 0.5->0.5, 0.2-0.8) if
          ,min
          (* ,min (expt ,quot ,x)))))
 
-(defmacro n-lin (x min max)
+(defun n-lin (x min max)
   (let ((diff (- max min)))
-    `(+ ,min (* ,diff ,x))))
+    (+ min (* diff x))))
 
-(defun recalc-bw (bw)
-  (n-lin bw 0.5 16))
+(defun recalc-bw (bw num-faders)
+  (n-lin bw 0.5 num-faders))
 
-(defun recalc-bias-pos (pos)
-  (n-lin pos 1 16))
+(defun n-recalc-bw (bw num-faders)
+  (n-lin bw (/ 0.5 num-faders) 1))
 
-(defun bias-cos (bias-pos bw &key (levels #(1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1)))
+(defun recalc-bias-pos (pos num-faders)
+  (n-lin pos 1 num-faders))
+
+#|
+(defun bias-cos (bias-pos bw &key targets (levels #(1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1)))
   "return a function which calculates the bias level for a slider [1-16]
 with given center freq and bw. bias-pos and bw are normalized. bw is
 the distance between the bias-pos and the -6 dB points left/right of
 the bias-pos. At 15/15.5 <bw<1 the faders are interpolated between the
 faders at bw 15/15.5 and max level of all faders at bw 1."
-  (let* ((real-bw (recalc-bw bw))
-         (fader-interp (- (clip real-bw 15 16) 15)))
+  (let* ((num-faders (if targets (length targets) 16))
+         (real-bw (recalc-bw bw num-faders))
+         (fader-interp (- (clip real-bw (1- num-faders) num-faders) (1- num-faders))))
     (lambda (x) (* (aref levels (1- x))
               (+ fader-interp
                  (* (- 1 fader-interp)
@@ -113,9 +131,10 @@ faders at bw 15/15.5 and max level of all faders at bw 1."
                      0.5
                      (* 0.5
                         (cos
-                         (clip (/ (* pi 1/2 (- x (recalc-bias-pos bias-pos)))
+                         (clip (/ (* pi 1/2 (- x (recalc-bias-pos bias-pos num-faders)))
                                   real-bw)
                                (* -1 pi) pi))))))))))
+|#
 
 (defun bias-wippe (bias-pos bw &key (levels #(1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1)))
   (lambda (x) (let* ((real-bw (+ (* 18/33 (1- (n-lin bw 0.5 15.5))) 7))
@@ -131,13 +150,77 @@ faders at bw 15/15.5 and max level of all faders at bw 1."
                 (interp (/ (1- (recalc-bias-pos bias-pos)) 15)))
            (* (aref levels (1- x)) (+ (* (- 1 interp) val1) (* interp val2))))))
 
+(defun calc-bw-interp (bw pivot)
+  (if (< bw pivot) 0
+      (/ (- bw pivot) (- 1 pivot))))
 
-(defun bias-wippe-db (bias-pos bw)
-  (lambda (x) (let* ((real-bw (+ (* 9/15 (1- (recalc-bw bw))) 7))
-                (val1 (clip (+ 1 (* (1- x) (/ -1 real-bw))) 0 1))
-                (val2 (clip (+ 1 (* (- 16 x) (/ -1 real-bw))) 0 1))
-                (interp (/ (1- (recalc-bias-pos bias-pos)) 15)))
-           (* 127 (+ (* (- 1 interp) val1) (* interp val2))))))
+(defun n-bias-cos (bias-pos bw &key targets (levels #(1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1)))
+  "return a function which calculates the bias level for a slider [1-16]
+with given center freq and bw. bias-pos and bw are normalized. bw is
+the distance between the bias-pos and the -6 dB points left/right of
+the bias-pos. At 15/15.5 <bw<1 the faders are interpolated between the
+faders at bw 15/15.5 and max level of all faders at bw 1."
+  (let* ((num-faders (if targets (length targets) 16))
+         (real-bw (n-recalc-bw bw num-faders))
+         (fader-interp (calc-bw-interp real-bw (/ (1- num-faders) num-faders))))
+;;;    (format t "~&~a" num-faders)
+    (lambda (x) (* (aref levels (round (n-lin x 0 (1- num-faders))))
+              (+ fader-interp
+                 (* (- 1 fader-interp)
+                    (+
+                     0.5
+                     (* 0.5
+                        (cos
+                         (clip (/ (* pi 1/2 (- x bias-pos)) real-bw)
+                               (* -1 pi) pi))))))))))
+
+(defun bias-cos (bias-pos bw &key targets (levels #(1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1)))
+  "return a function which calculates the bias level for a slider [1-16]
+with given center freq and bw. bias-pos and bw are normalized. bw is
+the distance between the bias-pos and the -6 dB points left/right of
+the bias-pos. At 15/15.5 <bw<1 the faders are interpolated between the
+faders at bw 15/15.5 and max level of all faders at bw 1."
+  (let* ((num-faders (if targets (length targets) 16))
+         (real-bw (n-recalc-bw bw num-faders))
+         (fader-interp (calc-bw-interp real-bw (/ (1- num-faders) num-faders))))
+;;;    (format t "~&~a" num-faders)
+    (lambda (x) (* (aref levels (round (n-lin x 0 (1- num-faders))))
+              (+ fader-interp
+                 (* (- 1 fader-interp)
+                    (+
+                     0.5
+                     (* 0.5
+                        (cos
+                         (clip (/ (* pi 1/2 (- x bias-pos)) real-bw)
+                               (* -1 pi) pi))))))))))
+
+(defun bias-wippe (bias-pos bw &key targets (levels #(1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1)))
+  (lambda (n-x) (let* ((num-targets (if targets (length targets) 16))
+                  (x (1+ (round (* n-x (1- num-targets)))))
+                  (real-bw (+ (* 18/33 (1- (n-lin bw 0.5 15.5))) 7))
+                  (val1 (clip (+ 1 (* (1- x) (/ -1 real-bw))) 0 1))
+                  (val2 (clip (+ 1 (* (- 16 x) (/ -1 real-bw))) 0 1))
+                  (interp (/ (1- (recalc-bias-pos bias-pos num-targets)) 15)))
+             (* (aref levels (1- x)) (+ (* (- 1 interp) val1) (* interp val2))))))
+
+(defun bias-db-linear (bias-pos bw &key targets (levels #(1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1)))
+  (lambda (n-x) (let* ((num-targets (if targets (length targets) 16))
+                  (x (1+ (round (* n-x (1- num-targets)))))
+                  (real-bw (+ (* 18/33 (1- (n-lin bw 0.5 15.5))) 7))
+                  (val1 (clip (+ 1 (* (1- x) (/ -1 real-bw))) 0 1))
+                  (val2 (clip (+ 1 (* (- 16 x) (/ -1 real-bw))) 0 1))
+                  (interp (/ (1- (recalc-bias-pos bias-pos num-targets)) 15)))
+             (* (aref levels (1- x)) (+ (* (- 1 interp) val1) (* interp val2))))))
+
+
+(defun bias-wippe-db (bias-pos bw &key targets)
+  (lambda (n-x) (let* ((num-targets (if targets (length targets) 16))
+                  (x (1+ (round (* n-x (1- num-targets)))))
+                  (real-bw (+ (* 9/15 (1- (recalc-bw bw num-targets))) 7))
+                  (val1 (clip (+ 1 (* (1- x) (/ -1 real-bw))) 0 1))
+                  (val2 (clip (+ 1 (* (- 16 x) (/ -1 real-bw))) 0 1))
+                  (interp (/ (1- (recalc-bias-pos bias-pos num-targets)) 15)))
+             (* 127 (+ (* (- 1 interp) val1) (* interp val2))))))
 
 (defun clear-routes ()
   (digest-routes nil))

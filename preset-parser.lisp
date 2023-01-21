@@ -31,10 +31,11 @@
         (setf (gethash fader-target 
                *orgel-preset-def-lookup*)
               `(orgel-ctl ,fader-target)))))
-
   (dolist (target *orgel-global-targets*)
     (setf (gethash target *orgel-preset-def-lookup*)
-          `(orgel-ctl ,target))))
+          `(orgel-ctl ,target)))
+  (setf (gethash :global *orgel-preset-def-lookup*)
+        `(set-global-faders)))
 
 (set-preset-def-lookup)
 
@@ -113,10 +114,12 @@ keywords with their expanded access functions."
 ;;; -> ((mlevel 1 1) (delay 1 1) (level 1 1) (gain 2 1) (base-freq 2))
 
 (defun get-fn (target orgel form)
-  (let* ((call-spec (gethash target *orgel-preset-def-lookup*))
-         (orgeltarget orgel))
-    (eval `(lambda () (,(first call-spec) ,orgeltarget
-                  ,@(rest call-spec) ,form)))))
+  (if (eql target :global)
+      (eval `(lambda () (set-global-faders ,(second form) ,(first form))))
+      (let* ((call-spec (gethash target *orgel-preset-def-lookup*))
+             (orgeltarget orgel))
+        (eval `(lambda () (,(first call-spec) ,orgeltarget
+                      ,@(rest call-spec) ,form))))))
 
 (defun register-responder (fn observed)
   (if (= (length observed) 3)
