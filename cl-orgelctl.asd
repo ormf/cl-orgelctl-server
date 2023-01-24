@@ -16,4 +16,5 @@
                (:file "presets")
                (:file "utils")
                (:file "database")
+               (:file "midi-handler")
                (:file "cl-orgelctl")))

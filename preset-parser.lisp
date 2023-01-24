@@ -56,7 +56,8 @@
           (append *orgel-fader-targets* *orgel-measure-targets*))
   (mapcar (lambda (x) (setf (gethash (read-from-string (format nil ":~a" x)) *observed*)
                        `(,(read-from-string (format nil "~a" x)))))
-          *orgel-global-targets*))
+          *orgel-global-targets*)
+  (setf (gethash 'ccin *observed*) t))
 
 #|
 (defun parse-observed (form)
@@ -108,24 +109,32 @@ keywords with their expanded access functions."
       (or (orgel-dependency-form (first form))
           (parse-observed (car form)))
       (parse-observed (cdr form))))
-    (:else (parse-observed (cdr form)))))
+    (:else (or (orgel-dependency-form form)
+               (parse-observed (cdr form))))))
 
 ;;; (parse-observed '(+ (mlevel 1 1) :delay01 (- (level 1 1) (gain 2 1) (* 3 (base-freq 2)))) 1)
 ;;; -> ((mlevel 1 1) (delay 1 1) (level 1 1) (gain 2 1) (base-freq 2))
 
 (defun get-fn (target orgel form)
   (if (eql target :global)
-      (eval `(lambda () (set-global-faders ,(second form) ,(first form))))
+      (eval `(lambda (&rest args) (declare (ignorable args))
+               (set-global-faders ,(second form) ,(first form))))
       (let* ((call-spec (gethash target *orgel-preset-def-lookup*))
              (orgeltarget orgel))
-        (eval `(lambda () (,(first call-spec) ,orgeltarget
-                      ,@(rest call-spec) ,form))))))
+        (eval `(lambda (&rest args) (declare (ignorable args))
+                 (,(first call-spec) ,orgeltarget
+                  ,@(rest call-spec) ,form))))))
 
 (defun register-responder (fn observed)
-  (if (= (length observed) 3)
-      (push fn (aref (slot-value (aref *osc-responder-registry* (1- (second observed))) (first observed))
-                     (1- (third observed))))
-      (push fn (slot-value (aref *osc-responder-registry* (1- (second observed))) (first observed)))))
+  (cond
+    ((eql (first observed) 'ccin)
+     (push fn (aref (aref *midi-cc-responders* (or (third observed) *global-midi-channel*))
+                    (second observed))))
+    ((= (length observed) 3)
+     (push fn (aref (slot-value (aref *osc-responder-registry* (1- (second observed))) (first observed))
+                                            (1- (third observed)))))
+    (:else
+     (push fn (slot-value (aref *osc-responder-registry* (1- (second observed))) (first observed))))))
 
 (defun register-responders (target orgel form reset)
   (let* ((registered-fns '())
@@ -140,10 +149,12 @@ keywords with their expanded access functions."
 (defun digest-route (orgel form reset)
   (loop
     for (target form) on form by #'cddr
-    do (register-responders target orgel form reset)))
+    do (progn
+         (format t "~S ~a" target form) (register-responders target orgel form reset))))
 
 (defun digest-routes (form &key (reset t))
   (clear-osc-responder-registry)
+  (remove-all-cc-responders)
   (loop
     for (orgel form) on form by #'cddr
     do (digest-route orgel form reset)))

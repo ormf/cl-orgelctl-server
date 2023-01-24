@@ -45,8 +45,8 @@
 (defun orgel-nr (key)
   (getf *orgel-nr-lookup* key))
 
-(defun orgel-name (idx)
-  (aref *orgel-name-lookup* idx))
+(defun orgel-name (orgelno)
+  (aref *orgel-name-lookup* orgelno))
 
 (defun clip (x min max)
   "clip x to the interval [min max]"
@@ -224,3 +224,65 @@ faders at bw 15/15.5 and max level of all faders at bw 1."
 
 (defun clear-routes ()
   (digest-routes nil))
+
+(defun switch-targets (new &key (old '*global-targets*) (trigger nil))
+  "set *global-targets* to new, zeroeing all faders of old, which are
+not contained in new."
+  (let* ((last (symbol-value old))
+         (to-remove (remove-if (lambda (x) (member x new :test #'equal)) last)))
+;;;    (break "~a " to-remove)
+    (loop
+      for (target orgelno faderno)
+        in to-remove
+      do (orgel-ctl-fader (orgel-name orgelno) target faderno 0))
+    (setf (symbol-value old) new)
+    (if trigger (mapcar #'funcall (get-trig-fns trigger)))))
+
+(defun get-trig-fns (expr)
+  "get the functions triggered by receiving a new value of an orgel
+fader. expr has to be a quoted expression of an orgelfader, which
+triggers a recalculation, e.g. '(bias-pos 1)."
+  (case (length expr)
+    (2 (slot-value (aref *osc-responder-registry* (1- (second expr))) (first expr)))
+    (3 (aref (slot-value (aref *osc-responder-registry* (1- (second expr))) (first expr)) (third expr)))))
+
+
+#|
+
+;;; examples:
+
+;;; set *global-targets*:
+
+(setf *global-targets*
+      '((level 1 1) (level 1 2) (level 2 1) (level 2 2) (level 1 3)
+        (level 1 5) (level 1 4) (level 2 11) (level 2 13) (level 2 3)
+        (level 1 15) (level 1 12) (level 2 7) (level 1 6) (level 2 5) (level 1 11)))
+
+;;; digest the route (:bias-pos, :bias-bw and _bias-type trigger
+;;; recalculation of the *global-targets*):
+
+(digest-routes
+ '(:orgel01
+   (:global
+    ((apply-notch :bias-type
+      (bias-cos :bias-pos :bias-bw :targets
+       *global-targets*))
+     *global-targets*))))
+
+;;; change *global-targets* and trigger recalculation with new
+;;; targets, after old targets not contained in new targets have been set
+;;; to 0:
+
+(switch-targets '((level 3 1) (level 1 2) (level 1 1) (level 2 5) (level 1 3)
+                  (level 1 5) (level 1 4) (level 2 11) (level 2 13) (level 2 3)
+                  (level 3 15) (level 2 12) (level 2 7) (level 1 6) (level 2 5) (level 1 11))
+                :trigger '(bias-pos 1))
+
+;;; change *global-targets* back to previous values:
+
+(switch-targets '((level 1 1) (level 1 2) (level 2 1) (level 2 2) (level 1 3)
+                  (level 1 5) (level 1 4) (level 2 11) (level 2 13) (level 2 3)
+                  (level 1 15) (level 1 12) (level 2 7) (level 1 6) (level 2 5) (level 1 11))
+                :trigger '(bias-pos 1))
+
+|#

@@ -146,6 +146,8 @@ interpolating all values between presets <num> and <next>."
 
 
 (defun edit-preset-in-emacs (ref &key (presets *route-presets*))
+  "send the preset form referenced by <ref> to emacs for display in the
+curr-preset.lisp buffer."
   (let ((swank::*emacs-connection* *emcs-conn*))
     (if (numberp ref)
         (swank::eval-in-emacs
