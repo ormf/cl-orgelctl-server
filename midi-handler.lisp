@@ -52,7 +52,7 @@
                    (aref (aref *midi-cc-responders* channel) d1))))))))
 
 ;;; (incudine::remove-responder *orgel-midi-responder*)
-
+;;; (setf (incudine::logger-level) :warn)
 ;;; (incudine::remove-all-responders cm:*midi-in1*)
 
 (defun add-cc-responder (ccnum fn &key (channel *global-midi-channel*))
@@ -74,10 +74,10 @@
     (remove-channel-cc-responders channel)))
 
 #|
-(add-cc-responder 0 (lambda (val) (format t "~&midi-in channel: ~d cc: ~d ~a" 5 0 val)))
+(add-cc-responder 0 (lambda (val) (format t "~&Lieber Robin midi-in channel: ~d cc: ~d ~a" 5 0 val)))
 (add-cc-responder 6 (lambda (val) (format t "~&midi-in channel: ~d cc: ~d ~a" 5 1 val)))
 
-(remove-cc-responders 6)
+(remove-cc-responders 0)
 
 |#
 

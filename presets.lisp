@@ -101,10 +101,10 @@ interpolating all values between presets <num> and <next>."
 
 (defparameter *route-presets* (make-array 128 :initial-element nil :element-type 'list))
 
-(defun digest-route-preset (preset-num form)
+(defun digest-route-preset (preset-num form &key (reset t))
   (setf (aref *route-presets* preset-num) form)
   (recall-preset (getf form :preset))
-  (digest-routes (getf form :routes)))
+  (digest-routes (getf form :routes) :reset reset))
 
 (defun save-route-presets (&optional (file "./presets/route-presets.lisp"))
   (with-open-file (out file :direction :output :if-exists :supersede)
