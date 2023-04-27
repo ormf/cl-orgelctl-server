@@ -23,7 +23,7 @@
 (in-package :cl-orgelctl)
 
 (defparameter *debug* t)
-(defparameter *num-orgel* 6) ;;; total num of organs
+(defparameter *num-orgel* 10) ;;; total num of organs
 
 (defconstant +notch+ 1)
 (defconstant +bandp+ 0)

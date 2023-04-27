@@ -154,36 +154,15 @@ faders at bw 15/15.5 and max level of all faders at bw 1."
   (if (< bw pivot) 0
       (/ (- bw pivot) (- 1 pivot))))
 
-(defun n-bias-cos (bias-pos bw &key targets (levels #(1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1)))
-  "return a function which calculates the bias level for a slider [1-16]
-with given center freq and bw. bias-pos and bw are normalized. bw is
-the distance between the bias-pos and the -6 dB points left/right of
-the bias-pos. At 15/15.5 <bw<1 the faders are interpolated between the
-faders at bw 15/15.5 and max level of all faders at bw 1."
-  (let* ((num-faders (if targets (length targets) 16))
-         (real-bw (n-recalc-bw bw num-faders))
-         (fader-interp (calc-bw-interp real-bw (/ (1- num-faders) num-faders))))
-;;;    (format t "~&~a" num-faders)
-    (lambda (x) (* (aref levels (round (n-lin x 0 (1- num-faders))))
-              (+ fader-interp
-                 (* (- 1 fader-interp)
-                    (+
-                     0.5
-                     (* 0.5
-                        (cos
-                         (clip (/ (* pi 1/2 (- x bias-pos)) real-bw)
-                               (* -1 pi) pi))))))))))
-
 (defun bias-cos (bias-pos bw &key targets (levels #(1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1)))
-  "return a function which calculates the bias level for a slider [1-16]
-with given center freq and bw. bias-pos and bw are normalized. bw is
-the distance between the bias-pos and the -6 dB points left/right of
-the bias-pos. At 15/15.5 <bw<1 the faders are interpolated between the
-faders at bw 15/15.5 and max level of all faders at bw 1."
+  "return a function which calculates the bias level for a slider
+[1-(length targets)] with given center freq and bw. bias-pos and bw
+are normalized. bw is the distance between the bias-pos and the -6 dB
+points left/right of the bias-pos. At 15/15.5<bw<1 the values of the
+faders are interpolated between the faders at bw 15/15.5 and 1."
   (let* ((num-faders (if targets (length targets) 16))
          (real-bw (n-recalc-bw bw num-faders))
          (fader-interp (calc-bw-interp real-bw (/ (1- num-faders) num-faders))))
-;;;    (format t "~&~a" num-faders)
     (lambda (x) (* (aref levels (round (n-lin x 0 (1- num-faders))))
               (+ fader-interp
                  (* (- 1 fader-interp)
