@@ -20,10 +20,15 @@
 
 (in-package :cl-orgelctl)
 
-(defparameter *oscout* (incudine.osc:open :port 3010 :direction :output :protocol :udp))
-(defparameter *oscin* (incudine.osc:open :port 3011 :host "127.0.0.1" :direction :input :protocol :udp))
+(defparameter *local-host* "127.0.0.1")
+(defparameter *remote-host* "127.0.0.1")
+
+(defparameter *oscout* (incudine.osc:open :port 3010 :host *remote-host* :direction :output :protocol :udp))
+(defparameter *oscin* (incudine.osc:open :port 3011 :host *local-host* :direction :input :protocol :udp))
 (defparameter *orgel-osc-responder* (make-hash-table)) ;;; a hashtable with the handles of all orgel responders
 
+
+;;; (incudine.osc:close *oscin*)
 ;; (progn
 ;;   (incudine.osc:close *oscout*)
 ;;   (incudine.osc:close *oscin*))

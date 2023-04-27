@@ -122,8 +122,10 @@ interpolating all values between presets <num> and <next>."
 ;;; (recall-route-preset 0)
 ;;; (save-route-presets)
 
+#+swank
 (defparameter *emcs-conn* swank::*emacs-connection*)
 
+#+swank
 (defun define-elisp-code ()
   (let ((swank::*emacs-connection* *emcs-conn*))
     (swank::eval-in-emacs
@@ -134,7 +136,16 @@ interpolating all values between presets <num> and <next>."
         (load ,(namestring (merge-pathnames "edit-orgel-presets.el" (asdf:system-source-directory :cl-orgelctl))))
         ) t)))
 
-(define-elisp-code)
+#+slynk
+(defun define-elisp-code ()
+  (slynk::eval-in-emacs
+   `(progn
+      (setq orgel-preset-file ,(namestring (merge-pathnames "curr-preset.lisp" (asdf:system-source-directory :cl-orgelctl))))
+      (find-file orgel-preset-file)
+      (set-window-dedicated-p (get-buffer-window "curr-preset.lisp" t) t)
+      (load ,(namestring (merge-pathnames "sly-edit-orgel-presets.el" (asdf:system-source-directory :cl-orgelctl))))
+      ) t))
+
 
 (defun preset->string (preset-form ref)
   (format nil "(digest-route-preset~%~d~%`(~S ~d~%~S ~S))"
@@ -144,7 +155,7 @@ interpolating all values between presets <num> and <next>."
           (third preset-form)
           (fourth preset-form)))
 
-
+#+swank
 (defun edit-preset-in-emacs (ref &key (presets *route-presets*))
   "send the preset form referenced by <ref> to emacs for display in the
 curr-preset.lisp buffer."
@@ -160,6 +171,23 @@ curr-preset.lisp buffer."
         (swank::eval-in-emacs
          `(save-excursion
            (switch-to-buffer (get-buffer "curr-preset.lisp"))) t))))
+
+#+slynk
+(defun edit-preset-in-emacs (ref &key (presets *route-presets*))
+  "send the preset form referenced by <ref> to emacs for display in the
+curr-preset.lisp buffer."
+  (if (numberp ref)
+      (slynk::eval-in-emacs
+       `(edit-orgelctl-preset
+         ,(progn
+            (in-package :cl-orgelctl)
+            (preset->string (aref presets ref) ref))
+         ,ref) t)
+      (slynk::eval-in-emacs
+       `(save-excursion
+         (switch-to-buffer (get-buffer "curr-preset.lisp"))) t)))
+
+(define-elisp-code)
 
 (defparameter *curr-preset-nr* 0)
 (defparameter *max-preset-nr* 127)

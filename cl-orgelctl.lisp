@@ -8,7 +8,7 @@
 ;;(load-presets "./presets/route-presets.lisp")
 ;;(load-presets "./presets/presets.lisp")
 
-
+;;; (permute)
 
 (incudine:remove-all-responders *oscin*)
 

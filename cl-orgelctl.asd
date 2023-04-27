@@ -1,5 +1,8 @@
 ;;;; cl-orgelctl.asd
 
+(when (find-package :slynk) (pushnew :slynk *features*))
+(when (find-package :swank) (pushnew :swank *features*))
+
 (asdf:defsystem #:cl-orgelctl
   :description "Controller für HfMDK Orgelprojekt 2022/23"
   :author "Orm Finnendahl <orm.finnendahl@selma.hfmdk-frankfurt.de>"
