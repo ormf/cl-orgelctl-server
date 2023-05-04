@@ -154,7 +154,8 @@ faders at bw 15/15.5 and max level of all faders at bw 1."
   (if (< bw pivot) 0
       (/ (- bw pivot) (- 1 pivot))))
 
-(defun bias-cos (bias-pos bw &key targets (levels #(1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1)))
+(defun bias-cos (bias-pos bw &key ta
+                               rgets (levels #(1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1)))
   "return a function which calculates the bias level for a slider
 [1-(length targets)] with given center freq and bw. bias-pos and bw
 are normalized. bw is the distance between the bias-pos and the -6 dB

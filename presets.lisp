@@ -36,12 +36,12 @@
                 for x below *num-orgel*
                 collect (make-orgel))))))
 
-(defun copy-preset (src target)
+(defun copy-orgel-preset (src target)
   (dotimes (i *num-orgel*)
     (setf (aref target i)
           (copy-orgel (aref src i)))))
 
-;;; (copy-preset *curr-state* (aref *orgel-presets* 0))
+;;; (copy-orgel-preset *curr-state* (aref *orgel-presets* 0))
 ;;;(aref *curr-state* 1)
 
 (defun recall-orgel (orgelidx num &optional next interp)
@@ -78,22 +78,22 @@ interpolating all values between presets <num> and <next>."
       (if *debug* (format t "sending: orgel~2,'0d: ~a ~a~%" (1+ orgelidx) slot val))
       (orgel-ctl (orgel-name (1+ orgelidx)) slot val))))
 
-(defun recall-preset (num &optional next interp)
+(defun recall-orgel-preset (num &optional next interp)
   (when num
       (loop for orgel below *num-orgel*
             for time from 0 by 0.005
             do (let ((orgel orgel))
                  (cm::at (+ (cm:now) time) (lambda () (recall-orgel orgel num next interp)))))))
 
-;;; (recall-preset 1)
+;;; (recall-orgel-preset 1)
 
-(defun save-presets (&optional (file "/tmp/orgel-presets.lisp"))
+(defun save-orgel-presets (&optional (file "/tmp/orgel-presets.lisp"))
   (with-open-file (out file :direction :output :if-exists :supersede)
-    (format out "(setf *orgel-presets* ~%~a)" *orgel-presets*)))
+    (format out "(in-package :cl-orgelctl)~%(setf *orgel-presets* ~%~a)" *orgel-presets*)))
 
 ;;; (save-presets)
 
-(defun load-presets (file)
+(defun load-orgel-presets (&optional (file *orgel-presets-file*))
   (load file))
 
 ;;; (orgel-ctl 1 :level 1 (random 128))
@@ -101,9 +101,11 @@ interpolating all values between presets <num> and <next>."
 
 (defparameter *route-presets* (make-array 128 :initial-element nil :element-type 'list))
 
+(+ 3 4)
+
 (defun digest-route-preset (preset-num form &key (reset t))
   (setf (aref *route-presets* preset-num) form)
-  (recall-preset (getf form :preset))
+  (recall-orgel-preset (getf form :preset))
   (digest-routes (getf form :routes) :reset reset))
 
 (defun save-route-presets (&optional (file "./presets/route-presets.lisp"))
@@ -115,7 +117,7 @@ interpolating all values between presets <num> and <next>."
 
 (defun recall-route-preset (num)
   (let ((form (aref *route-presets* num)))
-    (recall-preset (getf form :preset))
+    (recall-orgel-preset (getf form :preset))
     (digest-routes (getf form :routes))
 ))
 

@@ -25,6 +25,12 @@
 (defparameter *debug* t)
 (defparameter *num-orgel* 10) ;;; total num of organs
 
+(defparameter *orgel-presets-file*
+  (asdf:system-relative-pathname :cl-orgelctl "presets/orgel-presets.lisp"))
+
+(defparameter *route-presets-file*
+    (asdf:system-relative-pathname :cl-orgelctl "presets/route-presets.lisp"))
+
 (defconstant +notch+ 1)
 (defconstant +bandp+ 0)
 (defconstant +phase+ 1)

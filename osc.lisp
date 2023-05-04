@@ -228,5 +228,7 @@ collect `(setf (,(read-from-string (format nil "orgel-registry-~a" target)) (are
         (orgeltarget (target-key orgeltarget)))
     (unless form (error "target ~S doesn't exist" target))
     (if (cdr form)
-        (incudine.osc:message *oscout* (format nil "/~a/~a" orgeltarget (first form)) "if" (second form) (float val 1.0))
+        (incudine.osc:message *oscout* (format nil "/~a/~a" orgeltarget (first form)) "if"
+                              (second form) (float val 1.0))
         (incudine.osc:message *oscout* (format nil "/~a/~a" orgeltarget (first form)) "f" (float val 1.0)))))
+
