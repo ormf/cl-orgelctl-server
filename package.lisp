@@ -1,4 +1,4 @@
 ;;;; package.lisp
 
 (defpackage #:cl-orgelctl
-  (:use #:cl))
+  (:use #:cl #:orm-utils))

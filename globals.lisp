@@ -55,6 +55,7 @@
 
 (defparameter *orgeltargets* (make-hash-table))
 (defparameter *global-targets* nil)
+(defparameter *global-amps* nil)
 
 (dotimes (i *num-orgel*)
   (setf (gethash (read-from-string (format nil ":orgel~2,'0d" (1+ i))) *orgeltargets*) i)

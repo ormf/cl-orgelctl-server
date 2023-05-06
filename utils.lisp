@@ -154,8 +154,7 @@ faders at bw 15/15.5 and max level of all faders at bw 1."
   (if (< bw pivot) 0
       (/ (- bw pivot) (- 1 pivot))))
 
-(defun bias-cos (bias-pos bw &key ta
-                               rgets (levels #(1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1)))
+(defun bias-cos (bias-pos bw &key targets (levels #(1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1)))
   "return a function which calculates the bias level for a slider
 [1-(length targets)] with given center freq and bw. bias-pos and bw
 are normalized. bw is the distance between the bias-pos and the -6 dB
@@ -228,41 +227,158 @@ triggers a recalculation, e.g. '(bias-pos 1)."
 
 
 #|
+(defparameter *base-freqs*
+  '(27.5 35.321407 45.367332 58.270473 74.84345
+    96.13003 123.470825 158.58774 203.69244 261.62555))
 
-;;; examples:
+(sort '(220.0 152.76933 113.156204 87.30706 69.28748 56.132587 46.19711 38.49546
+          32.401794 27.5)
+        #'<)
+|#
 
-;;; set *global-targets*:
+(defparameter *base-freqs*
+  '(27.5 32.401794 38.49546 46.19711 56.132587 69.28748 87.30706 113.156204
+    152.76933 220.0))
 
-(setf *global-targets*
-      '((level 1 1) (level 1 2) (level 2 1) (level 2 2) (level 1 3)
-        (level 1 5) (level 1 4) (level 2 11) (level 2 13) (level 2 3)
-        (level 1 15) (level 1 12) (level 2 7) (level 1 6) (level 2 5) (level 1 11)))
+(defparameter *orgel-freqs*
+  (sort
+   (loop
+     for base-freq in *base-freqs*
+     for orgeltarget from 1
+     append (loop
+              for partial from 1 to 16
+              collect (list (* base-freq partial)
+                            (ftom (* base-freq partial))
+                            orgeltarget partial)))
+   #'<
+   :key #'first))
 
-;;; digest the route (:bias-pos, :bias-bw and _bias-type trigger
-;;; recalculation of the *global-targets*):
+(defparameter *max-freq* (caar (last *orgel-freqs*)))
+(defparameter *min-freq* (caar *orgel-freqs*))
 
-(digest-routes
- '(:orgel01
-   (:global
-    ((apply-notch :bias-type
-      (bias-cos :bias-pos :bias-bw :targets
-       *global-targets*))
-     *global-targets*))))
+(defun find-orgel-partial (freq &key (orgel-registry *orgel-freqs*))
+  (if (<= *min-freq* freq *max-freq*)
+      (loop for (entry1 entry2) on orgel-registry
+            for f1 = (first entry1)
+            for f2 = (first entry2)
+            until (<= f1 freq f2)
+            finally (return
+                      (if (< (- freq f1)
+                             (- f2 freq))
+                          (values entry1 (- (ftom freq) (second entry1)))
+                          (values entry2 (- (ftom freq) (second entry2))))))))
 
-;;; change *global-targets* and trigger recalculation with new
-;;; targets, after old targets not contained in new targets have been set
-;;; to 0:
+(defun find-fader (freq-amp &key (fader 'level))
+  (destructuring-bind (freq amp) freq-amp
+    (destructuring-bind (freq keynum orgeltarget partial)
+        (find-orgel-partial freq)
+      (declare (ignore keynum))
+      (list freq (list fader orgeltarget partial) amp))))
 
-(switch-targets '((level 3 1) (level 1 2) (level 1 1) (level 2 5) (level 1 3)
-                  (level 1 5) (level 1 4) (level 2 11) (level 2 13) (level 2 3)
-                  (level 3 15) (level 2 12) (level 2 7) (level 1 6) (level 2 5) (level 1 11))
-                :trigger '(bias-pos 1))
+(defun transpose (seqs &key (initial-element nil))
+  "transpose seqs and return them as a list of vectors. The number of
+seqs returned equals the number of the first element of seqs.  If an
+element of seqs is shorter then the length of the first element, the
+elemtn gets nil padded at the end."
+  (labels ((inner (seq accum)
+             (if (null seq)
+                 (mapcar #'reverse accum)
+                 (inner (cdr seq) (mapcar #'cons (first seq) accum)))))
+    (inner seqs (or initial-element (loop for i below (length (first seqs))
+                                            collect nil)))))
 
-;;; change *global-targets* back to previous values:
+(defun find-orgel-fader-amps (seq &key (fader 'level))
+  (transpose
+   (mapcar #'cdr
+           (remove-duplicates
+            (sort (mapcar (lambda (x) (find-fader x :fader fader)) seq)
+                  (lambda (elem1 elem2)
+                    (destructuring-bind (freq1 target1 amp1) elem1
+                      (declare (ignore target1))
+                      (destructuring-bind (freq2 target2 amp2) elem2
+                        (declare (ignore target2))
+                        (or (< freq1 freq2)
+                            (and (= freq1 freq2) (< amp1 amp2)))))))
+            :key #'first
+            :from-end t))))
 
-(switch-targets '((level 1 1) (level 1 2) (level 2 1) (level 2 2) (level 1 3)
-                  (level 1 5) (level 1 4) (level 2 11) (level 2 13) (level 2 3)
-                  (level 1 15) (level 1 12) (level 2 7) (level 1 6) (level 2 5) (level 1 11))
-                :trigger '(bias-pos 1))
 
+
+#|
+(destructuring-bind (targets amps)
+    (find-orgel-fader-amps
+     '((311.3 0.5) (412.2 0.3)
+       (1230.5 0.1) (3410.8 0.191)
+       (311.3 0.2) (412.2 0.247)
+       (1230.5 0.4) (3410.8 0.193)
+       (311.3 0.321) (412.2 0.312)
+       (1230.5 0.125) (3410.8 0.71)
+       (311.3 0.521) (412.2 0.25)
+       (1230.5 0.413) (3410.8 0.31))
+     :fader 'osc-level)
+  (setf *global-targets* targets)
+  (setf *global-amps* (apply #'vector amps)))
+
+|#
+
+;;; (defun browser-play-papierorgel (ats-sound))
+
+
+#|
+                                        ;
+;;; examples:                           ;
+                                        ;
+;;; preparation for use with ats-cuda:  ;
+;;;                                     ;
+;;; given a list of freqs and their amps return two vectors ;
+;;; containing the orgel faders <(level orgelno partial)> and their ;
+;;; respective amps. The vectors are reduced by removing duplicate faders ;
+;;; (the loudest one is kept).          ;
+                                        ;
+(find-orgel-level-amps                  ;
+'((311.3 0.5) (412.2 0.3)               ;
+(1230.5 0.1) (3410.8 0.191)             ;
+(311.3 0.2) (412.2 0.247)               ;
+(1230.5 0.4) (3410.8 0.193)             ;
+(311.3 0.321) (412.2 0.312)             ;
+(1230.5 0.125) (3410.8 0.71)            ;
+(311.3 0.521) (412.2 0.25)              ;
+(1230.5 0.413) (3410.8 0.31)))          ;
+                                        ;
+                                        ;
+                                        ;
+;;; set *global-targets*:               ;
+                                        ;
+(setf *global-targets*                  ;
+'((level 1 1) (level 1 2) (level 2 1) (level 2 2) (level 1 3) ;
+(level 1 5) (level 1 4) (level 2 11) (level 2 13) (level 2 3) ;
+(level 1 15) (level 1 12) (level 2 7) (level 1 6) (level 2 5) (level 1 11))) ;
+                                        ;
+;;; digest the route (:bias-pos, :bias-bw and _bias-type trigger ;
+;;; recalculation of the *global-targets*): ;
+                                        ;
+(digest-routes                          ;
+'(:orgel01                              ;
+(:global                                ;
+((apply-notch :bias-type                ;
+(bias-cos :bias-pos :bias-bw :targets   ;
+*global-targets*))                      ;
+*global-targets*))))                    ;
+                                        ;
+;;; change *global-targets* and trigger recalculation with new ;
+;;; targets, after old targets not contained in new targets have been set ;
+;;; to 0:                               ;
+                                        ;
+(switch-targets '((level 3 1) (level 1 2) (level 1 1) (level 2 5) (level 1 3) ;
+(level 1 5) (level 1 4) (level 2 11) (level 2 13) (level 2 3) ;
+(level 3 15) (level 2 12) (level 2 7) (level 1 6) (level 2 5) (level 1 11)) ;
+:trigger '(bias-pos 1))                 ;
+                                        ;
+;;; change *global-targets* back to previous values: ;
+                                        ;
+(switch-targets '((level 1 1) (level 1 2) (level 2 1) (level 2 2) (level 1 3) ;
+(level 1 5) (level 1 4) (level 2 11) (level 2 13) (level 2 3) ;
+(level 1 15) (level 1 12) (level 2 7) (level 1 6) (level 2 5) (level 1 11)) ;
+:trigger '(bias-pos 1))                 ;
+                                        ;
 |#
