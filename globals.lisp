@@ -22,8 +22,34 @@
 
 (in-package :cl-orgelctl)
 
-(defparameter *debug* t)
-(defparameter *num-orgel* 10) ;;; total num of organs
+(defparameter *debug* t
+   "flag for printing debugging info.")
+
+(defparameter *num-orgel* 10
+  "total num of organs")
+
+(defparameter *base-freqs*
+  '(27.5 32.401794 38.49546 46.19711 56.132587 69.28748 87.30706 113.156204
+    152.76933 220.0)
+  "all base frequencies of the orgel.")
+
+(defparameter *orgel-freqs*
+  (sort
+   (loop
+     for base-freq in *base-freqs*
+     for orgeltarget from 1
+     append (loop
+              for partial from 1 to 16
+              collect (list (* base-freq partial)
+                            (ftom (* base-freq partial))
+                            orgeltarget partial)))
+   #'<
+   :key #'first)
+  "all available frequencies in orgel. The entries contain frequency,
+keynum, orgelno and partialno.")
+
+(defparameter *orgel-max-freq* (caar (last *orgel-freqs*)))
+(defparameter *orgel-min-freq* (caar *orgel-freqs*))
 
 (defparameter *orgel-presets-file*
   (asdf:system-relative-pathname :cl-orgelctl "presets/orgel-presets.lisp"))
@@ -42,7 +68,8 @@
   (make-array
    *num-orgel*
    :element-type 'orgel
-   :initial-contents (loop for i below *num-orgel* collect (make-orgel))))
+   :initial-contents (loop for i below *num-orgel* collect (make-orgel)))
+  "State of all faders of the orgel on the pd side.")
 
 (defparameter *orgel-mlevel*
   (make-array *num-orgel*
@@ -51,18 +78,28 @@
               (loop
                 for i below *num-orgel*
                 collect (make-array 16 :element-type 'float
-                                       :initial-contents (loop for x below 16 collect 0.0)))))
+                                       :initial-contents (loop for x below 16 collect 0.0))))
+  "all volume levels currently measured in pd (permanently updated).")
 
-(defparameter *orgeltargets* (make-hash-table))
+(defparameter *orgeltargets* (make-hash-table)
+  "lookup of orgelname (as keyword) or orgelnumber (starting from 1 to
+zerobased index.")
+
 (defparameter *global-targets* nil)
 (defparameter *global-amps* nil)
 
+;;; setup of *orgeltargets*
+
 (dotimes (i *num-orgel*)
-  (setf (gethash (read-from-string (format nil ":orgel~2,'0d" (1+ i))) *orgeltargets*) i)
-  (setf (gethash (1+ i) *orgeltargets*) i))
+  (setf (gethash (read-from-string (format nil "orgel~2,'0d" (1+ i)))
+                 *orgeltargets*)
+        i
+        (gethash (1+ i) *orgeltargets*)
+        i))
 
 (defparameter *orgel-global-targets*
-  '(:base-freq :phase :bias-pos :bias-bw :bias-type :main :min-amp :max-amp :ramp-up :ramp-down :exp-base))
+  '(:base-freq :phase :bias-pos :bias-bw :bias-type :main :min-amp :max-amp
+    :ramp-up :ramp-down :exp-base))
 
 (defparameter *orgel-fader-targets*
   '(:level :bias-level :delay :q :gain :osc-level :bias-level))
@@ -73,14 +110,19 @@
 (defparameter *midi-targets*
   '())
 
-(defparameter *orgel-nr-lookup* nil)
+(defparameter *orgel-nr-lookup* nil
+  "property list of orgel names and their number")
 
-(defparameter *orgel-name-lookup* nil)
+(defparameter *orgel-name-lookup* nil
+    "vector associating orgel numbers with their name")
 
 (setf *orgel-nr-lookup*
       (loop for idx below *num-orgel*
             for name = (read-from-string (format nil ":orgel~2,'0d" (1+ idx)))
-            append (list name (1+ idx))))
+            append (list name (1+ idx)))
 
-(setf *orgel-name-lookup*
-      (coerce (cons nil (loop for (name idx) on *orgel-nr-lookup* by #'cddr collect name)) 'vector))
+      *orgel-name-lookup*
+      (coerce (cons nil (loop
+                          for (name idx) on *orgel-nr-lookup* by #'cddr
+                          collect name))
+              'vector))
