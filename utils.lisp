@@ -64,12 +64,13 @@ determined by fn, called on all partials."
 (defun set-global-faders (targets fn)
   "set faders of <targets> to the values determined by fn, called on all
 targets with the idx of the target as arg."
-  (loop
-    for target in targets
-    for x from 0 by (/ (1- (length targets)))
-    do (case (length target)
-         (2 (orgel-ctl (orgel-name (second target)) (first target) (funcall fn x)))
-         (3 (orgel-ctl-fader (orgel-name (second target)) (first target) (third target) (funcall fn x))))))
+  (if targets
+      (loop
+        for target in targets
+        for x from 0 by (if (> (length targets) 1) (/ (1- (length targets))) 1)
+        do (case (length target)
+             (2 (orgel-ctl (orgel-name (second target)) (first target) (float (funcall fn x) 1.0)))
+             (3 (orgel-ctl-fader (orgel-name (second target)) (first target) (third target) (float (funcall fn x) 1.0)))))))
 
 (defun apply-notch (bias-type fn)
   "return a function by composing fn with an inverter of values with
@@ -246,15 +247,15 @@ triggers a recalculation, e.g. '(bias-pos 1)."
             finally (return
                       (if (< (- freq f1)
                              (- f2 freq))
-                          (values entry1 (- (ftom freq) (second entry1)))
-                          (values entry2 (- (ftom freq) (second entry2))))))))
+                          (values entry1 (- (second entry1) (ftom freq)))
+                          (values entry2 (- (second entry2) (ftom freq))))))))
 
 (defun find-fader (freq-amp &key (fader 'level))
   (destructuring-bind (freq amp) freq-amp
-    (destructuring-bind (freq keynum orgeltarget partial)
+    (destructuring-bind (&optional freq keynum orgeltarget partial)
         (find-orgel-partial freq)
       (declare (ignore keynum))
-      (list freq (list fader orgeltarget partial) amp))))
+      (if freq (list freq (list fader orgeltarget partial) amp)))))
 
 (defun transpose (seqs &key (initial-element nil))
   "transpose seqs and return them as a list of vectors. The number of
@@ -269,21 +270,27 @@ elemtn gets nil padded at the end."
                                             collect nil)))))
 
 (defun find-orgel-fader-amps (seq &key (fader 'level))
-  (transpose
-   (mapcar #'cdr
-           (remove-duplicates
-            (sort (mapcar (lambda (x) (find-fader x :fader fader)) seq)
-                  (lambda (elem1 elem2)
-                    (destructuring-bind (freq1 target1 amp1) elem1
-                      (declare (ignore target1))
-                      (destructuring-bind (freq2 target2 amp2) elem2
-                        (declare (ignore target2))
-                        (or (< freq1 freq2)
-                            (and (= freq1 freq2) (< amp1 amp2)))))))
-            :key #'first
-            :from-end t))))
+  (if seq
+      (let ((fader-seq (mapcar (lambda (x) (find-fader x :fader fader)) seq)))
+        (transpose
+         (mapcar #'cdr
+                 (remove-duplicates
+                  (sort (remove nil fader-seq)
+                        (lambda (elem1 elem2)
+                          (destructuring-bind (freq1 target1 amp1) elem1
+                            (declare (ignore target1))
+                            (destructuring-bind (freq2 target2 amp2) elem2
+                              (declare (ignore target2))
+                              (or (< freq1 freq2)
+                                  (and (= freq1 freq2) (< amp1 amp2)))))))
+                  :key #'first
+                  :from-end t))))))
 
-
+(defun oscillator-mute ()
+  (loop for orgelidx from 1 to *num-orgel*
+        for orgeltarget = (make-keyword (format nil "orgel~2,'0d" orgelidx))
+        do (loop for partial from 1 to 16
+                 do (orgel-ctl-fader orgeltarget :osc-level partial 0.0))))
 
 #|
 (destructuring-bind (targets amps)
@@ -301,8 +308,6 @@ elemtn gets nil padded at the end."
   (setf *global-amps* (apply #'vector amps)))
 
 |#
-
-;;; (defun browser-play-papierorgel (ats-sound))
 
 
 #|

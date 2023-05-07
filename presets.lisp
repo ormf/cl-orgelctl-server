@@ -87,7 +87,7 @@ interpolating all values between presets <num> and <next>."
 
 ;;; (recall-orgel-preset 1)
 
-(defun save-orgel-presets (&optional (file "/tmp/orgel-presets.lisp"))
+(defun save-orgel-presets (&optional (file *orgel-presets-file*))
   (with-open-file (out file :direction :output :if-exists :supersede)
     (format out "(in-package :cl-orgelctl)~%(setf *orgel-presets* ~%~a)" *orgel-presets*)))
 

@@ -91,7 +91,7 @@ zerobased index.")
 ;;; setup of *orgeltargets*
 
 (dotimes (i *num-orgel*)
-  (setf (gethash (read-from-string (format nil "orgel~2,'0d" (1+ i)))
+  (setf (gethash (read-from-string (format nil ":orgel~2,'0d" (1+ i)))
                  *orgeltargets*)
         i
         (gethash (1+ i) *orgeltargets*)
@@ -111,10 +111,10 @@ zerobased index.")
   '())
 
 (defparameter *orgel-nr-lookup* nil
-  "property list of orgel names and their number")
+  "property list of orgel names and their number.")
 
-(defparameter *orgel-name-lookup* nil
-    "vector associating orgel numbers with their name")
+(defparameter *orgel-name-lookup* #()
+    "vector associating orgel numbers with their name.")
 
 (setf *orgel-nr-lookup*
       (loop for idx below *num-orgel*

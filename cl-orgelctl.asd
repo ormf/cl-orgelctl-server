@@ -6,7 +6,7 @@
 (asdf:defsystem #:cl-orgelctl
   :description "Controller für HfMDK Orgelprojekt 2022/23"
   :author "Orm Finnendahl <orm.finnendahl@selma.hfmdk-frankfurt.de>"
-  :depends-on (#:incudine #:cm-all)
+  :depends-on (#:incudine #:cm-all #:ats-cuda)
   :license  "GPL 2.0 or later"
   :version "0.0.1"
   :serial t
@@ -20,4 +20,5 @@
                (:file "utils")
                (:file "database")
                (:file "midi-handler")
+               (:file "ats-player")
                (:file "cl-orgelctl")))
