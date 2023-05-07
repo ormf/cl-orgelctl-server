@@ -292,6 +292,41 @@ elemtn gets nil padded at the end."
         do (loop for partial from 1 to 16
                  do (orgel-ctl-fader orgeltarget :osc-level partial 0.0))))
 
+(defun set-orgel-freqs (base-freqs preset-no)
+  (setf *base-freqs* base-freqs)
+
+  (setf *orgel-freqs*
+        (sort
+         (loop
+           for base-freq in base-freqs
+           for orgeltarget from 1
+           append (loop
+                    for partial from 1 to 16
+                    collect (list (* base-freq partial)
+                                  (ftom (* base-freq partial))
+                                  orgeltarget partial)))
+         #'<
+         :key #'first))
+  (setf *orgel-max-freq* (caar (last *orgel-freqs*)))
+  (setf *orgel-min-freq* (caar *orgel-freqs*))
+  (loop for f in base-freqs
+        for orgelidx from 1
+        for orgeltarget = (make-keyword (format nil "orgel~2,'0d" orgelidx))
+        do (progn
+             (orgel-ctl orgeltarget :base-freq f)
+             (orgel-ctl orgeltarget :min-amp 0)
+             (orgel-ctl orgeltarget :max-amp 1)
+             (orgel-ctl orgeltarget :ramp-up 239)
+             (orgel-ctl orgeltarget :ramp-down 239)
+             (orgel-ctl orgeltarget :exp-base 0.8)
+             (orgel-ctl orgeltarget :phase 1)
+             ))
+  (copy-orgel-preset *curr-state* (aref *orgel-presets* preset-no))
+  (save-orgel-presets))
+
+(defun wellenlaenge (freq &key (schallgeschwindigkeit 343.2))
+  (/ schallgeschwindigkeit freq))
+
 #|
 (destructuring-bind (targets amps)
     (find-orgel-fader-amps
