@@ -77,13 +77,15 @@
 
 (defun coords (x y)
   (let* ((ats-sound (browser-player-ats-sound *curr-browser-player*))
-         (frame (round (* x (1- (ats-sound-frames ats-sound))))))
+         (frame (min (1- (ats-sound-frames ats-sound)) (round (* x (1- (ats-sound-frames ats-sound)))))))
     (if (/= frame (browser-player-last-frame *curr-browser-player*))
         (let ((fader-amps (cl-orgelctl::find-orgel-fader-amps
                            (get-freq-amps frame ats-sound)
                            :fader 'osc-level)))
           (setf (browser-player-last-frame *curr-browser-player*) frame)
 ;;;          (format t "~&faders: ~a~%" (first fader-amps))
+          (if (member 0 (mapcar #'third (first fader-amps)))
+              (format t "~a~%" (first fader-amps)))
           (setf cl-orgelctl::*global-targets* (first fader-amps))
           (setf cl-orgelctl::*global-amps* (coerce (second fader-amps) 'vector))
           (cl-orgelctl::oscillator-mute)
@@ -97,7 +99,7 @@
   ;; (recalc-amps)
   )
 
-
+;;; (aref)
 
 (export '(browser-play-papierorgel play-browser) 'ats-cuda)
 

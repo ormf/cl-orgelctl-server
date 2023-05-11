@@ -41,22 +41,43 @@
 
 (in-package :cl-orgelctl)
 
-(ats-cuda:browser-play-papierorgel ats-cuda::village01)
+
 
 (progn
   (set-orgel-freqs
-   (mapcar (lambda (x) (* x 4))
-           '(27.5 32.401794 38.49546 46.19711 56.132587 69.28748 87.30706 113.156204 152.76933 220.0))
+   (mapcar (lambda (x) (* x 2))
+           '(27.5 32.401794 38.49546 46.19711 56.132587
+             69.28748 87.30706 113.156204 152.76933 220.0))
    2)
-  (orgel-ctl :orgel01 :bias-bw 1)
   (digest-route-preset
    15
-   `(:preset 2
+   `(:preset nil
      :routes (:orgel01
               (:bias-pos (ccin 0) :bias-bw (ccin 1) :global
                          ((apply-notch :bias-type
                                        (bias-cos :bias-pos :bias-bw :targets *global-targets*
                                                  :levels *global-amps*))
                           *global-targets*)))))
+  (orgel-ctl :orgel01 :bias-bw 1)
+  (ats-cuda:browser-play-papierorgel ats-cuda::village01)
   (play-browser 4))
 
+(ou:differentiate (mapcar #'second *orgel-freqs*))
+
+;;; play currently loaded ats-sound in 4 seconds
+
+(mapcar #'wellenlaenge *base-freqs*)
+
+
+(play-browser 4)
+
+(ats-cuda::coords)
+
+(orgel-ctl-fader)
+
+(cm:events
+ (loop for base-freq in *base-freqs*
+       for time from 0 by 0.1
+       for i from 1
+       append (loop for p from 1 to 16 collect (cm:new cm:midi :time time :keynum (ou:ftom (* base-freq p)) :duration 1 :channel i)))
+ "/tmp/freqs.svg")

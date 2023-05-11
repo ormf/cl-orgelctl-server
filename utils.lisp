@@ -325,7 +325,7 @@ elemtn gets nil padded at the end."
   (save-orgel-presets))
 
 (defun wellenlaenge (freq &key (schallgeschwindigkeit 343.2))
-  (/ schallgeschwindigkeit freq))
+  (/ schallgeschwindigkeit freq 2))
 
 #|
 (destructuring-bind (targets amps)

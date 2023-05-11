@@ -216,6 +216,7 @@ collect `(setf (,(read-from-string (format nil "orgel-registry-~a" target)) (are
 
 (defun orgel-ctl-fader (orgel target idx val)
   (unless (gethash orgel *orgeltargets*) (error "Orgel \"~S\" doesn't exist" orgel))
+;;;  (break "orgel: ~a ~a ~a ~a" orgel target idx val)
   (incudine.osc:message *oscout* (format nil "/~a/~a" orgel target) "if" (round idx) (float val 1.0)))
 
 (declaim (inline target-key))
