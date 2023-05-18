@@ -41,7 +41,7 @@
 
 (in-package :cl-orgelctl)
 
-
+(ats-cuda:coords)
 
 (progn
   (set-orgel-freqs
@@ -63,6 +63,10 @@
   (play-browser 4))
 
 (ou:differentiate (mapcar #'second *orgel-freqs*))
+(copy-orgel-preset *curr-state* (aref *orgel-presets* 1))
+(save-orgel-presets)
+
+(cd (asdf:system-relative-pathname :cl-orgelctl ""))
 
 ;;; play currently loaded ats-sound in 4 seconds
 
@@ -81,3 +85,14 @@
        for i from 1
        append (loop for p from 1 to 16 collect (cm:new cm:midi :time time :keynum (ou:ftom (* base-freq p)) :duration 1 :channel i)))
  "/tmp/freqs.svg")
+
+
+
+(cm:cd (asdf:system-relative-pathname :cl-orgelctl ""))
+(save-orgel-presets (asdf:system-relative-pathname :cl-orgelctl "presets/orgel-presets.lisp"))
+
+(load-orgel-presets (asdf:system-relative-pathname :cl-orgelctl "presets/orgel-presets.lisp"))
+
+(copy-orgel-preset *curr-state* (aref *orgel-presets* 0))
+
+

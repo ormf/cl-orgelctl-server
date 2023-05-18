@@ -101,18 +101,16 @@ interpolating all values between presets <num> and <next>."
 
 (defparameter *route-presets* (make-array 128 :initial-element nil :element-type 'list))
 
-(+ 3 4)
-
 (defun digest-route-preset (preset-num form &key (reset t))
   (setf (aref *route-presets* preset-num) form)
   (recall-orgel-preset (getf form :preset))
   (digest-routes (getf form :routes) :reset reset))
 
-(defun save-route-presets (&optional (file "./presets/route-presets.lisp"))
+(defun save-route-presets (&optional *route-presets-file*)
   (with-open-file (out file :direction :output :if-exists :supersede)
     (format out "(in-package :cl-orgelctl)~%~%(setf *route-presets*~%~S)" *route-presets*)))
 
-(defun load-route-presets (&optional (file "./presets/route-presets.lisp"))
+(defun load-route-presets (&optional (file *route-presets-file*))
   (load file))
 
 (defun recall-route-preset (num)
