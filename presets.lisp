@@ -81,7 +81,7 @@ interpolating all values between presets <num> and <next>."
 (defun recall-orgel-preset (num &optional next interp)
   (when num
       (loop for orgel below *num-orgel*
-            for time from 0 by 0.005
+            for time from 0 by 0.02
             do (let ((orgel orgel))
                  (cm::at (+ (cm:now) time) (lambda () (recall-orgel orgel num next interp)))))
       (copy-orgel-preset (aref *orgel-presets* num) *curr-state*)))
