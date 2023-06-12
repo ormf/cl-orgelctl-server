@@ -83,9 +83,14 @@ interpolating all values between presets <num> and <next>."
       (loop for orgel below *num-orgel*
             for time from 0 by 0.005
             do (let ((orgel orgel))
-                 (cm::at (+ (cm:now) time) (lambda () (recall-orgel orgel num next interp)))))))
+                 (cm::at (+ (cm:now) time) (lambda () (recall-orgel orgel num next interp)))))
+      (copy-orgel-preset (aref *orgel-presets* num) *curr-state*)))
 
 ;;; (recall-orgel-preset 1)
+
+(defun store-orgel-preset (num &key (presets *orgel-presets*))
+  (copy-orgel-preset *curr-state* (aref presets num)))
+
 
 (defun save-orgel-presets (&optional (file *orgel-presets-file*))
   (with-open-file (out file :direction :output :if-exists :supersede)
@@ -189,16 +194,28 @@ curr-preset.lisp buffer."
 
 (define-elisp-code)
 
-(defparameter *curr-preset-nr* 0)
-(defparameter *max-preset-nr* 127)
+(defparameter *curr-orgel-preset-nr* 0)
+(defparameter *max-orgel-preset-nr* 127)
+(defparameter *curr-route-preset-nr* 0)
+(defparameter *max-route-preset-nr* 127)
 
-(defun next-preset ()
-  (if (< *curr-preset-nr* *max-preset-nr*)
-      (edit-preset-in-emacs (incf *curr-preset-nr*))))
+(defun next-orgel-preset ()
+  (if (< *curr-orgel-preset-nr* *max-orgel-preset-nr*)
+      (incudine.osc:message *oscout* "/preset-ctl/preset-no" "i" (incf *curr-orgel-preset-nr*))))
 
-(defun previous-preset ()
-  (if (> *curr-preset-nr* 0)
-      (edit-preset-in-emacs (decf *curr-preset-nr*))))
+(defun previous-orgel-preset ()
+  (if (> *curr-orgel-preset-nr* 0)
+      (incudine.osc:message *oscout* "/preset-ctl/preset-no" "i" (decf *curr-orgel-preset-nr*))))
 
-(previous-preset)
-(next-preset)
+(defun next-route-preset ()
+  (if (< *curr-route-preset-nr* *max-route-preset-nr*)
+      (edit-preset-in-emacs (incf *curr-route-preset-nr*))))
+
+(defun previous-route-preset ()
+  (if (> *curr-route-preset-nr* 0)
+      (edit-preset-in-emacs (decf *curr-route-preset-nr*))))
+
+;;; (previous-route-preset)
+;;; (next-route-preset)
+
+

@@ -20,11 +20,11 @@
 
 (defun next-orgelctl-preset ()
     (interactive)
-    (slime-repl-send-string "(cl-orgelctl::next-preset)"))
+    (slime-repl-send-string "(cl-orgelctl::next-route-preset)"))
 
 (defun previous-orgelctl-preset ()
     (interactive)
-    (slime-repl-send-string "(cl-orgelctl::previous-preset)")
+    (slime-repl-send-string "(cl-orgelctl::previous-route-preset)")
     (save-excursion
       (switch-to-buffer (get-buffer "curr-preset.lisp"))))
 

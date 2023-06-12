@@ -20,13 +20,13 @@
 
 (defun next-orgelctl-preset ()
     (interactive)
-    (sly-interactive-eval "(cl-orgelctl::next-preset)")
+    (sly-interactive-eval "(cl-orgelctl::next-route-preset)")
     (save-excursion
       (switch-to-buffer (get-buffer "curr-preset.lisp"))))
 
 (defun previous-orgelctl-preset ()
     (interactive)
-    (sly-interactive-eval "(cl-orgelctl::previous-preset)")
+    (sly-interactive-eval "(cl-orgelctl::previous-route-preset)")
     (save-excursion
       (switch-to-buffer (get-buffer "curr-preset.lisp"))))
 

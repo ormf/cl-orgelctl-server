@@ -161,16 +161,70 @@ collect `(setf (,(read-from-string (format nil "orgel-registry-~a" target)) (are
 
 ;;; (define-orgel-measure-responder *oscin* 0 :mlevel)
 
+(defmacro get-preset-responders (stream)
+  `(progn
+     (incudine:make-osc-responder
+      ,stream
+      "/preset-ctl/prev-preset" ""
+      (lambda ()
+        (previous-orgel-preset)
+        (if *debug*
+            (format t "preset-ctl: prev-preset~%"))))
+     (incudine:make-osc-responder
+      ,stream
+      "/preset-ctl/next-preset" ""
+      (lambda ()
+        (next-orgel-preset)
+        (if *debug*
+            (format t "preset-ctl: next-preset~%"))))
+     (incudine:make-osc-responder
+      ,stream
+      "/preset-ctl/recall-preset" ""
+      (lambda ()
+        (recall-orgel-preset *curr-orgel-preset-nr*)
+        (if *debug*
+            (format t "preset-ctl: recall-preset~%"))))
+     (incudine:make-osc-responder
+      ,stream
+      "/preset-ctl/store-preset" ""
+      (lambda ()
+        (store-orgel-preset *curr-orgel-preset-nr*)
+        (if *debug*
+            (format t "preset-ctl: store-preset~%"))))
+     (incudine:make-osc-responder
+      ,stream
+      "/preset-ctl/load-presets" ""
+      (lambda ()
+        (load-orgel-presets)
+        (if *debug*
+            (format t "preset-ctl: load-presets~%"))))
+     (incudine:make-osc-responder
+      ,stream
+      "/preset-ctl/save-presets" ""
+      (lambda ()
+        (save-orgel-presets)
+        (if *debug*
+            (format t "preset-ctl: save-presets~%"))))
+     (incudine:make-osc-responder
+      ,stream
+      "/preset-ctl/preset-no" "f"
+      (lambda (f)
+        (setf *curr-orgel-preset-nr* (round f))
+        (if *debug*
+            (format t "preset-ctl: preset-no ~a~%" (round f)))))))
+
 (defmacro make-all-responders (maxorgel stream)
   (let ((maxorgel (eval maxorgel)))
     `(progn
+       (get-preset-responders ,stream)
        ,@(loop
            for orgelidx below maxorgel
            collect `(setf (gethash ,(ou:make-keyword (format nil "orgel~2,'0d" (1+ orgelidx))) *orgel-osc-responder*)
                           (append
                            (get-orgel-fader-responders ,stream ,orgelidx *orgel-fader-targets*)
                            (get-orgel-global-responders ,stream ,orgelidx *orgel-global-targets*)
-                           (get-orgel-measure-responders ,stream ,orgelidx *orgel-measure-targets*)))))))
+                           (get-orgel-measure-responders ,stream ,orgelidx *orgel-measure-targets*))))
+       nil)))
 
 ;;; call this in the init file: (make-all-responders *num-orgel* *oscin*)
 
