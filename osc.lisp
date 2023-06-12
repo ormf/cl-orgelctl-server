@@ -161,6 +161,33 @@ collect `(setf (,(read-from-string (format nil "orgel-registry-~a" target)) (are
 
 ;;; (define-orgel-measure-responder *oscin* 0 :mlevel)
 
+(defun define-preset-responder (stream path fn)
+  `(incudine:make-osc-responder
+    ,stream
+    ,(format nil "/preset-ctl/~a" path)
+    ""
+    (lambda ()
+      ,fn
+      (if *debug*
+          (format t "preset-ctl: ~a~%" ,path)))))
+
+(defmacro get-preset-responders (stream)
+  `(progn
+     ,(define-preset-responder stream "prev-preset" '(previous-orgel-preset))
+     ,(define-preset-responder stream "next-preset" '(next-orgel-preset))
+     ,(define-preset-responder stream "recall-preset" '(recall-orgel-preset *curr-orgel-preset-nr*))
+     ,(define-preset-responder stream "store-preset" '(store-orgel-preset *curr-orgel-preset-nr*))
+     ,(define-preset-responder stream "load-presets" '(load-orgel-presets))
+     ,(define-preset-responder stream "save-presets" '(save-orgel-presets))
+     (incudine:make-osc-responder
+      ,stream
+      "/preset-ctl/preset-no" "f"
+      (lambda (f)
+        (setf *curr-orgel-preset-nr* (round f))
+        (if *debug*
+            (format t "preset-ctl: preset-no ~a~%" (round f)))))))
+
+#|
 (defmacro get-preset-responders (stream)
   `(progn
      (incudine:make-osc-responder
@@ -211,7 +238,8 @@ collect `(setf (,(read-from-string (format nil "orgel-registry-~a" target)) (are
       (lambda (f)
         (setf *curr-orgel-preset-nr* (round f))
         (if *debug*
-            (format t "preset-ctl: preset-no ~a~%" (round f)))))))
+(format t "preset-ctl: preset-no ~a~%" (round f)))))))
+|#
 
 (defmacro make-all-responders (maxorgel stream)
   (let ((maxorgel (eval maxorgel)))
