@@ -22,7 +22,7 @@
 
 (in-package :cl-orgelctl)
 
-(defparameter *global-midi-channel* 5)
+(defparameter *global-midi-channel* 4)
 
 (defparameter *midi-cc-state*
   (make-array 16 :element-type '(simple-array single-float)

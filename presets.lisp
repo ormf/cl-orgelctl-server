@@ -111,7 +111,7 @@ interpolating all values between presets <num> and <next>."
   (recall-orgel-preset (getf form :preset))
   (digest-routes (getf form :routes) :reset reset))
 
-(defun save-route-presets (&optional *route-presets-file*)
+(defun save-route-presets (&optional (file *route-presets-file*))
   (with-open-file (out file :direction :output :if-exists :supersede)
     (format out "(in-package :cl-orgelctl)~%~%(setf *route-presets*~%~S)" *route-presets*)))
 
