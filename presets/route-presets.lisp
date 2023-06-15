@@ -56,10 +56,14 @@
             (:bias-pos (ccin 0) :bias-bw (ccin 1) :level
              (permute (bias-cos :bias-pos :bias-bw)
                       #(16 10 15 11 2 12 3 13 5 14 9 4 7 8 6 1)))))
+  (:preset nil :routes
+           (:orgel01
+            (:bias-pos (ccin 0) :bias-bw (ccin 1) :main (ccin 2) :level
+             (permute (bias-cos :bias-pos :bias-bw)
+                      #(16 10 15 11 2 12 3 13 5 14 9 4 7 8 6 1)))))
   nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil
   nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil
   nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil
   nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil
   nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil
-  nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil
-  nil))
+  nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil))
