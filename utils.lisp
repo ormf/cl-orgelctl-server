@@ -69,8 +69,12 @@ targets with the idx of the target as arg."
         for target in targets
         for x from 0 by (if (> (length targets) 1) (/ (1- (length targets))) 1)
         do (case (length target)
-             (2 (orgel-ctl (orgel-name (second target)) (first target) (float (funcall fn x) 1.0)))
-             (3 (orgel-ctl-fader (orgel-name (second target)) (first target) (third target) (float (funcall fn x) 1.0)))))))
+             (2 (orgel-ctl (orgel-name (second target))
+                           (first target)
+                           (float (funcall fn x) 1.0)))
+             (3 (orgel-ctl-fader (orgel-name (second target))
+                                 (first target) (third target)
+                                 (float (funcall fn x) 1.0)))))))
 
 (defun apply-notch (bias-type fn)
   "return a function by composing fn with an inverter of values with
@@ -238,19 +242,27 @@ triggers a recalculation, e.g. '(bias-pos 1)."
 |#
 
 (defun find-orgel-partial (freq &key (orgel-registry *orgel-freqs*))
-  "for a given freq find the closest partial given the orgel-registry"
-  (if (<= *orgel-min-freq* freq *orgel-max-freq*)
-      (loop for (entry1 entry2) on orgel-registry
-            for f1 = (first entry1)
-            for f2 = (first entry2)
-            until (<= f1 freq f2)
-            finally (return
-                      (if (< (- freq f1)
-                             (- f2 freq))
-                          (values entry1 (- (second entry1) (ftom freq)))
-                          (values entry2 (- (second entry2) (ftom freq))))))))
+  "for a given freq find the closest partial given the orgel-registry.
+Return the deviation from the desired keynum in midifloats."
+  (cond
+    ((<= *orgel-min-freq* freq *orgel-max-freq*)
+     (loop for (entry1 entry2) on orgel-registry
+           for f1 = (first entry1)
+           for f2 = (first entry2)
+           until (<= f1 freq f2)
+           finally (return
+                     (if (< (- freq f1)
+                            (- f2 freq))
+                         (values entry1 (- (second entry1) (ftom freq)))
+                         (values entry2 (- (second entry2) (ftom freq)))))))
+    ((< freq *orgel-min-freq*) (let ((entry (first orgel-registry)))
+                                (values entry (- (second entry) (ftom freq)))) )
+    (t (let ((entry (first (last orgel-registry))))
+         (values entry (- (second entry) (ftom freq)))) )))
 
 (defun find-fader (freq-amp &key (fader 'level))
+  "given a list (<freq> <amp>) and a fader type construct a list to be
+sent using orgel-ctl-fader."
   (destructuring-bind (freq amp) freq-amp
     (destructuring-bind (&optional freq keynum orgeltarget partial)
         (find-orgel-partial freq)

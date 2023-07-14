@@ -1,5 +1,5 @@
 ;;; 
-;;; midi-handler.lisp
+;;; midi-cc-handler.lisp
 ;;;
 ;;; framework to set midi cc responders
 ;;;
@@ -39,17 +39,32 @@
                                          (make-array 128 :element-type 'list
                                                          :initial-element nil))))
 
-(defparameter *orgel-midi-responder*
-  (incudine:make-responder
-   cm:*midi-in1*
-   (lambda (st d1 d2)
-     (case (cm:status->opcode st)
-       (:cc (let ((channel (cm:status->channel st))
-                  (val (float (/ d2 127) 1.0)))
-              (incudine::msg info "orgel-midi-responder: ~d ~d ~,2f" channel d1 val)
-              (setf (aref (aref *midi-cc-state* channel) d1) val)
-              (map nil (lambda (fn) (funcall fn val))
-                   (aref (aref *midi-cc-responders* channel) d1))))))))
+
+(defun ccin (ccnum &optional (channel *global-midi-channel*))
+  (aref (aref *midi-cc-state* channel) ccnum))
+
+(defsetf ccin (ccnum &optional (channel *global-midi-channel*)) (value)
+  `(progn
+     (setf (aref (aref *midi-cc-state* ,channel) ,ccnum) ,value)
+     (map nil (lambda (fn) (funcall fn ,value))
+          (aref (aref *midi-cc-responders* ,channel) ,ccnum))
+     ,value))
+
+(defparameter *orgel-cc-responder* nil)
+
+(defun make-orgel-cc-responder ()
+  (setf *orgel-cc-responder*
+        (incudine:make-responder
+         cm:*midi-in1*
+         (lambda (st d1 d2)
+           (case (cm:status->opcode st)
+             (:cc (let ((channel (cm:status->channel st))
+                        (val (float (/ d2 127) 1.0)))
+                    (incudine::msg info "orgel-midi-responder: ~d ~d ~,2f" channel d1 val)
+                    (setf (ccin d1 channel) val))))))))
+
+(defun remove-orgel-cc-responder ()
+  (incudine:remove-responder *orgel-cc-responder*))
 
 ;;; (incudine::remove-responder *orgel-midi-responder*)
 ;;; (setf (incudine::logger-level) :warn)
@@ -81,17 +96,7 @@
 
 |#
 
-(incudine:recv-start cm:*midi-in1*)
 
-(defun ccin (ccnum &optional (channel *global-midi-channel*))
-  (aref (aref *midi-cc-state* channel) ccnum))
-
-(defsetf ccin (ccnum &optional (channel *global-midi-channel*)) (value)
-  `(progn
-     (setf (aref (aref *midi-cc-state* ,channel) ,ccnum) ,value)
-     (map nil (lambda (fn) (funcall fn ,value))
-          (aref (aref *midi-cc-responders* ,channel) ,ccnum))
-     ,value))
 
 ;;; (setf (ccin 0) 64)
 

@@ -53,8 +53,8 @@
    15
    `(:preset nil
      :routes (:orgel01
-              (:bias-pos (ccin 0) :bias-bw (ccin 1) :global
-                         ((apply-notch :bias-type
+              (:bias-pos (ccin 0) :bias-bw (ccin 1)
+               :global ((apply-notch :bias-type
                                        (bias-cos :bias-pos :bias-bw :targets *global-targets*
                                                  :levels *global-amps*))
                           *global-targets*)))))

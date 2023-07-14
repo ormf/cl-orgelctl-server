@@ -13,9 +13,17 @@
 ;;; (permute)
 
 (incudine:remove-all-responders *oscin*)
-
 (make-all-responders *num-orgel* *oscin*)
 
+(incudine:recv-start cm:*midi-in1*)
+(incudine:remove-all-responders cm:*midi-in1*)
+(make-orgel-cc-responder)
+(make-orgel-note-responder)
+(init-orgel-keymaps)
+;;; (stop-keymap-note-responder)
+(start-keymap-note-responder)
+(print-pending-keymap-responders)
+(clear-keymap-responders)
 
 #|
 (dotimes (idx *num-orgel*)

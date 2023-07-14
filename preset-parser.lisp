@@ -149,9 +149,7 @@ keywords with their expanded access functions."
 (defun digest-route (orgel form reset)
   (loop
     for (target form) on form by #'cddr
-    do (progn
-;;;         (format t "~S ~a" target form)
-         (register-responders target orgel form reset))))
+    do (register-responders target orgel form reset)))
 
 (defun digest-routes (form &key (reset t))
   (clear-osc-responder-registry)

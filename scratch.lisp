@@ -20,6 +20,7 @@
 
 (ql:quickload "cl-orgelctl")
 (in-package :cl-orgelctl)
+(incudine::remove-all-responders cm:*midi-in1*)
 
 (copy-preset *curr-state* (aref *orgel-presets* 2))
 (copy-preset *curr-state* (aref *orgel-presets* 0))
@@ -27,12 +28,209 @@
 (recall-preset 1)
 (clear-routes)
 
+(start-keymap-note-responder)
+
+*
+
+(incudine::remove-all-responders cm:*midi-in1*)
+
+
+(orgel-ctl :orgel01 :base-freq 275)
+(orgel-ctl-fader :orgel01 :gain 10 0.5)
+
+(ccin)
+
+*base-freqs*
+
+ ; => (27.5 32.401794 38.49546 46.19711 56.132587 69.28748 87.30706 113.156204
+ ; 152.76933 220.0)
+
+*orgel-freqs*
+
+(defparameter *well-tempered-lookup* nil)
+
+(progn
+  (setf *well-tempered-lookup*
+        (make-array 128 :element-type 'list :initial-element nil))
+  (loop
+    for entry across *well-tempered-lookup*
+    for keynum from 0
+    if (null entry)
+      do (push (find-orgel-partial (mtof keynum)) entry)))
+
+(progn
+  (setf *well-tempered-lookup*
+        (make-array 128 :element-type 'list :initial-element nil))
+  (dolist (elem *orgel-freqs*)
+    (push elem (aref *well-tempered-lookup* (round (second elem)))))
+  (loop
+    for entry across *well-tempered-lookup*
+    for keynum from 0
+    if (null entry)
+      do (setf (aref *well-tempered-lookup* keynum) (list (find-orgel-partial (mtof keynum))))
+    else do (print "found")))
+
+https://hmwk.heconf.de/r?room=HMWK%3A+MPK-Digitalisierung
+
+(find-orgel-partial 231)
+
+(destructuring-bind (&optional a b c d) '()
+  (list a b c d))
+
+(defparameter *orgel-midi-responder*
+  (incudine:make-responder
+   cm:*midi-in1*
+   (lambda (st d1 d2)
+     (case (cm:status->opcode st)
+       (:cc (let ((channel (cm:status->channel st))
+                  (val (float (/ d2 127) 1.0)))
+              (incudine::msg info "orgel-midi-responder: ~d ~d ~,2f" channel d1 val)
+              (setf (ccin d1 channel) val)))))))
+
+(setf (note-in 4 0) 0.5)
+
+(orgel-name 1)
+
+(let ((fn (lambda (amp keynum)
+            (destructuring-bind (freq keynum orgelno faderno) (elt *orgel-freqs* keynum)
+              (declare (ignore freq keynum))
+              (orgel-ctl-fader (orgel-name orgelno) :osc-level faderno amp)))))
+  (dotimes (chan 16)
+    (dotimes (key 128)
+      (add-note-responder key fn :channel chan))))
+
+*midi-note-responders*
+
+(funcall (first (elt (elt *midi-note-responders* 0) 0)) 0.0 0)
+(ou:range 16)
+
+(all-notes-off)
+
+(remove-all-note-responders)
+
+
+(funcall
+ (lambda (amp keynum)
+   (destructuring-bind (freq keynum orgelno faderno) (elt *orgel-freqs* keynum)
+     (declare (ignore freq keynum))
+     (orgel-ctl-fader (orgel-name orgelno) :osc-level faderno amp)))
+ 0.0 0)
+
+(orgel-ctl-fader :orgel01 :osc-level  2 0.5)
+
+
+
+(replace-keywords '(apply-notch :bias-type (bias-cos :bias-pos :bias-bw)) 1)
+ ; => (apply-notch (bias-type 1) (bias-cos (bias-pos 1) (bias-bw 1)))
+
+(bias-type 1)
+
+(set-orgel-freqs
+ (mapcar (lambda (x) (* x 2))
+         '(27.5 32.401794 38.49546 46.19711 56.132587
+           69.28748 87.30706 113.156204 152.76933 220.0))
+ 2)
+
+(progn
+  (set-orgel-freqs
+   (mapcar (lambda (x) (* x 2))
+           '(27.5 32.401794 38.49546 46.19711 56.132587
+             69.28748 87.30706 113.156204 152.76933 220.0))
+   2)
+  (digest-route-preset
+   15
+   `(:preset nil
+     :routes (:orgel01
+              (:bias-pos (ccin 0) :bias-bw (ccin 1)
+               :global ((apply-notch :bias-type
+                                      (bias-cos :bias-pos :bias-bw
+                                                :targets *global-targets*
+                                                :levels *global-amps*))
+                        *global-targets*))))))
+(loop)
+(set-global-faders *global-targets* (lambda (x) 0.3))
+
+(setf *global-amps* #(1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1))
+(length *global-targets*)
+
+(replace-keywords
+ '(apply-notch :bias-type
+   (bias-cos :bias-pos :bias-bw :targets *global-targets*
+             :levels *global-amps*))
+ 1)
+
+(setf *global-targets*                  
+      '((level 1 1) (level 1 2) (level 2 1) (level 2 2) (level 1 3) 
+        (level 1 5) (level 1 4) (level 2 11) (level 2 13) (level 2 3) 
+        (level 1 15) (level 1 12) (level 2 7) (level 1 6) (level 2 5)
+        (level 1 11)))
+
+(bias-cos)
+
+(defun bias-lin (bias-pos)
+  (lambda (x)
+    (format t "x: ~a~%" x)
+    (if (=
+         (round (* x 15))
+         (round (* bias-pos 15)))
+        x
+        0)))
+
+(defparameter *akkord* '(60 64 67 72))
+
+(defun suche-fader (midi)
+  (loop
+    for ((freq1 midi1 orgelno1 faderno1)
+         (freq2 midi2 orgelno2 faderno2))
+      on *orgel-freqs*
+    while freq2
+    until (< midi1 midi midi2)
+    finally (return (if (< (- midi2 midi) (- midi midi1))
+                        (list freq2 midi2 orgelno2 faderno2)
+                        (list freq1 midi1 orgelno1 faderno1)))))
+
+(suche-fader 60)
+
+(loop for keynum in *akkord*
+      collect (cons 'osc-level (nthcdr 2 (suche-fader keynum))))
+
+(orgel-ctl-fader 1 'osc-level 1 0.5)
+
+(orgel-name 1) ; => :orgel01
+
+(orgel-ctl-fader :orgel01 'osc-level 1 0.5)
+
+(dotimes (orgel 10)
+  (orgel-ctl
+   (orgel-name (1+ orgel)) :base-freq
+   (elt *base-freqs* orgel)))
+
+(loop
+  for keynum in *akkord*
+  do (destructuring-bind
+         (orgel-no fader-no) (nthcdr 2 (suche-fader keynum))
+       (orgel-ctl-fader (orgel-name orgel-no) 'osc-level fader-no 1.0)))
+
+
+(ats-cuda:browser-play-papierorgel ats-cuda::village01)
+(play-browser 4)
+
+(replace-keywords
+ '(bias-cos :bias-pos :bias-bw :targets *global-targets*
+   :levels *global-amps*)
+ *global-targets*)
+
+(bias-cos)
+
+
+(eval `(lambda (&rest args) (declare (ignorable args))
+               (set-global-faders ,(second form) ,(first form))))
 
 (defun permute (fn permutation)
   ""
   (let ((array
           (loop for x across permutation
-                for idx from 0
+                for idx from 0 by (/ (1- (length permutation)))
                 with array = (make-array (length permutation) :initial-element 0.0)
                 do (setf (aref array (1- x)) (1+ idx))
                 finally (return array))))
@@ -41,6 +239,9 @@
 (funcall
  (permute (bias-cos (bias-pos 1) (bias-bw 1))
           #(1 16 2 15 3 14 4 13 5 12 6 11 7 10 8 9)) 2)
+
+
+
 *curr-state*
 (setf *debug* nil)
 (setf *debug* t)
