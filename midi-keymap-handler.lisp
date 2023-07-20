@@ -21,6 +21,45 @@
 ;;;
 ;;; **********************************************************************
 
+(in-package :incudine)
+
+;;; shadow incudine's wrapper to make *keymap-note-responder-fn* work
+
+(defun midi-responder-wrapper (function)
+    (let* ((lambda-list (incudine.util::function-lambda-list function))
+           (len (length lambda-list))
+           (key-pos (position '&key lambda-list)))
+      (if (and key-pos (<= key-pos 2))
+          ;; Optional keywords are ignored with one argument `(stream &key ...)'
+          ;; but an error is signaled with more arguments.
+          (setf len key-pos))
+      ;; &optional makes sense only with three mandatory arguments.
+      (case (position '&optional lambda-list)
+        ((nil) (case len
+                 (1 ;; (func stream)
+                  (lambda (status data1 data2 stream)
+                    (declare (ignore status data1 data2))
+                    (funcall function stream)))
+                 (3 ;; (func status data1 data2)
+                  (lambda (status data1 data2 stream)
+                    (declare (ignore stream))
+                    (funcall function status data1 data2)))
+                 (4 ;; No wrapper:
+                    ;; (func status data1 data2 stream)
+                  function)
+                 (otherwise
+                  (if (eq (first lambda-list) '&rest)
+                      ;; No wrapper:
+                      ;; (func &rest arguments)
+                      function
+                      (error 'alexandria:simple-program-error
+                        :format-control "MIDI responder function with invalid ~
+                                         number of arguments: ~D"
+                        :format-arguments (list len))))))
+        ;; No wrapper:
+        ;; (func status data1 data2 &optional stream)
+        (t function))))
+
 (in-package :cl-orgelctl)
 
 (defparameter *orgel-keymaps* nil)
@@ -72,7 +111,7 @@
                  (list
                   (find-entry (1+ (floor (+ keynum offset) 16))
                               (1+ (mod (+ keynum offset) 16))))))  
-  (loop ;;; Keynums 24->103 for organs freqs in sorted order
+  (loop ;;; Keynums 24->103 for organ freqs in sorted order
     with keymap = (aref *orgel-keymaps* 2) 
         for keynum from 24 to 103
         with offset = -24
@@ -103,8 +142,7 @@
     for entry across keymap
     for keynum from 0
     if (null entry) ;;; fill in gaps
-      do (setf (aref keymap keynum)
-               (list (find-orgel-partial (mtof keynum))))
+      do (setf (aref keymap keynum) (list (find-orgel-partial (mtof keynum))))
     else do (let ((len (length entry))) ;;; cons length for entries
                                         ;;; with more than one partial
               (if (> len 1) (setf (aref keymap keynum)
@@ -113,65 +151,97 @@
 ;;; (init-orgel-keymaps)
 
 (defun find-entry (orgelno faderno &key (freqs *orgel-freqs*))
+  "retrieve the entry of orgelno and faderno from *orgel-freqs*."
     (find (list orgelno faderno) freqs :key #'cddr :test #'equal))
 
 ;;; (find-entry 1 2) (55.0 33.0 1 2)
 
-(defun get-keymap-entry (keynum chan)
+(defun get-closest (keynum entry)
+  "search a list of (freq keynum orgelno faderno) sorted by keynum and
+return the element closest to the supplied keynum."
+  (loop
+    for (partial1 partial2) on entry while partial2
+    for keynum1 = (second partial1)
+    for keynum2 = (second partial2)
+    until (<= keynum1 keynum keynum2)
+    finally (return (if (< (- keynum keynum1) (- keynum2 keynum))
+                        partial1 partial2))))
+
+(defun get-keymap-entry (keynum chan &key (select :random))
+  "get one entry from the keymap at chan according to keynum. The
+keymaps contain lists in the form (freq cent orgelno faderno). If more
+than one partial is associated with keynum, the first element of the
+list at keynum is the length of the following lists to be used to
+retrieve a random element."
   (let ((entry (aref (aref *orgel-keymaps* chan) keynum)))
-    (if (numberp (first entry))
-        (elt (cdr entry) (random (first entry)))
+    (if (numberp (first entry)) ;;; more than one list in entry
+        (case select
+          (:random (elt (cdr entry) (random (first entry))))
+          (:first (second entry))
+          (:last (first (last entry)))
+          (:closest (get-closest keynum (cdr entry))))
         (first entry))))
 
 ;;; (get-keymap-entry 60 5)
 
- ;;; we use *keymap-note-responder-fn* definied here as a responder
-;;; function for midi-events because we create and maintain a
-;;; "pending" list which contains all pending note events. Using the
-;;; paramezter *keymap-note-responder-fn* we can access the function
-;;; for inspecting and clearing the list by calling it with a keyword
-;;; as first element instead of a status byte. In this case d1 and d2
-;;; are not used and are therefore declared &optional.
+(defmacro remove-1 (elem list &key test (from-end t))
+"destructively remove 1 occurence of elem from list, starting at the
+end and reset the list to the result."
+  `(setf ,list (delete ,elem ,list :test (or ,test #'equal) :count 1 :from-end ,from-end)))
+
+;;; We use the parameter *keymap-note-responder-fn* defined below as a
+;;; responder function for midi-note-events because we create and
+;;; maintain a "pending" list which contains all pending note
+;;; events. Using the parameter we can access the function for
+;;; inspecting and clearing the list by calling it with a keyword as
+;;; first element instead of a status byte like this:
+;;;
+;;; (funcall *keymap-note-responder-fn* :clear)
+;;;
+;;; As d1 and d2 are not used in such cases they have to be declared
+;;; &optional.
 
 (defparameter *keymap-note-responder-fn*
   (let ((pending nil))
-    (lambda (st d1 d2)
+    (lambda (st &optional d1 d2)
       (case (if (numberp st) (cm:status->opcode st) st)
+        ;;; Midi messages
         (:note-on (let* ((chan (cm:status->channel st))
                          (val (float (/ d2 127) 1.0))
                          (entry (get-keymap-entry d1 chan)))
-                    (format t "note-on: ~a ~a ~%" d1 d2)
                     (destructuring-bind
                         (&optional freq keynum orgelno faderno) entry
                       (declare (ignore freq keynum))
                       (when orgelno
                         (orgel-ctl-fader (orgel-name orgelno) :osc-level faderno val)
-                        (push (list* d1 entry) pending)))))
+                        (push (list* d1 entry) pending) ;;; register entry
+                        ))))
         (:note-off
 ;;;             (format t "note-off: ~a ~a ~%" d1 d2)
          (unless *sticky* (let ((entry (assoc d1 pending)))
-                            (if entry
-                                (orgel-ctl-fader (orgel-name (fourth entry))
-                                                 :osc-level (fifth entry) 0.0))
-                            (setf pending (delete entry pending :test #'equal :count 1 :from-end t))
-                            ;;; (format t "pending: ~a~%" pending)
-                            )))
+                            (when entry
+                              (orgel-ctl-fader (orgel-name (fourth entry))
+                                               :osc-level (fifth entry) 0.0)
+                              (remove-1 entry pending) ;;; unregister entry
+                              ))))
+        ;;; additional messages
         (:clear
          (dolist (entry pending)
            (orgel-ctl-fader (orgel-name (fourth entry))
                             :osc-level (fifth entry) 0.0))
          (setf pending nil))
-        (:print (if pending
-                    (format t "pending: ~{~a~^, ~}~%" pending)
-                    (format t "no pending notes~%")))))))
+        (:print
+         (if pending
+             (format t "pending: ~{~a~^, ~}~%" pending)
+             (format t "no pending notes~%")))))))
 
 (defun clear-keymap-responders ()
-  (funcall *keymap-note-responder-fn* :clear nil nil))
+  (funcall *keymap-note-responder-fn* :clear))
 
 ;;; (clear-keymap-responders)
 
 (defun print-pending-keymap-responders ()
-  (funcall *keymap-note-responder-fn* :print nil nil))
+  (funcall *keymap-note-responder-fn* :print))
 
 ;;; (print-pending-keymap-responders)
 
@@ -192,4 +262,5 @@
   (if *orgel-keymap-note-responder*
       (incudine::remove-responder *orgel-keymap-note-responder*))
   :stopped)
+
 

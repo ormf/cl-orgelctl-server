@@ -38,6 +38,7 @@
 (defparameter *orgel-note-responder* nil)
 
 (defun make-orgel-note-responder ()
+  (if *orgel-note-responder* (incudine::remove-responder *orgel-note-responder*))
   (setf *orgel-note-responder*
         (incudine:make-responder
          cm:*midi-in1*
