@@ -654,8 +654,14 @@ https://hmwk.heconf.de/r?room=HMWK%3A+MPK-Digitalisierung
 (make-orgel-responders (:level :delay :q :gain :osc-level))
 
 
-
+(setf *debug* t)
 clog-connection::*connection-data*
+
+(let ((res '()))
+  (maphash (lambda (key val) (push key res))
+           clog-connection::*connection-data*)
+  res)
+
 
 *curr-state*
 
@@ -826,3 +832,15 @@ clog-connection::*connection-data*
 (make-all-responders *num-orgel* *oscin*)
 
 
+(let ((result nil))
+  (maphash (lambda (key val) (push (gethash "orgel-gui" val)
+                              result))
+           clog-connection::*connection-data*)
+  (setf (clog::attribute (first (cl-orgel-gui::orgel-meters (aref (cl-orgel-gui::orgel-gui-orgeln (first result)) 0)))
+                   "data-db") -100))
+
+(setf *debug* t)
+
+*curr-state*
+
+(setf (cl-orgel-gui::orgel-gui-orgeln cl-orgel-gui::*curr-orgel-state*) *curr-state*)

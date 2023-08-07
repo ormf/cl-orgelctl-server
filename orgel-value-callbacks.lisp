@@ -58,27 +58,8 @@
                clog-connection::*connection-data*))
   (mapcar #'funcall (slot-value (aref *osc-responder-registry* orgelidx) target)))
 
-(defun make-orgel-array-receiver (slot orgel-idx global-orgel-ref)
-  (let ((accessor (cl-orgel-gui::slot->function "orgel" slot)))
-    (lambda (idx val self)
-      (let* ((val-string (ensure-string val))
-;;;             (num-val (read-from-string val-string))
-             )
-        (setf (aref (funcall accessor global-orgel-ref) idx) val-string)
-        (maphash (lambda (connection-id connection-hash)
-                   (declare (ignore connection-id))
-;;;                   (break "~a" (gethash "orgel-gui" connection-hash))
-                   (let* ((orgel-gui (gethash "orgel-gui" connection-hash))
-                          (orgel (aref (orgel-gui-orgeln orgel-gui) orgel-idx)))
-                     (when orgel-gui (let ((elem (aref (funcall accessor orgel) idx)))
-;;;                                       (break "~a" orgel)
-                                       (unless (equal self elem) (setf (value elem) val-string))))))
-                 clog-connection::*connection-data*)))))
-
-
 ;;; (orgel-ctl (orgel-name 1) :base-freq 28)
 
-(cl-orgel-gui::slot->function "orgel" 'base-freq)
 
 (defun orgel-fader-value-callback (orgelidx target faderidx value src)
   (let ((f-idx (round (1- faderidx))))
@@ -103,10 +84,25 @@
 ;;; (orgel-fader-value-callback 0 'level 3 0.7 nil)
 
 (defun orgel-mlevel-value-callback (orgelidx faderidx value src)
-  (declare (ignore src))
   (let ((f-idx (round (1- faderidx))))
+;;;    (format t "mlevel2-value-callback: ~a ~a ~a~%" orgelidx faderidx value)
     (setf (aref (aref *orgel-mlevel* orgelidx) f-idx) value)
-    (orgel-ctl-fader (orgel-name (1+ orgelidx)) :mlevel faderidx value)
+;;;    (orgel-ctl-fader (orgel-name (1+ orgelidx)) :mlevel faderidx value)
+    (let ((accessor (cl-orgel-gui::slot->function "orgel" 'meters))
+          (val-string (cl-orgel-gui::ensure-string (- value 100))))
+        (maphash (lambda (connection-id connection-hash)
+                   (declare (ignore connection-id))
+;;;                   (break "~a" (gethash "orgel-gui" connection-hash))
+                   (let* ((orgel-gui (gethash "orgel-gui" connection-hash))
+                          (orgel (aref (cl-orgel-gui::orgel-gui-orgeln orgel-gui) orgelidx)))
+                     (when orgel-gui
+;;;                       (format t "~a" (funcall accessor orgel))
+                       (let ((elem (elt (funcall accessor orgel) (round (1- faderidx)))))
+;;;                                       (break "self: ~a~% elem: ~a" self elem)
+                                       (unless (equal src elem) (setf (clog::attribute elem "data-db") val-string))))))
+                 clog-connection::*connection-data*))
     (mapcar #'funcall (aref
-                       (slot-value (aref *osc-responder-registry* orgelidx) :mlevel)
+                       (slot-value (aref *osc-responder-registry* orgelidx) 'mlevel)
                        f-idx))))
+
+
