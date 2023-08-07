@@ -655,6 +655,7 @@ https://hmwk.heconf.de/r?room=HMWK%3A+MPK-Digitalisierung
 
 
 
+clog-connection::*connection-data*
 
 *curr-state*
 
