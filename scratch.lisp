@@ -656,7 +656,7 @@ https://hmwk.heconf.de/r?room=HMWK%3A+MPK-Digitalisierung
 
 
 
-
+*curr-state*
 
 
 (define-orgel-responder :level)
@@ -783,3 +783,45 @@ https://hmwk.heconf.de/r?room=HMWK%3A+MPK-Digitalisierung
   (member (first (slot-value (aref *osc-responder-registry* 0) 'bias-pos))
           (slot-value orgel-registry 'bias-pos))
   )
+
+
+(orgel-ctl :orgel01 :main 0.3)
+
+(orgel-ctl :orgel01 :base-freq 411.7)
+
+(orgel-ctl-fader :orgel01 :level 1 0.5)
+(orgel-ctl-fader :orgel01 "osc-level" 1 0)
+
+(symbol-function (orgel-slot-name (symbol-value :level)))
+
+(setf (orgel-base-freq (aref *curr-state* 2)) (float 231))
+
+(setf (slot-value (aref *curr-state* 2) 'base-freq) (float 265))
+
+(lambda (f)
+  (setf (,(orgel-slot-name (symbol-value target)) (aref *curr-state* ,orgelidx)) f)
+  (mapcar #'funcall (slot-value (aref *osc-responder-registry* ,orgelidx)
+                                ',(read-from-string (format nil "~a" (symbol-value target)))))
+  (if *debug* (format t "orgel~2,'0d: ~a ~a~%" ,(1+ orgelidx) ,target f)))
+
+
+  (setf (aref (,(orgel-slot-name (symbol-value target)) (aref *curr-state* ,orgelidx)) (round (1- i))) f)
+            (mapcar #'funcall (aref
+                               (slot-value (aref *osc-responder-registry* ,orgelidx)
+                                          ',(read-from-string (format nil "~a" (symbol-value target))))
+                               (round (1- i))))
+
+(lambda (i f)
+  (setf (aref (aref *orgel-mlevel* ,orgelidx) (round (1- i))) f)
+  (mapcar #'funcall (aref
+                     (slot-value (aref *osc-responder-registry* ,orgelidx)
+                                 ',(read-from-string (format nil "~a" (symbol-value target))))
+                     (round (1- i)))))
+
+*curr-state*
+*orgel-mlevel*
+(setf *debug* t)
+
+(make-all-responders *num-orgel* *oscin*)
+
+

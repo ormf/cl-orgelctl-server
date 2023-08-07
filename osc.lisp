@@ -111,16 +111,14 @@ collect `(setf (,(read-from-string (format nil "orgel-registry-~a" target)) (are
 
 
 (defmacro define-orgel-fader-responder (stream orgelidx target)
+  "responder for the fader controllers of the 16 partials (level, delay,
+bp, gain, osc-level)."
   `(list ,target
          (incudine::make-osc-responder
           ,stream ,(format nil "/orgel~2,'0d/~a" (1+ orgelidx) (symbol-value target)) "ff"
-          (lambda (i f)
-            (setf (aref (,(orgel-slot-name (symbol-value target)) (aref *curr-state* ,orgelidx)) (round (1- i))) f)
-            (mapcar #'funcall (aref
-                               (slot-value (aref *osc-responder-registry* ,orgelidx)
-                                          ',(read-from-string (format nil "~a" (symbol-value target))))
-                               (round (1- i))))
-            (if *debug* (format t "orgel~2,'0d: ~a ~a ~a~%" ,(1+ orgelidx) ,target (round i) f))))))
+          (lambda (faderidx value)
+            (orgel-fader-value-callback ,orgelidx ',(read-from-string (format nil "~a" (symbol-value target))) faderidx value nil)
+            (if *debug* (format t "orgel~2,'0d: ~a ~a ~a~%" ,(1+ orgelidx) ,target (round faderidx) value))))))
 
 (defmacro get-orgel-fader-responders (stream orgelidx targets)
   `(append
@@ -128,14 +126,16 @@ collect `(setf (,(read-from-string (format nil "orgel-registry-~a" target)) (are
              collect `(define-orgel-fader-responder ,stream ,orgelidx ,target))))
 
 (defmacro define-orgel-global-responder (stream orgelidx target)
+  "responder for the global parameters of the organ (ramps, base-freq,
+amps, etc.)"
   `(list ,target
          (incudine::make-osc-responder
           ,stream ,(format nil "/orgel~2,'0d/~a" (1+ orgelidx) (symbol-value target)) "f"
-          (lambda (f)
-            (setf (,(orgel-slot-name (symbol-value target)) (aref *curr-state* ,orgelidx)) f)
-            (mapcar #'funcall (slot-value (aref *osc-responder-registry* ,orgelidx)
-                                          ',(read-from-string (format nil "~a" (symbol-value target)))))
-            (if *debug* (format t "orgel~2,'0d: ~a ~a~%" ,(1+ orgelidx) ,target f))))))
+          (lambda (value)
+            (orgel-global-value-callback ,orgelidx ',(read-from-string (format nil "~a" (symbol-value target))) value nil)
+            (if *debug* (format t "orgel~2,'0d: ~a ~a~%" ,(1+ orgelidx) ,target value))))))
+
+;;; (define-orgel-global-responder 'osc-stream 0 :base-freq)
 
 (defmacro get-orgel-global-responders (stream orgelidx targets)
   `(append
@@ -143,16 +143,13 @@ collect `(setf (,(read-from-string (format nil "orgel-registry-~a" target)) (are
              collect `(define-orgel-global-responder ,stream ,orgelidx ,target))))
 
 (defmacro define-orgel-measure-responder (stream orgelidx target)
+  "responder for the 16 output level meters."
   `(list ,target
          (incudine::make-osc-responder
           ,stream ,(format nil "/orgel~2,'0d/~a" (1+ orgelidx) (symbol-value target)) "ff"
-          (lambda (i f)
-            (setf (aref (aref *orgel-mlevel* ,orgelidx) (round (1- i))) f)
-            (mapcar #'funcall (aref
-                               (slot-value (aref *osc-responder-registry* ,orgelidx)
-                                           ',(read-from-string (format nil "~a" (symbol-value target))))
-                               (round (1- i))))
-            (if *debug* (format t "orgel~2,'0d: ~a ~a ~a~%" ,(1+ orgelidx) , target (round i) f))))))
+          (lambda (faderidx value)
+            (orgel-mlevel-value-callback ,orgelidx faderidx value nil)
+            (if *debug* (format t "orgel~2,'0d: ~a ~a ~a~%" ,(1+ orgelidx) ,target (round faderidx) value))))))
 
 (defmacro get-orgel-measure-responders (stream orgelidx targets)
   `(append
@@ -307,7 +304,9 @@ collect `(setf (,(read-from-string (format nil "orgel-registry-~a" target)) (are
       (format nil "orgel~2,'0d" target)))
 
 (defun orgel-ctl (orgeltarget target val)
-  (let ((form (if (listp target) target (gethash target *observed*)))
+  (let ((form (cond ((listp target) target)
+                    ((keywordp target) (gethash target *observed*))
+                    (t (list target))))
         (orgeltarget (target-key orgeltarget)))
     (unless form (error "target ~S doesn't exist" target))
     (if (cdr form)
