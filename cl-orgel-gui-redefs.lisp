@@ -81,3 +81,64 @@
 ;;;                                       (break "~a" orgel)
                                        (unless (equal self elem) (setf (value elem) val-string))))))
                  clog-connection::*connection-data*)))))
+
+
+(defun create-preset-panel (container vu-container)
+  (let ((preset-panel
+          (create-div container :height 80
+                         :style "border: thin solid black;position: absolute;top: 0;left: 0;display: none;justify-content: space-between;width: 100%;")))
+    (create-div preset-panel :content "Presets" :style "margin: 2px;")
+    (let* ((prv (init-button preset-panel :content "prev" :active-bg "orange"
+                                          :background "#bbb" :style "font-size: 8px;"))
+           (nb (numbox preset-panel :size 6 :min 0 :max 127))
+           (nxt (init-button preset-panel :content "next" :active-bg "orange"
+                                          :background "#bbb" :style "font-size: 8px;")))
+      (set-on-click
+       prv
+       (lambda (obj)
+         (declare (ignore obj))
+         (let ((curr (read-from-string (value nb))))
+           (when (> curr (read-from-string (attribute nb "min")))
+             (setf (value nb) (1- curr))))))
+      (set-on-click
+       nxt
+       (lambda (obj)
+         (declare (ignore obj))
+         (let ((curr (read-from-string (value nb))))
+           (when (< curr (read-from-string (attribute nb "max")))
+             (setf (value nb) (1+ curr))))))
+      (create-br preset-panel)
+      (let ((recall-btn
+              (init-button preset-panel :content "recall" :active-bg "orange"
+                                        :background "#d5ffd5" :style "font-size: 8px;"))
+            (store-btn
+              (init-button preset-panel :content "store" :active-bg "orange"
+                                        :background "#ffd5d5" :style "font-size: 8px;"))
+            load-btn
+            save-btn)
+        (create-br preset-panel)
+        (setf load-btn (init-button preset-panel :content "load" :active-bg "orange"
+                                                 :background "#d5ffd5" :style "font-size: 8px;"))
+        (setf save-btn (init-button preset-panel :content "save" :active-bg "orange"
+                                                 :background "#ffd5d5" :style "font-size: 8px;"))
+        (set-on-click
+         recall-btn
+         (lambda (obj)
+           (declare (ignore obj))
+           (cl-orgelctl::recall-orgel-preset (round (read-from-string (value nb))))))
+        (set-on-click
+         store-btn
+         (lambda (obj)
+           (declare (ignore obj))
+           (cl-orgelctl::store-orgel-preset (round (read-from-string (value nb))))))
+        (set-on-click
+         load-btn
+         (lambda (obj)
+           (declare (ignore obj))
+           (cl-orgelctl::load-orgel-presets)))
+        (set-on-click
+         save-btn
+         (lambda (obj)
+           (declare (ignore obj))
+           (cl-orgelctl::save-orgel-presets)))
+        (install-preset-key-switch container (html-id vu-container) (html-id preset-panel))))))
