@@ -308,6 +308,7 @@ amps, etc.)"
                     ((keywordp target) (gethash target *observed*))
                     (t (list target))))
         (orgeltarget (target-key orgeltarget)))
+    (format t (format nil "/~a/~a" orgeltarget (first form)))
     (unless form (error "target ~S doesn't exist" target))
     (if (cdr form)
         (incudine.osc:message *oscout* (format nil "/~a/~a" orgeltarget (first form)) "if"
