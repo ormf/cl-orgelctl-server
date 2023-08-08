@@ -19,6 +19,7 @@
                (:file "preset-parser")
                (:file "presets")
                (:file "utils")
+               (:file "cl-orgel-gui-redefs")
                (:file "database")
                (:file "midi-cc-handler")
                (:file "midi-notein-handler")

@@ -19,7 +19,7 @@
 ;;; **********************************************************************
 
 (in-package :cl-orgelctl)
-
+#|
 (defstruct orgel
   (base-freq 0.0 :type float)
   (phase 0.0 :type float)
@@ -38,6 +38,7 @@
   (q (make-array 16 :initial-element 0.0) :type simple-array)
   (gain (make-array 16 :initial-element 0.0) :type simple-array)
   (osc-level (make-array 16 :initial-element 0.0) :type simple-array))
+|#
 
 (defun copy-orgel (original)
   (make-orgel

@@ -36,9 +36,9 @@
 ;;; registry for functions to be called on incoming osc messages
 
 (defparameter *osc-responder-registry*
-  (make-array *num-orgel*
+  (make-array *orgelcount*
               :initial-contents (loop
-                                  for i below *num-orgel*
+                                  for i below *orgelcount*
                                   collect (make-instance 'orgel-registry))))
 #|
 (loop for target in *orgel-global-targets*
@@ -51,7 +51,7 @@ collect `(setf (,(read-from-string (format nil "orgel-registry-~a" target)) (are
 (defun clear-osc-responder-registry ()
   "clear all function calls to be called on osc message receive."
   (loop
-    for orgelidx below *num-orgel*
+    for orgelidx below *orgelcount*
     do (progn
          (setf (slot-value (aref *osc-responder-registry* orgelidx) 'base-freq) nil)
          (setf (slot-value (aref *osc-responder-registry* orgelidx) 'phase) nil)
@@ -251,7 +251,7 @@ amps, etc.)"
                            (get-orgel-measure-responders ,stream ,orgelidx *orgel-measure-targets*))))
        nil)))
 
-;;; call this in the init file: (make-all-responders *num-orgel* *oscin*)
+;;; call this in the init file: (make-all-responders *orgelcount* *oscin*)
 
 #|
 (defun make-responders (orgelidx &optional (stream *oscin*))

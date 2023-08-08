@@ -25,7 +25,7 @@
 (defparameter *debug* t
    "flag for printing debugging info.")
 
-(defparameter *num-orgel* 10
+(defparameter *orgelcount* 10
   "total num of organs")
 
 (defparameter *base-freqs*
@@ -62,21 +62,22 @@ keynum, orgelno and partialno.")
 (defconstant +phase+ 1)
 (defconstant +invert+ -1)
 
-;;; the current state of all orgel vars:
+#|;;; the current state of all orgel vars:
 
 (defparameter *curr-state*
   (make-array
-   *num-orgel*
+   *orgelcount*
    :element-type 'orgel
-   :initial-contents (loop for i below *num-orgel* collect (make-orgel)))
+   :initial-contents (loop for i below *orgelcount* collect (make-orgel)))
   "State of all faders of the orgel on the pd side.")
+|#
 
 (defparameter *orgel-mlevel*
-  (make-array *num-orgel*
+  (make-array *orgelcount*
               :element-type 'simple-array
               :initial-contents
               (loop
-                for i below *num-orgel*
+                for i below *orgelcount*
                 collect (make-array 16 :element-type 'float
                                        :initial-contents (loop for x below 16 collect 0.0))))
   "all volume levels currently measured in pd (permanently updated).")
@@ -90,7 +91,7 @@ zerobased index.")
 
 ;;; setup of *orgeltargets*
 
-(dotimes (i *num-orgel*)
+(dotimes (i *orgelcount*)
   (setf (gethash (read-from-string (format nil ":orgel~2,'0d" (1+ i)))
                  *orgeltargets*)
         i
@@ -117,7 +118,7 @@ zerobased index.")
     "vector associating orgel numbers with their name.")
 
 (setf *orgel-nr-lookup*
-      (loop for idx below *num-orgel*
+      (loop for idx below *orgelcount*
             for name = (read-from-string (format nil ":orgel~2,'0d" (1+ idx)))
             append (list name (1+ idx)))
 

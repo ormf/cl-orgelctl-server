@@ -30,14 +30,14 @@
    (loop
      for i below 128
      collect (make-array
-              *num-orgel*
+              *orgelcount*
               :initial-contents
               (loop
-                for x below *num-orgel*
+                for x below *orgelcount*
                 collect (make-orgel))))))
 
 (defun copy-orgel-preset (src target)
-  (dotimes (i *num-orgel*)
+  (dotimes (i *orgelcount*)
     (setf (aref target i)
           (copy-orgel (aref src i)))))
 
@@ -80,7 +80,7 @@ interpolating all values between presets <num> and <next>."
 
 (defun recall-orgel-preset (num &optional next interp)
   (when num
-      (loop for orgel below *num-orgel*
+      (loop for orgel below *orgelcount*
             for time from 0 by 0.02
             do (let ((orgel orgel))
                  (cm::at (+ (cm:now) time) (lambda () (recall-orgel orgel num next interp)))))

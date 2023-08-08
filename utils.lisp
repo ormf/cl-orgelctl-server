@@ -299,7 +299,7 @@ elemtn gets nil padded at the end."
                   :from-end t))))))
 
 (defun oscillator-mute ()
-  (loop for orgelidx from 1 to *num-orgel*
+  (loop for orgelidx from 1 to *orgelcount*
         for orgeltarget = (make-keyword (format nil "orgel~2,'0d" orgelidx))
         do (loop for partial from 1 to 16
                  do (orgel-ctl-fader orgeltarget :osc-level partial 0.0))))

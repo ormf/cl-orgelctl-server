@@ -13,7 +13,7 @@
 ;;; (permute)
 
 (incudine:remove-all-responders *oscin*)
-(make-all-responders *num-orgel* *oscin*)
+(make-all-responders *orgelcount* *oscin*)
 
 
 
@@ -28,14 +28,16 @@
 ;;; (clear-keymap-responders)
 
 #|
-(dotimes (idx *num-orgel*)
+(dotimes (idx *orgelcount*)
   (make-responders idx))
-|#
 
 (let ((test (make-orgel)))
   (slot-value test 'ramp-up))
+|#
 
 (incudine:recv-start *oscin*)
 
 ;;; (incudine.osc:close *oscout*)
 ;;; (incudine.osc:close *oscin*)
+
+(start-orgel-gui)

@@ -829,7 +829,7 @@ clog-connection::*connection-data*
 *orgel-mlevel*
 (setf *debug* t)
 
-(make-all-responders *num-orgel* *oscin*)
+(make-all-responders *orgelcount* *oscin*)
 
 
 (let ((result nil))
@@ -841,6 +841,8 @@ clog-connection::*connection-data*
 
 (setf *debug* t)
 
-*curr-state*
+(aref *curr-state* 0)
+
+(make-orgel-val-receiver)
 
 (setf (cl-orgel-gui::orgel-gui-orgeln cl-orgel-gui::*curr-orgel-state*) *curr-state*)
