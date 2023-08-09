@@ -844,6 +844,9 @@ clog-connection::*connection-data*
 
 (aref *curr-state* 0)
 
+(aref *orgel-mlevel* 0)
+
+
 *orgel-presets*
 
 (recall-orgel-preset 0)
