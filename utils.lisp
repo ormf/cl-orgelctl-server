@@ -306,7 +306,6 @@ elemtn gets nil padded at the end."
 
 (defun set-orgel-freqs (base-freqs preset-no)
   (setf *base-freqs* base-freqs)
-
   (setf *orgel-freqs*
         (sort
          (loop

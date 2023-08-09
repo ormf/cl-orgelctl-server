@@ -115,6 +115,18 @@ zerobased index.")
   (mapcar (lambda (key) (intern (symbol-name key)))
           *orgel-fader-targets*))
 
+;;; (mapcar #'cons *orgel-global-targets* *orgel-global-target-syms*)
+
+(defun target-key->sym (key)
+  (cdr
+   (assoc key
+          '((:level . level) (:delay . delay) (:q . q) (:gain . gain) (:osc-level . osc-level)
+            (:base-freq . base-freq) (:phase . phase) (:bias-pos . bias-pos) (:bias-bw . bias-bw)
+            (:bias-type . bias-type) (:main . main) (:min-amp . min-amp) (:max-amp . max-amp)
+            (:ramp-up . ramp-up) (:ramp-down . ramp-down) (:exp-base . exp-base)))))
+
+;;; (target-key->sym :level)
+
 (defparameter *orgel-measure-targets*
   '(:mlevel))
 

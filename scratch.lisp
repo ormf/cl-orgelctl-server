@@ -867,3 +867,10 @@ clog-connection::*connection-data*
   (setf (set-cell-hook (slot-value orgel 'base-freq)) (lambda (val) (format t "hook: base-freq set to ~a~%" val))))
 
 (set-cell (slot-value (aref *curr-state* 0) 'base-freq) 231)
+
+(orgel-ctl)
+
+recall-orgel neu schreiben!
+
+set-orgel-freqs
+coords (ats-cuda) checken!

@@ -291,16 +291,32 @@ amps, etc.)"
 ;;; (incudine.osc:close *oscout*)
 ;;; (incudine.osc:close *oscin*)
 
+#|
 (defun orgel-ctl-fader (orgel target idx val)
   (unless (gethash orgel *orgeltargets*) (error "Orgel \"~S\" doesn't exist" orgel))
 ;;;  (break "orgel: ~a ~a ~a ~a" orgel target idx val)
   (incudine.osc:message *oscout* (format nil "/~a/~a" orgel target) "if" (round idx) (float val 1.0)))
+|#
+
+(defun orgel-ctl-fader (orgel target idx val)
+  (let ((orgelidx (gethash orgel *orgeltargets*)))
+    (unless orgelidx (error "Orgel \"~S\" doesn't exist" orgel))
+;;;  (break "orgel: ~a ~a ~a ~a" orgel target idx val)
+    (set-cell (aref
+               (slot-value (aref *curr-state* orgelidx)
+                           (target-key->sym target))
+               idx)
+              (float val 1.0))))
+
+;;; (orgel-ctl-fader :orgel04 :level 4 0.5)
+
 
 (declaim (inline target-key))
 (defun target-key (target)
   (if (keywordp target) target
       (format nil "orgel~2,'0d" target)))
 
+#|
 (defun orgel-ctl (orgeltarget target val)
   (let ((form (cond ((listp target) target)
                     ((keywordp target) (gethash target *observed*))
@@ -312,6 +328,17 @@ amps, etc.)"
         (incudine.osc:message *oscout* (format nil "/~a/~a" orgeltarget (first form)) "if"
                               (second form) (float val 1.0))
         (incudine.osc:message *oscout* (format nil "/~a/~a" orgeltarget (first form)) "f" (float val 1.0)))))
+|#
+
+(defun orgel-ctl (orgel target val)
+  (let ((orgelidx (gethash orgel *orgeltargets*)))
+    (unless orgelidx (error "Orgel \"~S\" doesn't exist" orgel))
+;;;  (break "orgel: ~a ~a ~a ~a" orgel target idx val)
+    (set-cell (slot-value (aref *curr-state* orgelidx)
+                          (target-key->sym target))
+              (float val 1.0))))
+
+;;; (orgel-ctl :orgel01 :base-freq 431)
 
 (defun global-to-pd (orgeltarget target val)
   (let ((form (cond ((listp target) target)
