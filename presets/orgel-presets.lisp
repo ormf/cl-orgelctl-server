@@ -1,7 +1,7 @@
 (in-package :cl-orgelctl)
 (setf *orgel-presets* 
 #(#(#S(orgel
-       :base-freq 132.43031
+       :base-freq 55.0
        :phase 1.0
        :bias-pos 0.0
        :bias-bw 0.0
@@ -9,9 +9,9 @@
        :main 0.0
        :min-amp 0.0
        :max-amp 1.0
-       :ramp-up 166.0
-       :ramp-down 166.0
-       :exp-base 0.5
+       :ramp-up 239.0
+       :ramp-down 239.0
+       :exp-base 0.8
        :level #(0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
                 0.0)
        :delay #(0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
@@ -21,17 +21,17 @@
        :osc-level #(0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
                     0.0))
     #S(orgel
-       :base-freq 0.0
-       :phase 0.0
+       :base-freq 64.80359
+       :phase 1.0
        :bias-pos 0.0
        :bias-bw 0.0
        :bias-type 0.0
        :main 0.0
        :min-amp 0.0
-       :max-amp 0.0
-       :ramp-up 0.0
-       :ramp-down 0.0
-       :exp-base 0.0
+       :max-amp 1.0
+       :ramp-up 239.0
+       :ramp-down 239.0
+       :exp-base 0.8
        :level #(0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
                 0.0)
        :delay #(0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
@@ -41,17 +41,17 @@
        :osc-level #(0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
                     0.0))
     #S(orgel
-       :base-freq 0.0
-       :phase 0.0
+       :base-freq 76.99092
+       :phase 1.0
        :bias-pos 0.0
        :bias-bw 0.0
        :bias-type 0.0
        :main 0.0
        :min-amp 0.0
-       :max-amp 0.0
-       :ramp-up 0.0
-       :ramp-down 0.0
-       :exp-base 0.0
+       :max-amp 1.0
+       :ramp-up 239.0
+       :ramp-down 239.0
+       :exp-base 0.8
        :level #(0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
                 0.0)
        :delay #(0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
@@ -61,17 +61,17 @@
        :osc-level #(0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
                     0.0))
     #S(orgel
-       :base-freq 0.0
-       :phase 0.0
+       :base-freq 92.39422
+       :phase 1.0
        :bias-pos 0.0
        :bias-bw 0.0
        :bias-type 0.0
        :main 0.0
        :min-amp 0.0
-       :max-amp 0.0
-       :ramp-up 0.0
-       :ramp-down 0.0
-       :exp-base 0.0
+       :max-amp 1.0
+       :ramp-up 239.0
+       :ramp-down 239.0
+       :exp-base 0.8
        :level #(0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
                 0.0)
        :delay #(0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
@@ -81,17 +81,17 @@
        :osc-level #(0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
                     0.0))
     #S(orgel
-       :base-freq 0.0
-       :phase 0.0
+       :base-freq 112.265175
+       :phase 1.0
        :bias-pos 0.0
        :bias-bw 0.0
        :bias-type 0.0
        :main 0.0
        :min-amp 0.0
-       :max-amp 0.0
-       :ramp-up 0.0
-       :ramp-down 0.0
-       :exp-base 0.0
+       :max-amp 1.0
+       :ramp-up 239.0
+       :ramp-down 239.0
+       :exp-base 0.8
        :level #(0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
                 0.0)
        :delay #(0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
@@ -101,17 +101,17 @@
        :osc-level #(0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
                     0.0))
     #S(orgel
-       :base-freq 0.0
-       :phase 0.0
+       :base-freq 138.57497
+       :phase 1.0
        :bias-pos 0.0
        :bias-bw 0.0
        :bias-type 0.0
        :main 0.0
        :min-amp 0.0
-       :max-amp 0.0
-       :ramp-up 0.0
-       :ramp-down 0.0
-       :exp-base 0.0
+       :max-amp 1.0
+       :ramp-up 239.0
+       :ramp-down 239.0
+       :exp-base 0.8
        :level #(0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
                 0.0)
        :delay #(0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
@@ -121,17 +121,17 @@
        :osc-level #(0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
                     0.0))
     #S(orgel
-       :base-freq 0.0
-       :phase 0.0
+       :base-freq 174.61412
+       :phase 1.0
        :bias-pos 0.0
        :bias-bw 0.0
        :bias-type 0.0
        :main 0.0
        :min-amp 0.0
-       :max-amp 0.0
-       :ramp-up 0.0
-       :ramp-down 0.0
-       :exp-base 0.0
+       :max-amp 1.0
+       :ramp-up 239.0
+       :ramp-down 239.0
+       :exp-base 0.8
        :level #(0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
                 0.0)
        :delay #(0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
@@ -141,17 +141,17 @@
        :osc-level #(0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
                     0.0))
     #S(orgel
-       :base-freq 0.0
-       :phase 0.0
+       :base-freq 226.31241
+       :phase 1.0
        :bias-pos 0.0
        :bias-bw 0.0
        :bias-type 0.0
        :main 0.0
        :min-amp 0.0
-       :max-amp 0.0
-       :ramp-up 0.0
-       :ramp-down 0.0
-       :exp-base 0.0
+       :max-amp 1.0
+       :ramp-up 239.0
+       :ramp-down 239.0
+       :exp-base 0.8
        :level #(0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
                 0.0)
        :delay #(0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
@@ -161,17 +161,17 @@
        :osc-level #(0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
                     0.0))
     #S(orgel
-       :base-freq 0.0
-       :phase 0.0
+       :base-freq 305.53867
+       :phase 1.0
        :bias-pos 0.0
        :bias-bw 0.0
        :bias-type 0.0
        :main 0.0
        :min-amp 0.0
-       :max-amp 0.0
-       :ramp-up 0.0
-       :ramp-down 0.0
-       :exp-base 0.0
+       :max-amp 1.0
+       :ramp-up 239.0
+       :ramp-down 239.0
+       :exp-base 0.8
        :level #(0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
                 0.0)
        :delay #(0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
@@ -181,17 +181,17 @@
        :osc-level #(0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
                     0.0))
     #S(orgel
-       :base-freq 0.0
-       :phase 0.0
+       :base-freq 440.0
+       :phase 1.0
        :bias-pos 0.0
        :bias-bw 0.0
        :bias-type 0.0
        :main 0.0
        :min-amp 0.0
-       :max-amp 0.0
-       :ramp-up 0.0
-       :ramp-down 0.0
-       :exp-base 0.0
+       :max-amp 1.0
+       :ramp-up 239.0
+       :ramp-down 239.0
+       :exp-base 0.8
        :level #(0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
                 0.0)
        :delay #(0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
@@ -623,7 +623,7 @@
     #S(orgel
        :base-freq 64.80359
        :phase 1.0
-       :bias-pos 0.49586776
+       :bias-pos 0.0
        :bias-bw 0.0
        :bias-type 0.0
        :main 0.0
