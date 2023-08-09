@@ -72,6 +72,7 @@ keynum, orgelno and partialno.")
   "State of all faders of the orgel on the pd side.")
 |#
 
+#|
 (defparameter *orgel-mlevel*
   (make-array *orgelcount*
               :element-type 'simple-array
@@ -81,6 +82,7 @@ keynum, orgelno and partialno.")
                 collect (make-array 16 :element-type 'float
                                        :initial-contents (loop for x below 16 collect 0.0))))
   "all volume levels currently measured in pd (permanently updated).")
+|#
 
 (defparameter *orgeltargets* (make-hash-table)
   "lookup of orgelname (as keyword) or orgelnumber (starting from 1 to

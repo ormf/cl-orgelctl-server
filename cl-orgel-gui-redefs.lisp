@@ -39,9 +39,10 @@
 ;;;                                       (break "self: ~a~% elem: ~a" self elem)
                                        (unless (equal self elem) (setf (attribute elem attribute) val-string))))))
                  clog-connection::*connection-data*)))))
-(cl-orgelctl::orgel-ctl :orgel01 :bias-type 0)
 
-(cl-orgelctl::orgel-ctl :orgel01 :phase -1.0)
+;;; (cl-orgelctl::orgel-ctl :orgel01 :bias-type 0)
+
+;;; (cl-orgelctl::orgel-ctl :orgel01 :phase -1.0)
 
 (defun make-orgel-val-receiver (slot orgelidx global-orgel-ref)
   (let ((slot-symbol (intern (format nil "~:@(~a~)" slot) 'cl-orgel-gui)))
