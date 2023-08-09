@@ -313,3 +313,19 @@ amps, etc.)"
                               (second form) (float val 1.0))
         (incudine.osc:message *oscout* (format nil "/~a/~a" orgeltarget (first form)) "f" (float val 1.0)))))
 
+(defun global-to-pd (orgeltarget target val)
+  (let ((form (cond ((listp target) target)
+                    ((keywordp target) (gethash target *observed*))
+                    (t (list target))))
+        (orgeltarget (target-key orgeltarget)))
+    (if *debug* (format t (format nil "/~a/~a" orgeltarget (first form))))
+    (unless form (error "target ~S doesn't exist" target))
+    (if (cdr form)
+        (incudine.osc:message *oscout* (format nil "/~a/~a" orgeltarget (first form)) "if"
+                              (second form) (float val 1.0))
+        (incudine.osc:message *oscout* (format nil "/~a/~a" orgeltarget (first form)) "f" (float val 1.0)))))
+
+(defun fader-to-pd (orgel target idx val)
+  (unless (gethash orgel *orgeltargets*) (error "Orgel \"~S\" doesn't exist" orgel))
+;;;  (break "orgel: ~a ~a ~a ~a" orgel target idx val)
+  (incudine.osc:message *oscout* (format nil "/~a/~a" orgel target) "if" (round idx) (float val 1.0)))

@@ -858,3 +858,9 @@ clog-connection::*connection-data*
 (setf (cl-orgel-gui::orgel-gui-orgeln cl-orgel-gui::*curr-orgel-state*) *curr-state*)
 
 (make-instance 'model-slot)
+
+
+(let ((orgel (aref *curr-state* 0)))
+  (setf (set-cell-hook (slot-value orgel 'base-freq)) (lambda (val) (format t "hook: base-freq set to ~a~%" val))))
+
+(set-cell (slot-value (aref *curr-state* 0) 'base-freq) 231)

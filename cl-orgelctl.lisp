@@ -40,4 +40,6 @@
 ;;; (incudine.osc:close *oscout*)
 ;;; (incudine.osc:close *oscin*)
 
+
+(setup-ref-cell-hooks)
 (start-orgel-gui)
