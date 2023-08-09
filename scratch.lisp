@@ -844,7 +844,13 @@ clog-connection::*connection-data*
 
 (aref *curr-state* 0)
 
-*orgel-presets* 
+*orgel-presets*
+
+(recall-orgel-preset 0)
+
+(let ((preset (elt *orgel-presets* 0)))
+  (dotimes (idx *orgelcount*)
+    (val-orgel->model-orgel (aref preset idx) (aref *curr-state* idx))))
 
 (copy-orgel)
 (make-orgel-val-receiver)

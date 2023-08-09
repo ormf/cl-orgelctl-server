@@ -40,9 +40,9 @@
 
 (in-package :cl-orgelctl)
 
-(defun orgel-access-fn (target)
+(defun val-orgel-access-fn (target)
   "retrieve function object by keyword of its name."
-  (symbol-function (intern (string-upcase (format nil "orgel-~a" target)) :cl-orgelctl)))
+  (symbol-function (intern (string-upcase (format nil "val-orgel-~a" target)) :cl-orgelctl)))
 
 ;;; (orgel-access-fn :level) -> #<function orgel-level>
 

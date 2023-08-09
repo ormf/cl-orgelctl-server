@@ -83,8 +83,10 @@
 
 (defun val-orgel->model-orgel (src dest)
   (dolist (slot *orgel-global-target-syms*)
+    (format t "~S, " slot)
     (setf (val (slot-value dest slot)) (slot-value src slot)))
   (dolist (slot *orgel-fader-target-syms*)
+    (format t "fader: ~S, ~A ~A" slot (slot-value dest slot)(slot-value src slot))
     (dotimes (i 16)
       (setf (val (aref (slot-value dest slot) i)) (aref (slot-value src slot) i)))))
 

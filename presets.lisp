@@ -54,14 +54,14 @@ interpolating all values between presets <num> and <next>."
              (val (if next
                       (+
                        (* (if interp (- 1 interp) 0.5)
-                          (aref (funcall (orgel-access-fn slot)
+                          (aref (funcall (val-orgel-access-fn slot)
                                          (aref (aref *orgel-presets* num) orgelidx))
                                 i))
                        (* (or interp 0.5)
-                          (aref (funcall (orgel-access-fn slot)
+                          (aref (funcall (val-orgel-access-fn slot)
                                          (aref (aref *orgel-presets* next) orgelidx))
                                 i)))
-                      (aref (funcall (orgel-access-fn slot)
+                      (aref (funcall (val-orgel-access-fn slot)
                                      (aref (aref *orgel-presets* num) orgelidx))
                             i)))
              (gui-val (* 100.0 val)))
@@ -82,12 +82,12 @@ interpolating all values between presets <num> and <next>."
            (val (if next
                     (+
                      (* (if interp (- 1 interp) 0.5)
-                        (funcall (orgel-access-fn slot)
+                        (funcall (val-orgel-access-fn slot)
                                  (aref (aref *orgel-presets* num) orgelidx)))
                      (* (or interp 0.5)
-                        (funcall (orgel-access-fn slot)
+                        (funcall (val-orgel-access-fn slot)
                                  (aref (aref *orgel-presets* next) orgelidx))))
-                    (funcall (orgel-access-fn slot) (aref (aref *orgel-presets* num) orgelidx))))
+                    (funcall (val-orgel-access-fn slot) (aref (aref *orgel-presets* num) orgelidx))))
            (gui-val (if (member slot '(:main :bias-pos :bias-bw)) (* val 100.0) val)))
       (if *debug* (format t "sending: orgel~2,'0d: ~a ~a~%" (1+ orgelidx) slot val))
       (maphash (lambda (connection-id connection-hash)
