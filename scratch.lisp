@@ -841,7 +841,7 @@ clog-connection::*connection-data*
 
 (setf *debug* t)
 
-(aref *curr-state* 0)
+(aref *curr-state* 1)
 
 (make-orgel-val-receiver)
 

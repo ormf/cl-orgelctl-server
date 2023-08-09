@@ -76,6 +76,7 @@ interpolating all values between presets <num> and <next>."
                                        (setf (clog:value elem) gui-val)))))
                  clog-connection::*connection-data*)
         (orgel-ctl-fader (orgel-name (1+ orgelidx)) slot (1+ i) val))))
+
   (dolist (slot *orgel-global-targets*) ;;; global slots
     (let* ((slot-symbol (intern (format nil "~:@(~a~)" slot) 'cl-orgel-gui))
            (val (if next
@@ -95,11 +96,14 @@ interpolating all values between presets <num> and <next>."
                  (let* ((orgel-gui (gethash "orgel-gui" connection-hash)))
                    (when orgel-gui (let ((elem (slot-value (aref (cl-orgel-gui::orgel-gui-orgeln orgel-gui) orgelidx) slot-symbol)))
 ;;;                                       (break "self: ~a~% elem: ~a" self elem)
-                                     (if (member slot '(:main :bias-bw))
+                                     (if (member slot '(:main :bias-bw :phase :bias-type))
                                          (setf (clog:attribute elem "data-val") gui-val)
                                          (setf (clog:value elem) gui-val))))))
                  clog-connection::*connection-data*)
       (orgel-ctl (orgel-name (1+ orgelidx)) slot val))))
+
+;;; (recall-orgel 0 2)
+
 
 (defun recall-orgel-preset (num &optional next interp)
   (when num
@@ -109,7 +113,7 @@ interpolating all values between presets <num> and <next>."
                  (cm::at (+ (cm:now) time) (lambda () (recall-orgel orgel num next interp)))))
       (copy-orgel-preset (aref *orgel-presets* num) *curr-state*)))
 
-;;; (recall-orgel-preset 1)
+;;; (recall-orgel-preset 2)
 
 (defun store-orgel-preset (num &key (presets *orgel-presets*))
   (copy-orgel-preset *curr-state* (aref presets num)))

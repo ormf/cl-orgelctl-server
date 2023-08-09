@@ -165,8 +165,7 @@ amps, etc.)"
     ""
     (lambda ()
       ,fn
-      (if *debug*
-          (format t "preset-ctl: ~a~%" ,path)))))
+      (if *debug* (format t "preset-ctl: ~a~%" ,path)))))
 
 (defmacro get-preset-responders (stream)
   `(progn
@@ -181,8 +180,7 @@ amps, etc.)"
       "/preset-ctl/preset-no" "f"
       (lambda (f)
         (setf *curr-orgel-preset-nr* (round f))
-        (if *debug*
-            (format t "preset-ctl: preset-no ~a~%" (round f)))))))
+        (if *debug* (format t "preset-ctl: preset-no ~a~%" (round f)))))))
 
 #|
 (defmacro get-preset-responders (stream)
@@ -308,7 +306,7 @@ amps, etc.)"
                     ((keywordp target) (gethash target *observed*))
                     (t (list target))))
         (orgeltarget (target-key orgeltarget)))
-    (format t (format nil "/~a/~a" orgeltarget (first form)))
+    (if *debug* (format t (format nil "/~a/~a" orgeltarget (first form))))
     (unless form (error "target ~S doesn't exist" target))
     (if (cdr form)
         (incudine.osc:message *oscout* (format nil "/~a/~a" orgeltarget (first form)) "if"

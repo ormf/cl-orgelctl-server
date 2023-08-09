@@ -54,7 +54,6 @@
    :ramp-down (orgel-ramp-down original)
    :exp-base (orgel-exp-base original)
    :level (copy-seq (orgel-level original))
-   :bias-level (copy-seq (orgel-bias-level original))
    :delay (copy-seq (orgel-delay original))
    :q (copy-seq (orgel-q original))
    :gain (copy-seq (orgel-gain original))
