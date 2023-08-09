@@ -19,8 +19,8 @@
 ;;; **********************************************************************
 
 (in-package :cl-orgelctl)
-#|
-(defstruct orgel
+
+(defstruct val-orgel
   (base-freq 0.0 :type float)
   (phase 0.0 :type float)
   (bias-pos 0.0 :type float)
@@ -38,27 +38,55 @@
   (q (make-array 16 :initial-element 0.0) :type simple-array)
   (gain (make-array 16 :initial-element 0.0) :type simple-array)
   (osc-level (make-array 16 :initial-element 0.0) :type simple-array))
-|#
+
 
 (defun copy-orgel (original)
-  (make-orgel
-   :base-freq (orgel-base-freq original)
-   :phase (orgel-phase original)
-   :bias-pos (orgel-bias-pos original)
-   :bias-bw (orgel-bias-bw original)
-   :bias-type (orgel-bias-type original)
-   :main (orgel-main original)
-   :min-amp (orgel-min-amp original)
-   :max-amp (orgel-max-amp original)
-   :ramp-up (orgel-ramp-up original)
-   :ramp-down (orgel-ramp-down original)
-   :exp-base (orgel-exp-base original)
-   :level (copy-seq (orgel-level original))
-   :delay (copy-seq (orgel-delay original))
-   :q (copy-seq (orgel-q original))
-   :gain (copy-seq (orgel-gain original))
-   :osc-level (copy-seq (orgel-osc-level original))))
+  (make-val-orgel
+   :base-freq (val-orgel-base-freq original)
+   :phase (val-orgel-phase original)
+   :bias-pos (val-orgel-bias-pos original)
+   :bias-bw (val-orgel-bias-bw original)
+   :bias-type (val-orgel-bias-type original)
+   :main (val-orgel-main original)
+   :min-amp (val-orgel-min-amp original)
+   :max-amp (val-orgel-max-amp original)
+   :ramp-up (val-orgel-ramp-up original)
+   :ramp-down (val-orgel-ramp-down original)
+   :exp-base (val-orgel-exp-base original)
+   :level (copy-seq (val-orgel-level original))
+   :delay (copy-seq (val-orgel-delay original))
+   :q (copy-seq (val-orgel-q original))
+   :gain (copy-seq (val-orgel-gain original))
+   :osc-level (copy-seq (val-orgel-osc-level original))))
 
+(defun copy-model-seq (model-array)
+  (map 'vector #'val model-array))
+
+(defun model-orgel->val-orgel (original)
+  (make-val-orgel
+   :base-freq (val (orgel-base-freq original))
+   :phase (val (orgel-phase original))
+   :bias-pos (val (orgel-bias-pos original))
+   :bias-bw (val (orgel-bias-bw original))
+   :bias-type (val (orgel-bias-type original))
+   :main (val (orgel-main original))
+   :min-amp (val (orgel-min-amp original))
+   :max-amp (val (orgel-max-amp original))
+   :ramp-up (val (orgel-ramp-up original))
+   :ramp-down (val (orgel-ramp-down original))
+   :exp-base (val (orgel-exp-base original))
+   :level (copy-model-seq (orgel-level original))
+   :delay (copy-model-seq (orgel-delay original))
+   :q (copy-model-seq (orgel-q original))
+   :gain (copy-model-seq (orgel-gain original))
+   :osc-level (copy-model-seq (orgel-osc-level original))))
+
+(defun val-orgel->model-orgel (src dest)
+  (dolist (slot *orgel-global-target-syms*)
+    (setf (val (slot-value dest slot)) (slot-value src slot)))
+  (dolist (slot *orgel-fader-target-syms*)
+    (dotimes (i 16)
+      (setf (val (aref (slot-value dest slot) i)) (aref (slot-value src slot) i)))))
 
 (defclass orgel-registry ()
   ((base-freq :initform nil)

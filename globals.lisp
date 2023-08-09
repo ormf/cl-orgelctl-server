@@ -104,8 +104,16 @@ zerobased index.")
   '(:base-freq :phase :bias-pos :bias-bw :bias-type :main :min-amp :max-amp
     :ramp-up :ramp-down :exp-base))
 
+(defparameter *orgel-global-target-syms*
+  (mapcar (lambda (key) (intern (symbol-name key)))
+          *orgel-global-targets*))
+
 (defparameter *orgel-fader-targets*
-  '(:level :bias-level :delay :q :gain :osc-level :bias-level))
+  '(:level :delay :q :gain :osc-level))
+
+(defparameter *orgel-fader-target-syms*
+  (mapcar (lambda (key) (intern (symbol-name key)))
+          *orgel-fader-targets*))
 
 (defparameter *orgel-measure-targets*
   '(:mlevel))

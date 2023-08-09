@@ -839,10 +839,16 @@ clog-connection::*connection-data*
   (setf (clog::attribute (first (cl-orgel-gui::orgel-meters (aref (cl-orgel-gui::orgel-gui-orgeln (first result)) 0)))
                    "data-db") -100))
 
+(setf *debug* nil)
 (setf *debug* t)
 
-(aref *curr-state* 1)
+(aref *curr-state* 0)
 
+*orgel-presets* 
+
+(copy-orgel)
 (make-orgel-val-receiver)
 
 (setf (cl-orgel-gui::orgel-gui-orgeln cl-orgel-gui::*curr-orgel-state*) *curr-state*)
+
+(make-instance 'model-slot)

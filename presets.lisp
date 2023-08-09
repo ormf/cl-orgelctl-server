@@ -34,7 +34,7 @@
               :initial-contents
               (loop
                 for x below *orgelcount*
-                collect (make-orgel))))))
+                collect (make-val-orgel))))))
 
 (defun copy-orgel-preset (src target)
   (dotimes (i *orgelcount*)
@@ -107,16 +107,20 @@ interpolating all values between presets <num> and <next>."
 
 (defun recall-orgel-preset (num &optional next interp)
   (when num
-      (loop for orgel below *orgelcount*
-            for time from 0 by 0.02
-            do (let ((orgel orgel))
-                 (cm::at (+ (cm:now) time) (lambda () (recall-orgel orgel num next interp)))))
-      (copy-orgel-preset (aref *orgel-presets* num) *curr-state*)))
+    (loop for orgel below *orgelcount*
+          for time from 0 by 0.02
+          do (let ((orgel orgel))
+               (cm::at (+ (cm:now) time) (lambda () (recall-orgel orgel num next interp)))))
+    (let ((preset (elt *orgel-presets* num)))
+      (dotimes (idx *orgelcount*)
+        (val-orgel->model-orgel (aref preset idx) (aref *curr-state* idx) )))))
 
 ;;; (recall-orgel-preset 2)
 
 (defun store-orgel-preset (num &key (presets *orgel-presets*))
-  (copy-orgel-preset *curr-state* (aref presets num)))
+  (let ((preset (aref presets num)))
+    (dotimes (idx *orgelcount*)
+      (setf (aref preset idx) (model-orgel->val-orgel (aref *curr-state* idx) )))))
 
 
 (defun save-orgel-presets (&optional (file *orgel-presets-file*))

@@ -7,8 +7,8 @@
 
 ;;(cm:cd "/home/orm/work/unterricht/frankfurt/ws_22_23/musikinformatik/papierorgel/lisp/cl-orgelctl")
 (uiop:chdir (asdf:system-relative-pathname :cl-orgelctl ""))
-(load-orgel-presets)
-(load-route-presets)
+;;; (load-orgel-presets)
+;;; (load-route-presets)
 
 ;;; (permute)
 

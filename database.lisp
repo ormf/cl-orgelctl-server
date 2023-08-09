@@ -30,7 +30,7 @@ partial-number) sorted by frequency."
   (sort
    (loop
      for orgelidx below (length organstate)
-     for base-freq = (orgel-base-freq (aref *curr-state* orgelidx))
+     for base-freq = (val (orgel-base-freq (aref *curr-state* orgelidx)))
      append (loop for partial from 1 to 16
                   collect (list (* base-freq partial) orgelidx partial)))
    #'<
