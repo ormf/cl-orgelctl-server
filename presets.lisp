@@ -50,7 +50,7 @@ sending the values using osc. <interp> is a value between 0 and 1
 interpolating all values between presets <num> and <next>."
   (dolist (slot '(:level :delay :q :gain :osc-level)) ;;; sliders
     (dotimes (i 16) ;;; iterate over all 16 sliders
-      (let* ((g-accessor (cl-orgel-gui::slot->function "g-orgel" slot))
+      (let* (;; (g-accessor (cl-orgel-gui::slot->function "g-orgel" slot))
              (val (if next
                       (+
                        (* (if interp (- 1 interp) 0.5)
@@ -64,17 +64,18 @@ interpolating all values between presets <num> and <next>."
                       (aref (funcall (val-orgel-access-fn slot)
                                      (aref (aref *orgel-presets* num) orgelidx))
                             i)))
-             (gui-val (* 100.0 val)))
-        (if *debug* (format t "sending: orgel~2,'0d: ~a ~a ~a~%" (1+ orgelidx) slot (1+ i) val))
-        (maphash (lambda (connection-id connection-hash)
-                   (declare (ignore connection-id))
-;;;                   (break "~a" (gethash "orgel-gui" connection-hash))
-                   (let* ((orgel-gui (gethash "orgel-gui" connection-hash))
-                          (orgel (aref (cl-orgel-gui::orgel-gui-orgeln orgel-gui) orgelidx)))
-                     (when orgel-gui (let ((elem (aref (funcall g-accessor orgel) i)))
-;;;                                       (break "~a" orgel)
-                                       (setf (clog:value elem) gui-val)))))
-                 clog-connection::*connection-data*)
+             ;; (gui-val (* 100.0 val))
+             )
+;;         (if *debug* (format t "sending: orgel~2,'0d: ~a ~a ~a~%" (1+ orgelidx) slot (1+ i) val))
+;;         (maphash (lambda (connection-id connection-hash)
+;;                    (declare (ignore connection-id))
+;; ;;;                   (break "~a" (gethash "orgel-gui" connection-hash))
+;;                    (let* ((orgel-gui (gethash "orgel-gui" connection-hash))
+;;                           (orgel (aref (cl-orgel-gui::orgel-gui-orgeln orgel-gui) orgelidx)))
+;;                      (when orgel-gui (let ((elem (aref (funcall g-accessor orgel) i)))
+;; ;;;                                       (break "~a" orgel)
+;;                                        (setf (clog:value elem) gui-val)))))
+;;                  clog-connection::*connection-data*)
         (orgel-ctl-fader (orgel-name (1+ orgelidx)) slot (1+ i) val))))
 
   (dolist (slot *orgel-global-targets*) ;;; global slots

@@ -305,7 +305,7 @@ amps, etc.)"
     (set-cell (aref
                (slot-value (aref *curr-state* orgelidx)
                            (target-key->sym target))
-               idx)
+               (1- idx))
               (float val 1.0))))
 
 ;;; (orgel-ctl-fader :orgel04 :level 4 0.5)
