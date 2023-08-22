@@ -20,17 +20,14 @@
 
 (in-package :cl-orgel-gui)
 
-(defun make-orgel-attr-val-receiver (slot orgelidx global-orgel-ref &key (attribute "data-val"))
-  (declare (ignore attribute orgelidx))
+#|
+(defun make-orgel-attr-val-receiver (slot orgelidx global-orgel-ref)
   (let ((slot-symbol (intern (format nil "~:@(~a~)" slot) 'cl-orgel-gui)))
     (lambda (val self)
       (let* ((val-string (ensure-string val))
-             (orgel-val (/ (read-from-string val-string)
-                           (if (member slot '(:main :bias-bw :bias-pos)) 100.0 1.0))))
-        (set-cell (slot-value global-orgel-ref slot-symbol) orgel-val :src self)
-        #|
-        |#
-        ))))
+             (orgel-val (read-from-string val-string)))
+        (set-cell (slot-value global-orgel-ref slot-symbol) orgel-val :src self)))))
+|#
 
 ;;; (cl-orgelctl::orgel-ctl :orgel01 :bias-type 0)
 
@@ -41,49 +38,18 @@
   (let ((slot-symbol (intern (format nil "~:@(~a~)" slot) 'cl-orgel-gui)))
     (lambda (val self)
       (let* ((val-string (ensure-string val))
-;;;             (num-val (read-from-string val-string))
-             (orgel-val (/ (read-from-string val-string)
-                           (if (member slot '(:main :bias-pos :bias-bw)) 100.0 1.0))))
-;;;        (break "val-receiver: ~S" slot)
-        (set-cell (slot-value global-orgel-ref slot-symbol) orgel-val :src self)
-        #|
-        (cl-orgelctl::orgel-ctl (cl-orgelctl::orgel-name (1+ orgelidx)) slot orgel-val)
-        (maphash (lambda (connection-id connection-hash)
-                   (declare (ignore connection-id))
-;;;                   (break "~a" (gethash "orgel-gui" connection-hash))
-                   (let* ((orgel-gui (gethash "orgel-gui" connection-hash)))
-                     (when orgel-gui (let ((elem (slot-value (aref (orgel-gui-orgeln orgel-gui) orgelidx) slot-symbol)))
-;;;                                       (break "self: ~a~% elem: ~a" self elem)
-                                       (unless (equal self elem) (setf (value elem) val-string))))))
-                 clog-connection::*connection-data*)
-        |#
-
-        ))))
+             (orgel-val (read-from-string val-string)))
+        (set-cell (slot-value global-orgel-ref slot-symbol) orgel-val :src self)))))
 
 (defun make-orgel-array-receiver (slot orgelidx global-orgel-ref)
-  (declare (ignore orgelidx))
+  (declare (ignorable orgelidx))
   (let ((g-accessor (slot->function "g-orgel" slot))
         (accessor (slot->function "orgel" slot)))
     (declare (ignore g-accessor))
     (lambda (idx val self)
-      (let* ((val-string (ensure-string val))
-;;;             (num-val (read-from-string val-string))
-             (orgel-val (/ (read-from-string val-string) 100.0))
-             )
-        (set-cell (aref (funcall accessor global-orgel-ref) idx) orgel-val :src self)
-        #|
-        (cl-orgelctl::orgel-ctl-fader (cl-orgelctl::orgel-name (1+ orgelidx)) slot (1+ idx) orgel-val)
-        (maphash (lambda (connection-id connection-hash)
-                   (declare (ignore connection-id))
-;;;                   (break "~a" (gethash "orgel-gui" connection-hash))
-                   (let* ((orgel-gui (gethash "orgel-gui" connection-hash))
-                          (orgel (aref (orgel-gui-orgeln orgel-gui) orgelidx)))
-                     (when orgel-gui (let ((elem (aref (funcall g-accessor orgel) idx)))
-;;;                                       (break "~a" orgel)
-                                       (unless (equal self elem) (setf (value elem) val-string))))))
-                 clog-connection::*connection-data*)
-        |#
-        ))))
+      (let* ((orgel-val (read-from-string (ensure-string val))))
+ ;;;        (format t "array-received: orgel~2,'0d ~a ~a~%" (1+ orgelidx) idx orgel-val)
+        (set-cell (aref (funcall accessor global-orgel-ref) idx) orgel-val :src self)))))
 
 
 (defun create-preset-panel (container vu-container)
@@ -100,15 +66,15 @@
        prv
        (lambda (obj)
          (declare (ignore obj))
-         (let ((curr (read-from-string (value nb))))
-           (when (> curr (read-from-string (attribute nb "min")))
+         (let ((curr (value nb)))
+           (when (> curr (min-val nb))
              (setf (value nb) (1- curr))))))
       (set-on-click
        nxt
        (lambda (obj)
          (declare (ignore obj))
-         (let ((curr (read-from-string (value nb))))
-           (when (< curr (read-from-string (attribute nb "max")))
+         (let ((curr (value nb)))
+           (when (< curr (max-val nb))
              (setf (value nb) (1+ curr))))))
       (create-br preset-panel)
       (let ((recall-btn
@@ -128,12 +94,12 @@
          recall-btn
          (lambda (obj)
            (declare (ignore obj))
-           (cl-orgelctl::recall-orgel-preset (round (read-from-string (value nb))))))
+           (cl-orgelctl::recall-orgel-preset (round (value nb)))))
         (set-on-click
          store-btn
          (lambda (obj)
            (declare (ignore obj))
-           (cl-orgelctl::store-orgel-preset (round (read-from-string (value nb))))))
+           (cl-orgelctl::store-orgel-preset (round (value nb)))))
         (set-on-click
          load-btn
          (lambda (obj)

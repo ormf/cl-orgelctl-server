@@ -556,6 +556,22 @@ https://hmwk.heconf.de/r?room=HMWK%3A+MPK-Digitalisierung
 
 *curr-state*
 
+(setf *test* (make-instance 'model-slot))
+
+(setf *test2* (make-instance 'value-cell :ref *test*))
+
+(setf (val *test*) 30)
+
+(setf (val *test2*) 45)
+
+(orgel-ctl :orgel01 :ramp-up 23)
+(orgel-ctl :orgel01 :main 0.03)
+
+(orgel-ctl-fader :orgel01 :osc-level 8 0.0)
+(orgel-ctl-fader :orgel01 :osc-level 8 0.4)
+
+(orgel-ctl :orgel01 :base-freq 55)
+
 (defmacro make-orgel-responders (targets)
   (let ((targets targets))
     `,(collect-orgel-responder-defs targets)))

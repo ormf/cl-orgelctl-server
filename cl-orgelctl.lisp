@@ -42,4 +42,5 @@
 
 
 (setup-ref-cell-hooks)
-(start-orgel-gui)
+;;;(start-orgel-gui)
+

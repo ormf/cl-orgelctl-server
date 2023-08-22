@@ -67,7 +67,7 @@ interpolating all values between presets <num> and <next>."
         (orgel-ctl-fader (orgel-name (1+ orgelidx)) slot (1+ i) val))))
 
   (dolist (slot *orgel-global-targets*) ;;; global slots
-    (let* ((slot-symbol (intern (format nil "~:@(~a~)" slot) 'cl-orgel-gui))
+    (let* (;;; (slot-symbol (intern (format nil "~:@(~a~)" slot) 'cl-orgel-gui))
            (val (if next
                     (+
                      (* (if interp (- 1 interp) 0.5)
@@ -76,19 +76,8 @@ interpolating all values between presets <num> and <next>."
                      (* (or interp 0.5)
                         (funcall (val-orgel-access-fn slot)
                                  (aref (aref *orgel-presets* next) orgelidx))))
-                    (funcall (val-orgel-access-fn slot) (aref (aref *orgel-presets* num) orgelidx))))
-           (gui-val (if (member slot '(:main :bias-pos :bias-bw)) (* val 100.0) val)))
+                    (funcall (val-orgel-access-fn slot) (aref (aref *orgel-presets* num) orgelidx)))))
       (if *debug* (format t "sending: orgel~2,'0d: ~a ~a~%" (1+ orgelidx) slot val))
-      (maphash (lambda (connection-id connection-hash)
-                 (declare (ignore connection-id))
-;;;                   (break "~a" (gethash "orgel-gui" connection-hash))
-                 (let* ((orgel-gui (gethash "orgel-gui" connection-hash)))
-                   (when orgel-gui (let ((elem (slot-value (aref (cl-orgel-gui::orgel-gui-orgeln orgel-gui) orgelidx) slot-symbol)))
-;;;                                       (break "self: ~a~% elem: ~a" self elem)
-                                     (if (member slot '(:main :bias-bw :phase :bias-type))
-                                         (setf (clog:attribute elem "data-val") gui-val)
-                                         (setf (clog:value elem) gui-val))))))
-                 clog-connection::*connection-data*)
       (orgel-ctl (orgel-name (1+ orgelidx)) slot val))))
 
 ;;; (recall-orgel 0 2)
@@ -99,7 +88,8 @@ interpolating all values between presets <num> and <next>."
     (loop for orgel below *orgelcount*
           for time from 0 by 0.02
           do (let ((orgel orgel))
-               (cm::at (+ (cm:now) time) (lambda () (recall-orgel orgel num next interp)))))
+               (cm::at (+ (cm:now) time)
+                       (lambda () (recall-orgel orgel num next interp)))))
     (let ((preset (elt *orgel-presets* num)))
       (dotimes (idx *orgelcount*)
         (val-orgel->model-orgel (aref preset idx) (aref *curr-state* idx) )))))
