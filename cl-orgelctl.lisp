@@ -42,5 +42,6 @@
 
 
 (setup-ref-cell-hooks)
+(incudine:rt-stop)
 ;;;(start-orgel-gui)
 

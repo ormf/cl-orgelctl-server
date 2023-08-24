@@ -56,6 +56,8 @@
 
 (declaim (inline get-orgelidx))
 
+;;; todo: use set-cell functions!!
+
 (defmacro define-orgel-fader-access-fn (target)
   `(progn
      (defun ,(intern (string-upcase (format nil "~a" target))) (orgelnummer idx)
@@ -109,7 +111,7 @@ of orgel at <orgelnummer> in *curr-state*." target)
 "access function for the phase slot with index <idx>
 of orgel at <orgelnummer> in *curr-state*."
   (let ((orgelidx (gethash orgelnummer *orgeltargets*)))
-    (orgel-phase (aref *curr-state* orgelidx))))
+    (val (orgel-phase (aref *curr-state* orgelidx)))))
 
 ;;; another special case, as mlevel isn't part of a preset and
 ;;; therefore not stored in *curr-state*
@@ -118,5 +120,5 @@ of orgel at <orgelnummer> in *curr-state*."
 "access function for the mlevel slot with index <idx>
 of orgel at <orgelnummer> in *curr-state*."
   (let ((orgelidx (gethash orgelnummer *orgeltargets*)))
-    (aref (aref *orgel-mlevel* orgelidx) (1- idx))))
+    (val (aref (aref *orgel-mlevel* orgelidx) (1- idx)))))
 

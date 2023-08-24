@@ -55,7 +55,7 @@
 (defun create-preset-panel (container vu-container)
   (let ((preset-panel
           (create-div container :height 80
-                         :style "border: thin solid black;position: absolute;top: 0;left: 0;display: none;justify-content: space-between;width: 100%;")))
+                                :css '(:border "thin solid black" :position absolute :top 0 :left 0 :display none :justify-content space-between :width 100% :height 80px))))
     (create-div preset-panel :content "Presets" :style "margin: 2px;")
     (let* ((prv (init-button preset-panel :content "prev" :active-bg "orange"
                                           :background "#bbb" :style "font-size: 8px;"))

@@ -863,20 +863,25 @@ clog-connection::*connection-data*
 (aref *orgel-mlevel* 0)
 
 
+
 *orgel-presets*
 
-(recall-orgel-preset 0)
+(recall-orgel-preset 1)
+
+*curr-state*
 
 (let ((preset (elt *orgel-presets* 0)))
   (dotimes (idx *orgelcount*)
     (val-orgel->model-orgel (aref preset idx) (aref *curr-state* idx))))
-
+(clog::value)
 (copy-orgel)
 (make-orgel-val-receiver)
 
 (setf (cl-orgel-gui::orgel-gui-orgeln cl-orgel-gui::*curr-orgel-state*) *curr-state*)
 
 (make-instance 'model-slot)
+
+(orgel-ctl-fader :orgel01 :level 1 0.5)
 
 
 (let ((orgel (aref *curr-state* 0)))
