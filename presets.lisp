@@ -99,8 +99,8 @@ interpolating all values between presets <num> and <next>."
 (defun store-orgel-preset (num &key (presets *orgel-presets*))
   (let ((preset (aref presets num)))
     (dotimes (idx *orgelcount*)
+      (format t "~a, " idx)
       (setf (aref preset idx) (model-orgel->val-orgel (aref *curr-state* idx) )))))
-
 
 (defun save-orgel-presets (&optional (file *orgel-presets-file*))
   (with-open-file (out file :direction :output :if-exists :supersede)

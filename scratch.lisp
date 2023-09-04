@@ -866,8 +866,11 @@ clog-connection::*connection-data*
 
 *orgel-presets*
 
-(recall-orgel-preset 1)
+(recall-orgel-preset 0)
 
+(model-orgel->val-orgel (aref *curr-state* 0))
+
+(cl-orgelctl::store-orgel-preset)
 *curr-state*
 
 (let ((preset (elt *orgel-presets* 0)))
@@ -883,6 +886,7 @@ clog-connection::*connection-data*
 
 (orgel-ctl-fader :orgel01 :level 1 0.5)
 
+(orgel-ctl :orgel01 :base-freq 55)
 
 (let ((orgel (aref *curr-state* 0)))
   (setf (set-cell-hook (slot-value orgel 'base-freq)) (lambda (val) (format t "hook: base-freq set to ~a~%" val))))
@@ -895,3 +899,46 @@ recall-orgel neu schreiben!
 
 set-orgel-freqs
 coords (ats-cuda) checken!
+
+k.christ@hoefler-fenster.de
+339x182
+
+Vorderseite:
+
+Gesamtbreite des rechten, großen Fensters: 340.2 cm
+Gesamthöhe: 247.6 cm
+Davon Brüstungshöhe (Blende unten): 65 cm
+Glasfläche: 182.6 x 340.2
+
+Die Gesamtbreite der Front ist 5,561 m, geteilt in 2,158 m Fenster links + Tür
+und
+3,402 m für das große Fenster rechts. Die Breite der Balkontür weiss ich leider
+nicht, ich vermute eine Standardbreite von 0,900 m.
+
+Rückseite:
+
+Von außen sind die Aluprofile der Fensterrahmen beider Zimmer
+verbunden (siehe angehängtes Foto von außen). Dabei beträgt der
+Abstand zwischen den Aluminiumrahmen der Fenster beider Zimmer 14 cm.
+Beim rechten Zimmer ist außerdem noch der Spalt zwischen Fensterrahmen
+und der Wand rechts mit einem Holzprofil ausgefüttert, das 4cm breit
+ist.
+
+
+
+
+Bitte beachten Sie, dass die Maße nach bestem Wissen erstellt wurden,
+aber unverbindlich sind und vor Auftragsausführung/Herstellung von den
+Handwerkern vor Ort zu überprüfen sind!
+
+Ich bitte auch zu beachten, dass bei dem Haus eine äußere Wärmedämmung
+geplant ist, die bei den Fenstermaßen entsprechend berücksichtigt
+werden sollte. Nach meinem Verständnis beduetet das, dass ganz links und ganz rechts an der Wand eine ca. 10 cm breite Blende
+angebracht werden sollte, da das Haus noch eine Außenwärmedämmung. D.h. das
+Fenster rechts ist gar nicht 3,402 m breit, sondern um Blende bzw. Rahmen
+schmaler. Beiliegend eine Skizze. Reicht Ihnen das so?
+
+
+(defparameter *test* (make-instance 'cellctl::model-slot))
+
+(defparameter *test2* (make-instance 'cellctl::value-cell :ref *test*))

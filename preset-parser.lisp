@@ -1,6 +1,10 @@
 ;;; 
 ;;; preset-parser.lisp
 ;;;
+;;; parse orglctl presets by checking all slots to be observed in the
+;;; preset form and creating and installing a value-change handler
+;;; function for each of them.
+;;;
 ;;; **********************************************************************
 ;;; Copyright (c) 2022 Orm Finnendahl <orm.finnendahl@selma.hfmdk-frankfurt.de>
 ;;;
@@ -20,9 +24,12 @@
 
 (in-package :cl-orgelctl)
 
+;;; association of orgel-slots to their setter functions
+
 (defparameter *orgel-preset-def-lookup* (make-hash-table))
 
 (defun set-preset-def-lookup ()
+  "fill the *orgel-preset-def-lookup* hash."
   (dolist (target *orgel-fader-targets*)
     (setf (gethash target *orgel-preset-def-lookup*)
           `(set-faders ,target))
@@ -39,8 +46,8 @@
 
 (set-preset-def-lookup)
 
-;;; the observed slots (accessor function names and keywords of all
-;;; possible slots within the current orgel):
+;;; lookup of accessor function-names and keywords of all slots within
+;;; the current orgel.
 
 (defparameter *observed* (make-hash-table))
 
@@ -59,22 +66,14 @@
           *orgel-global-targets*)
   (setf (gethash 'ccin *observed*) t))
 
-#|
-(defun parse-observed (form)
-  "extract all forms containing observed targets from form, replacing
-keywords with their expanded access functions."
-  (cond
-    ((null form) nil)
-    ((consp (first form))
-     (append
-      (if (gethash (caar form) *observed*)
-          (list (first form))
-          (parse-observed (car form)))
-      (parse-observed (cdr form))))
-(:else (parse-observed (cdr form)))))
-|#
-
 (defun replace-keywords (form orgelno)
+  "replace all keywords of observed slots in form by their expansion into
+a valid access function call form:
+
+:level01 -> (level <orgelno> 1)
+
+:bias-pos -> (bias-pos <orgelno>)
+"
   (cond
     ((null form) nil)
     ((keywordp (first form))
@@ -100,7 +99,7 @@ keywords with their expanded access functions."
 ;;; -> (base-freq phase main min-amp max-amp ramp-up ramp-down exp-base bias-pos level delay q gain osc-level mlevel)
 
 (defun parse-observed (form)
-  "extract all forms containing observed targets from form, replacing
+  "extract all forms containing observed slots from form, replacing
 keywords with their expanded access functions."
   (cond
     ((null form) nil)
@@ -116,6 +115,9 @@ keywords with their expanded access functions."
 ;;; -> ((mlevel 1 1) (delay 1 1) (level 1 1) (gain 2 1) (base-freq 2))
 
 (defun get-fn (target orgel form)
+"return the compiled function for a given target in the preset
+definition. A target can be
+:level, but also :level01"
   (if (eql target :global)
       (eval `(lambda (&rest args) (declare (ignorable args))
                (set-global-faders ,(second form) ,(first form))))
@@ -126,13 +128,16 @@ keywords with their expanded access functions."
                   ,@(rest call-spec) ,form))))))
 
 (defun register-responder (fn observed)
+  "register fn in the responder registry of all targets supplied in the
+observed arg. A target either starts with 'ccin, has length 3 for
+a fader target, or length 2 for a global target."
   (cond
     ((eql (first observed) 'ccin)
      (push fn (aref (aref *midi-cc-responders* (or (third observed) *global-midi-channel*))
                     (second observed))))
     ((= (length observed) 3)
      (push fn (aref (slot-value (aref *osc-responder-registry* (1- (second observed))) (first observed))
-                                            (1- (third observed)))))
+                    (1- (third observed)))))
     (:else
      (push fn (slot-value (aref *osc-responder-registry* (1- (second observed))) (first observed))))))
 

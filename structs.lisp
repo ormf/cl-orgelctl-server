@@ -25,7 +25,7 @@
   (phase 1 :type number)
   (bias-pos 0.0 :type number)
   (bias-bw 0.0 :type number)
-  (bias-type 0)
+  (bias-type 0 :type number)
   (main 0.0 :type number)
   (min-amp 0.0 :type number)
   (max-amp 0.0 :type number)
