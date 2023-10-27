@@ -30,12 +30,19 @@
 
 (bias-pos 0)
 
+(bias-cos)
+
+*curr-state*
+
+(setup-ref-cell-hooks)
+
 (slot-value (aref *osc-responder-registry* 0) (first *orgel-global-targets*))
 
 (setup-ref-cell-hooks)
 
 (start-keymap-note-responder)
 
+(start-orgel-gui)
 *
 
 (incudine::remove-all-responders cm:*midi-in1*)

@@ -39,6 +39,7 @@
     (lambda (val self)
       (let* ((val-string (ensure-string val))
              (orgel-val (read-from-string val-string)))
+;;;        (format t "make-orgel-val-receiver: ~a~%" orgel-val)
         (set-cell (slot-value global-orgel-ref slot-symbol) orgel-val :src self)))))
 
 (defun make-orgel-array-receiver (slot orgelidx global-orgel-ref)

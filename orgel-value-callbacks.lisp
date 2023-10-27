@@ -81,10 +81,9 @@ events from the dsp engine)."
            (setf (set-cell-hook (slot-value global-orgel slot-sym))
                  (lambda (val &key src)
                    (declare (ignorable src))
+;;;                   (format t "setup-ref-cell-hooks, slot-sym: ~a, val: ~a~%" slot-sym val)
                    (if val (global-to-pd (orgel-name (1+ orgelidx)) slot-key val))
-                   (dolist (fn (slot-value (aref *osc-responder-registry* orgelidx) slot-sym))
-                     (funcall fn val)) ;;; call the defined route functions
-                   (let ((val-string (format nil "~,1f" val ))
+                   (let ((val-string (format nil "~,3f" val ))
                          (attribute (if (member slot-key '(:bias-type :phase)) "data-val")))
                      (maphash (lambda (connection-id connection-hash)
                                 (declare (ignore connection-id))
@@ -97,7 +96,9 @@ events from the dsp engine)."
                                                       (if attribute
                                                           (setf (clog:attribute elem attribute) val-string)
                                                           (setf (clog:value elem) val-string)))))))
-                              clog-connection::*connection-data*))))))
+                              clog-connection::*connection-data*)) ;;; call the defined route functions
+                   (dolist (fn (slot-value (aref *osc-responder-registry* orgelidx) slot-sym))
+                     (funcall fn val))))))
            *orgel-global-target-syms*
            *orgel-global-targets*)
 
@@ -108,12 +109,10 @@ events from the dsp engine)."
                        (setf (set-cell-hook (aref (slot-value global-orgel slot-sym) faderidx))
                              (lambda (val &key src)
                                (declare (ignorable src))
+;;;                               (format t "setup-ref-cell-hooks, slot-sym: ~a, fader-idx: ~a, val: ~a~%" slot-sym faderidx val)
                                (if val (fader-to-pd (orgel-name (1+ orgelidx)) slot-key (1+ faderidx) val))
 ;;;                               (format t "setting: ~a ~a ~a ~a~%" (orgel-name (1+ orgelidx)) slot-key (1+ faderidx) val)
-                               (dolist (fn (aref (slot-value (aref *osc-responder-registry* orgelidx) slot-sym) faderidx))
-                                 (funcall fn val))
- ;;; call the defined route functions
-                               (let ((val-string (format nil "~,1f" val)))
+                               (let ((val-string (format nil "~,3f" val)))
                                  (maphash (lambda (connection-id connection-hash)
                                             (declare (ignore connection-id))
 ;;;                   (break "~a" (gethash "orgel-gui" connection-hash))
@@ -121,7 +120,10 @@ events from the dsp engine)."
                                               (when orgel-gui (let ((elem (aref (slot-value (aref (orgel-gui-orgeln orgel-gui) orgelidx) slot-sym)
                                                                                 faderidx)))
                                                                 (unless (equal src elem) (setf (clog:value elem) val-string))))))
-                                          clog-connection::*connection-data*))))))))
+                                          clog-connection::*connection-data*))
+ ;;; call the defined route functions
+                               (dolist (fn (aref (slot-value (aref *osc-responder-registry* orgelidx) slot-sym) faderidx))
+                                 (funcall fn val))))))))
             *orgel-fader-target-syms*
             *orgel-fader-targets*)
 
