@@ -28,6 +28,12 @@
 (recall-preset 1)
 (clear-routes)
 
+(bias-pos 0)
+
+(slot-value (aref *osc-responder-registry* 0) (first *orgel-global-targets*))
+
+(setup-ref-cell-hooks)
+
 (start-keymap-note-responder)
 
 *

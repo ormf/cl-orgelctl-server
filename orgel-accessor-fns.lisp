@@ -64,9 +64,9 @@
        ,(format nil "access function for the ~a slot with index <idx>
 of orgel at <orgelnummer> in *curr-state*." target)
        (let ((orgelidx (gethash orgelnummer *orgeltargets*)))
-         (aref (,(intern (string-upcase (format nil "orgel-~a" target)) :cl-orgelctl)
-                (aref *curr-state* orgelidx))
-               (1- idx))))
+         (val (aref (,(intern (string-upcase (format nil "orgel-~a" target)) :cl-orgelctl)
+                     (aref *curr-state* orgelidx))
+                    (1- idx)))))
      (defsetf ,(intern (string-upcase (format nil "~a" target))) (orgelnummer idx) (value)
        ,(format nil "access function for the ~a slot with index <idx>
 of orgel at <orgelnummer> in *curr-state*." target)
@@ -91,8 +91,8 @@ of orgel at <orgelnummer> in *curr-state*." target)
      (defun ,(intern (string-upcase (format nil "~a" target))) (orgelnummer)
        ,(format nil "access function for the ~a slot of orgel at <orgelnummer> in *curr-state*." target)
        (let ((orgelidx (gethash orgelnummer *orgeltargets*)))
-         (,(intern (string-upcase (format nil "orgel-~a" target)) :cl-orgelctl)
-          (aref *curr-state* orgelidx))))
+         (val (,(intern (string-upcase (format nil "orgel-~a" target)) :cl-orgelctl)
+               (aref *curr-state* orgelidx)))))
      (defsetf ,(intern (string-upcase (format nil "~a" target))) (orgelnummer) (value)
        `(orgel-ctl ,orgelnummer ,,target ,value))))
 

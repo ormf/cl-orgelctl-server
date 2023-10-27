@@ -38,20 +38,40 @@
 
 (in-package :cl-orgelctl)
 
+;;; all the callback functions are installed in:
+;;;
+;;; - osc.lisp (define-orgel-fader-responder...)
+;;;
+;;; - orgel-gui-redefs.lisp (make-orgel-val-receiver, etc., used in
+;;;   the init routines of the gui widgets (init-vslider...) in
+;;;   utils.lisp). They simply set the cell of the model-slots in
+;;;   *curr-state*, triggering gui-redraw and behaviour defined in
+;;;   route-presets (like controller actions and such with
+;;;   digest-route-preset).
+
 (defun orgel-global-value-callback (orgelidx target value src)
+  "callback function if a global value changes (either through gui
+interaction or by responding to osc events)."
   (set-cell (slot-value (aref *curr-state* orgelidx) target) value :src src))
 
 (defun orgel-fader-value-callback (orgelidx target faderidx value src)
+  "callback function if a fader value changes (either through gui
+interaction or by responding to osc events)."
   (let ((f-idx (round (1- faderidx))))
     (set-cell (aref (slot-value (aref *curr-state* orgelidx) target) f-idx) value :src src)))
 
 (defun orgel-mlevel-value-callback (orgelidx faderidx value src)
+  "callback function if a meter level value changes (by responding to osc
+events from the dsp engine)."
   (let ((f-idx (round (1- faderidx))))
     (set-cell (aref (aref *orgel-mlevel* orgelidx) f-idx) value :src src)))
 
 (defun setup-ref-cell-hooks ()
-  "Set up propagating changes in the model-slots of *curr-state* to all
-connected clients."
+  "Set up propagating changes in the model-slots of *curr-state* and
+*orgel-mlevel* to all connected clients (gui and pd via osc). This
+ also takes care of calling the route functions defined in presets, so
+ triggering all necessary respond actions to gui, cc or osc messages
+ boils down to simply setting the ref-cell in *curr-state*."
   (dotimes (orgelidx *orgelcount*)
     (let ((global-orgel (aref *curr-state* orgelidx)))
       (map
@@ -62,6 +82,8 @@ connected clients."
                  (lambda (val &key src)
                    (declare (ignorable src))
                    (if val (global-to-pd (orgel-name (1+ orgelidx)) slot-key val))
+                   (dolist (fn (slot-value (aref *osc-responder-registry* orgelidx) slot-sym))
+                     (funcall fn val)) ;;; call the defined route functions
                    (let ((val-string (format nil "~,1f" val ))
                          (attribute (if (member slot-key '(:bias-type :phase)) "data-val")))
                      (maphash (lambda (connection-id connection-hash)
@@ -88,6 +110,9 @@ connected clients."
                                (declare (ignorable src))
                                (if val (fader-to-pd (orgel-name (1+ orgelidx)) slot-key (1+ faderidx) val))
 ;;;                               (format t "setting: ~a ~a ~a ~a~%" (orgel-name (1+ orgelidx)) slot-key (1+ faderidx) val)
+                               (dolist (fn (aref (slot-value (aref *osc-responder-registry* orgelidx) slot-sym) faderidx))
+                                 (funcall fn val))
+ ;;; call the defined route functions
                                (let ((val-string (format nil "~,1f" val)))
                                  (maphash (lambda (connection-id connection-hash)
                                             (declare (ignore connection-id))
@@ -112,15 +137,14 @@ connected clients."
                     (let ((meter-value (- (val (aref (aref *orgel-mlevel* orgelidx) faderidx)) 100)))
                       (maphash (lambda (connection-id connection-hash)
                                  (declare (ignore connection-id))
-;;;                   (break "~a" (gethash "orgel-gui" connection-hash))
                                  (let* ((orgel-gui (gethash "orgel-gui" connection-hash)))
                                    (when orgel-gui
                                      (let ((elem (elt (slot-value
                                                        (aref (orgel-gui-orgeln orgel-gui) orgelidx)
                                                        'cl-orgel-gui::meters)
                                                       faderidx)))
-                                                     (unless (equal src elem)
-                                                       (setf (clog:attribute elem "data-db") meter-value))))))
+                                       (unless (equal src elem)
+                                         (setf (clog:attribute elem "data-db") meter-value))))))
                                clog-connection::*connection-data*)))))))
       *orgel-fader-target-syms*
       *orgel-fader-targets*)))
