@@ -19,8 +19,8 @@
 
 (incudine:recv-start cm:*midi-in1*)
 (incudine:remove-all-responders cm:*midi-in1*)
-(make-orgel-cc-responder)
-(make-orgel-note-responder)
+
+
 ;;; (init-orgel-keymaps)
 ;;; (stop-keymap-note-responder)
 ;;; (start-keymap-note-responder)
@@ -42,6 +42,10 @@
 
 
 (setup-ref-cell-hooks)
+(make-orgel-cc-responder)
+(make-orgel-note-responder)
+(register-cc-ref-cell-hooks)
+(register-notein-ref-cell-hooks)
 (incudine:rt-stop)
 (start-orgel-gui)
 

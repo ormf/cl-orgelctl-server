@@ -26,7 +26,9 @@
                  (loop repeat 16
                        collect (make-array
                                 128
-                                :element-type 'single-float))))
+                                :element-type 'model-slot
+                                :initial-contents
+                                (v-collect (n 128) (make-instance 'model-slot))))))
 
 (defparameter *midi-note-responders*
   (make-array 16 :element-type '(simple-array list)
@@ -58,14 +60,11 @@
 ;;; (incudine::remove-responder *orgel-note-responder*)
 
 (defun note-in (keynum &optional (channel *global-midi-channel*))
-  (aref (aref *midi-note-state* channel) keynum))
+  (val (aref (aref *midi-note-state* channel) keynum)))
 
-(defsetf note-in (keynum &optional (channel *global-midi-channel*)) (value)
-  `(progn
-     (setf (aref (aref *midi-note-state* ,channel) ,keynum) ,value)
-     (map nil (lambda (fn) (funcall fn ,value ,keynum))
-          (aref (aref *midi-note-responders* ,channel) ,keynum))
-     ,value))
+(defun (setf note-in) (value keynum &optional (channel *global-midi-channel*))
+  (progn
+    (setf (val (aref (aref *midi-note-state* channel) keynum)) value)))
 
 (defun add-note-responder (keynum fn &key (channel *global-midi-channel*))
   "push fn to the the responders of <keynum> at <channel>."
@@ -88,3 +87,16 @@
 (defun all-notes-off (&key (chan nil))
   (dolist (chn (or chan (ou:range 16)))
     (dotimes (key 128) (setf (note-in key chn) 0.0))))
+
+(defun register-notein-ref-cell-hooks ()
+  (dotimes (chan 16)
+    (dotimes (keynum 128)
+      (setf (set-cell-hook (aref (aref *midi-note-state* chan) keynum))
+            (let ((chan chan)
+                  (keynum keynum))
+              (lambda (velo)
+                (dolist (fn (aref (aref *midi-note-responders* chan) keynum))
+                  (funcall fn velo))))))))
+
+;;; (register-notein-ref-cell-hooks)
+

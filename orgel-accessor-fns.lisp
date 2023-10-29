@@ -60,17 +60,17 @@
 
 (defmacro define-orgel-fader-access-fn (target)
   `(progn
-     (defun ,(intern (string-upcase (format nil "~a" target))) (orgelnummer idx)
+     (defun ,(intern (string-upcase (format nil "~a" target))) (orgelnummer partial)
        ,(format nil "access function for the ~a slot with index <idx>
 of orgel at <orgelnummer> in *curr-state*." target)
        (let ((orgelidx (gethash orgelnummer *orgeltargets*)))
          (val (aref (,(intern (string-upcase (format nil "orgel-~a" target)) :cl-orgelctl)
                      (aref *curr-state* orgelidx))
-                    (1- idx)))))
-     (defsetf ,(intern (string-upcase (format nil "~a" target))) (orgelnummer idx) (value)
+                    (1- partial)))))
+     (defsetf ,(intern (string-upcase (format nil "~a" target))) (orgelnummer partial) (value)
        ,(format nil "access function for the ~a slot with index <idx>
 of orgel at <orgelnummer> in *curr-state*." target)
-       `(orgel-ctl ,orgelnummer `(,,,target ,,idx) ,value))))
+       `(orgel-ctl-fader ,orgelnummer ,,target ,partial ,value))))
 
 (defmacro define-all-orgel-fader-access-fns (targets)
   `(progn
@@ -105,7 +105,20 @@ of orgel at <orgelnummer> in *curr-state*." target)
 ;;; for the following target list we need to remove phase as this
 ;;; symbol is used and we call the access function "ophase":
 
-(define-all-orgel-global-access-fns (remove :phase *orgel-global-targets*))
+(define-all-orgel-global-access-fns (remove :bias-type (remove :phase *orgel-global-targets*)))
+
+(deftype orgel-phase () `(member -1 1 -1.0 1.0))
+(deftype orgel-bias-type () `(member 0 1 0.0 1.0))
+
+(defun bias-type (orgelnummer)
+"access function for the phase slot with index <idx>
+of orgel at <orgelnummer> in *curr-state*."
+  (let ((orgelidx (gethash orgelnummer *orgeltargets*)))
+    (val (orgel-bias-type (aref *curr-state* orgelidx)))))
+
+(defun (setf bias-type) (value orgeltarget)
+  (declare (type orgel-bias-type value))
+  (orgel-ctl orgeltarget :bias-type value))
 
 (defun ophase (orgelnummer)
 "access function for the phase slot with index <idx>
@@ -113,12 +126,16 @@ of orgel at <orgelnummer> in *curr-state*."
   (let ((orgelidx (gethash orgelnummer *orgeltargets*)))
     (val (orgel-phase (aref *curr-state* orgelidx)))))
 
+(defun (setf ophase) (value orgeltarget)
+  (declare (type orgel-phase value))
+  (orgel-ctl orgeltarget :phase value))
+
 ;;; another special case, as mlevel isn't part of a preset and
 ;;; therefore not stored in *curr-state*
 
-(defun mlevel (orgelnummer idx)
+(defun mlevel (orgelnummer partial)
 "access function for the mlevel slot with index <idx>
 of orgel at <orgelnummer> in *curr-state*."
   (let ((orgelidx (gethash orgelnummer *orgeltargets*)))
-    (val (aref (aref *orgel-mlevel* orgelidx) (1- idx)))))
+    (val (aref (aref *orgel-mlevel* orgelidx) (1- partial)))))
 

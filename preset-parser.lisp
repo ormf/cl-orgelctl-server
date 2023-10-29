@@ -53,14 +53,14 @@
 
 (progn
   (mapcar (lambda (x) (setf (gethash (read-from-string (format nil "~a" x)) *observed*) t))
-          (append *orgel-global-targets* *orgel-fader-targets* *orgel-measure-targets* *midi-targets*))
+          (append *orgel-global-targets* *orgel-fader-targets* *orgel-level-meter-targets* *midi-targets*))
   (mapcar (lambda (x) (loop
                    for slider from 1 to 16
                    do (setf (gethash
                              (read-from-string (format nil ":~a~2,'0d" x slider))
                              *observed*)
                             `(,(read-from-string (format nil "~a" x)) ,slider))))
-          (append *orgel-fader-targets* *orgel-measure-targets*))
+          (append *orgel-fader-targets* *orgel-level-meter-targets*))
   (mapcar (lambda (x) (setf (gethash (read-from-string (format nil ":~a" x)) *observed*)
                        `(,(read-from-string (format nil "~a" x)))))
           *orgel-global-targets*)
@@ -124,6 +124,7 @@ definition. A target can be
       (let* ((call-spec (gethash target *orgel-preset-def-lookup*))
              (orgeltarget orgel))
         (eval `(lambda (&rest args) (declare (ignorable args))
+;;;                 (format t "calling:" )
                  (,(first call-spec) ,orgeltarget
                   ,@(rest call-spec) ,form))))))
 

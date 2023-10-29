@@ -22,15 +22,17 @@
 
 (in-package :cl-orgelctl)
 
-(defparameter *global-midi-channel* 4)
+(defparameter *global-midi-channel* 5)
 
 (defparameter *midi-cc-state*
-  (make-array 16 :element-type '(simple-array single-float)
+  (make-array 16 :element-type '(simple-array model-slot)
                  :initial-contents
                  (loop repeat 16
                        collect (make-array
                                 128
-                                :element-type 'single-float))))
+                                :element-type 'model-slot
+                                :initial-contents
+                                (v-collect (n 128) (make-instance 'model-slot))))))
 
 (defparameter *midi-cc-responders*
   (make-array 16 :element-type '(simple-array list)
@@ -41,13 +43,11 @@
 
 
 (defun ccin (ccnum &optional (channel *global-midi-channel*))
-  (aref (aref *midi-cc-state* channel) ccnum))
+  (val (aref (aref *midi-cc-state* channel) ccnum)))
 
 (defsetf ccin (ccnum &optional (channel *global-midi-channel*)) (value)
   `(progn
-     (setf (aref (aref *midi-cc-state* ,channel) ,ccnum) ,value)
-     (map nil (lambda (fn) (funcall fn ,value))
-          (aref (aref *midi-cc-responders* ,channel) ,ccnum))
+     (setf (val (aref (aref *midi-cc-state* ,channel) ,ccnum)) ,value)
      ,value))
 
 (defparameter *orgel-cc-responder* nil)
@@ -87,6 +87,18 @@
   "clear all cc responders."
   (dotimes (channel 16)
     (remove-channel-cc-responders channel)))
+
+(defun register-cc-ref-cell-hooks ()
+  (dotimes (chan 16)
+    (dotimes (ccnum 128)
+      (let ((cell (aref (aref *midi-cc-state* chan) ccnum)))
+        (setf (set-cell-hook cell)
+              (let ((chan chan)
+                    (ccnum ccnum))
+                (lambda (ccval)
+                  (dolist (fn (aref (aref *midi-cc-responders* chan) ccnum))
+                    (funcall fn ccval)))))))))
+
 
 #|
 (add-cc-responder 0 (lambda (val) (format t "~&Lieber Robin midi-in channel: ~d cc: ~d ~a" 5 0 val)))

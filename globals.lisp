@@ -127,7 +127,7 @@ zerobased index.")
 
 ;;; (target-key->sym :level)
 
-(defparameter *orgel-measure-targets*
+(defparameter *orgel-level-meter-targets*
   '(:mlevel))
 
 (defparameter *midi-targets*

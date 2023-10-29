@@ -142,7 +142,7 @@ amps, etc.)"
      ,@(loop for target in (symbol-value targets)
              collect `(define-orgel-global-responder ,stream ,orgelidx ,target))))
 
-(defmacro define-orgel-measure-responder (stream orgelidx target)
+(defmacro define-orgel-level-meter-responder (stream orgelidx target)
   "responder for the 16 output level meters."
   `(list ,target
          (incudine::make-osc-responder
@@ -151,12 +151,12 @@ amps, etc.)"
             (orgel-mlevel-value-callback ,orgelidx faderidx value nil)
             (if *debug* (format t "orgel~2,'0d: ~a ~a ~a~%" ,(1+ orgelidx) ,target (round faderidx) value))))))
 
-(defmacro get-orgel-measure-responders (stream orgelidx targets)
+(defmacro get-orgel-level-meter-responders (stream orgelidx targets)
   `(append
      ,@(loop for target in (symbol-value targets)
-             collect `(define-orgel-measure-responder ,stream ,orgelidx ,target))))
+             collect `(define-orgel-level-meter-responder ,stream ,orgelidx ,target))))
 
-;;; (define-orgel-measure-responder *oscin* 0 :mlevel)
+;;; (define-orgel-level-meter-responder *oscin* 0 :mlevel)
 
 (defun define-preset-responder (stream path fn)
   `(incudine:make-osc-responder
@@ -166,6 +166,24 @@ amps, etc.)"
     (lambda ()
       ,fn
       (if *debug* (format t "preset-ctl: ~a~%" ,path)))))
+
+(defmacro define-orgel-ccin-responder (stream)
+  "responder for external ccin."
+  `(list :ccin
+         (incudine::make-osc-responder
+          ,stream "/ccin"  "fff"
+          (lambda (ccval ccnum channel)
+            (setf (val (aref (aref *midi-cc-state* channel) ccnum)) ccval)
+            (if *debug* (format t "ccin: ~a ~a ~a~%" ccnum ccval channel))))))
+
+(defmacro define-orgel-notein-responder (stream)
+  "responder for external notein."
+  `(list :notein
+         (incudine::make-osc-responder
+          ,stream "/notein"  "fff"
+          (lambda (keynum velo channel)
+            (setf (val (aref (aref *midi-note-state* channel) keynum)) velo)
+            (if *debug* (format t "ccin: ~a ~a ~a~%" keynum velo channel))))))
 
 (defmacro get-preset-responders (stream)
   `(progn
@@ -192,7 +210,10 @@ amps, etc.)"
                           (append
                            (get-orgel-fader-responders ,stream ,orgelidx *orgel-fader-targets*)
                            (get-orgel-global-responders ,stream ,orgelidx *orgel-global-targets*)
-                           (get-orgel-measure-responders ,stream ,orgelidx *orgel-measure-targets*))))
+                           (get-orgel-level-meter-responders ,stream ,orgelidx *orgel-level-meter-targets*)
+;;;                           (define-orgel-ccin-responder ,stream)
+;;;                           (define-orgel-notein-responder ,stream)
+                           )))
        nil)))
 
 ;;; call this in the init file: (make-all-responders *orgelcount* *oscin*)
@@ -241,12 +262,17 @@ amps, etc.)"
 |#
 
 (defun orgel-ctl (orgel target val)
+  (if (eql orgel :all)
+      (dotimes (orgelidx *orgelcount*)
+        (set-cell (slot-value (aref *curr-state* orgelidx)
+                          (target-key->sym target))
+              (float val 1.0)))
   (let ((orgelidx (gethash orgel *orgeltargets*)))
     (unless orgelidx (error "Orgel \"~S\" doesn't exist" orgel))
 ;;;  (break "orgel: ~a ~a ~a ~a" orgel target idx val)
     (set-cell (slot-value (aref *curr-state* orgelidx)
                           (target-key->sym target))
-              (float val 1.0))))
+              (float val 1.0)))))
 
 ;;; (orgel-ctl :orgel01 :base-freq 431)
 

@@ -62,6 +62,10 @@ determined by fn, called on all partials."
       for x from 0 by 1/15
       do (orgel-ctl-fader orgel target fader (funcall fn x)))))
 
+
+
+
+
 (defun set-global-faders (targets fn)
   "set faders of <targets> to the values determined by fn, called on all
 targets with the idx of the target as arg."

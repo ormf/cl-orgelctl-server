@@ -27,6 +27,39 @@
 (save-presets)
 (recall-preset 1)
 (clear-routes)
+(setf (main 1) 0.5)
+
+(defun main-group (level)
+  "return a function which calculates the level level for a slider
+[1-(length targets)] with given center freq and bw. bias-pos and bw
+are normalized. bw is the distance between the bias-pos and the -6 dB
+points left/right of the bias-pos. At 15/15.5<bw<1 the values of the
+faders are interpolated between the faders at bw 15/15.5 and 1."
+  (let* ()
+    (lambda (x) (declare (ignore x)) level)))
+
+(let ((target :hallo))
+  (cond
+    ((eql target :hallo)))
+
+  )
+*midi-cc-state*
+*global-midi-channel*
+(setf (ccin 0) 0.8)
+
+(remove-all-cc-responders)
+
+(replace-keywords '(:main (ccin 1)) 1)
+
+(setf (ccin 0) 0.1)
+(setf (ccin 1) 0.3)
+(setf (val (aref (aref *midi-cc-state* 4) 0)) 0.2)
+
+(funcall (first (aref (aref *midi-cc-responders* 4) 0)))
+
+(orgel-ctl :orgel01 :bias-pos (ccin 1))
+
+(ccin 1)
 
 (bias-pos 0)
 
@@ -45,8 +78,30 @@
 (start-orgel-gui)
 *
 
+(setf (val (orgel-phase (aref *curr-state* 0))) -1)
+
+(setf (ophase 1) -1.0)
+
+(setf (ophase :orgel01) 1)
+
+(symbol-function 'ophase)
+
+(unintern 'bias-type)
+
+(orgel-ctl :orgel01 :phase 1)
+
+(level 1 1)
+
+
+(setf (bias-pos 1) 14/15)
+
 (incudine::remove-all-responders cm:*midi-in1*)
 
+(setf (bias-type 1) -1)
+
+(setf (level :orgel01 1) 0.9)
+
+(orgel-ctl-fader :orgel01 :level 1 0.5)
 
 (orgel-ctl :orgel01 :base-freq 275)
 (orgel-ctl-fader :orgel01 :gain 10 0.5)
@@ -730,7 +785,7 @@ clog-connection::*connection-data*
                              (setf (slot-value (aref *curr-state* orgelidx) slot) f)
                              (if *debug* (format t "orgel~2,'0d: ~a ~a~%" (1+ orgelidx) target f))))))
                   (gethash (ou:make-keyword (format nil "orgel~2,'0d" (1+ orgelidx))) *orgel-osc-responder*))))
-  (dolist (target *orgel-measure-targets*)
+  (dolist (target *orgel-level-meter-targets*)
     (let* ((target target))
       (setf (gethash (ou:make-keyword (format nil "orgel~2,'0d" (1+ orgelidx))) *orgel-osc-responder*)
             (let (;; (fn (orgel-access-fn target))
