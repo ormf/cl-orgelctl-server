@@ -38,8 +38,8 @@
      (setf (ccin (round ccnum) (round (1- channel))) (/ value 127))
      (incudine::msg :info "ctlin: ~a ~a ~a" value ccnum channel)))
   (incudine::make-osc-responder
-   stream "/notein" "iii"
+   stream "/notein" "fff"
    (lambda (keynum velo channel)
-     (setf (notein keynum (1- channel)) velo)
+     (setf (notein (round keynum) (round (1- channel))) (/ velo 127))
      (incudine::msg :info "notein: ~a ~a ~a" keynum velo channel))))
 
