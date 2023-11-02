@@ -29,20 +29,16 @@
 (clear-routes)
 (setf (main 1) 0.5)
 
-(defun main-group (level)
-  "return a function which calculates the level level for a slider
-[1-(length targets)] with given center freq and bw. bias-pos and bw
-are normalized. bw is the distance between the bias-pos and the -6 dB
-points left/right of the bias-pos. At 15/15.5<bw<1 the values of the
-faders are interpolated between the faders at bw 15/15.5 and 1."
-  (let* ()
-    (lambda (x) (declare (ignore x)) level)))
+(setf (ccin 7) 0.3)
 
 (let ((target :hallo))
   (cond
     ((eql target :hallo)))
 
   )
+
+(incudine.util::set-logger-level :warn)
+
 *midi-cc-state*
 *global-midi-channel*
 (setf (ccin 0) 0.8)
@@ -1010,3 +1006,12 @@ schmaler. Beiliegend eine Skizze. Reicht Ihnen das so?
 (defparameter *test* (make-instance 'cellctl::model-slot))
 
 (defparameter *test2* (make-instance 'cellctl::value-cell :ref *test*))
+
+(defun main-group (level)
+  "return a function which calculates the level level for a slider
+[1-(length targets)] with given center freq and bw. bias-pos and bw
+are normalized. bw is the distance between the bias-pos and the -6 dB
+points left/right of the bias-pos. At 15/15.5<bw<1 the values of the
+faders are interpolated between the faders at bw 15/15.5 and 1."
+  (let* ()
+    (lambda (x) (declare (ignore x)) level)))

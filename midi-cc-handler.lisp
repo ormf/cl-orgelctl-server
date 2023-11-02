@@ -67,6 +67,8 @@
   (incudine:remove-responder *orgel-cc-responder*))
 
 ;;; (incudine::remove-responder *orgel-midi-responder*)
+;;; (remove-orgel-cc-responder)
+;;; (make-orgel-cc-responder)
 ;;; (setf (incudine::logger-level) :warn)
 ;;; (incudine::remove-all-responders cm:*midi-in1*)
 
