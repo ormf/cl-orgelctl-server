@@ -47,6 +47,7 @@
 
 (setf (ccin 0) 1) ; => 1 (1 bit, #x1, #o1, #b1)
 
+(incudine.util::set-logger-level :info)
 (incudine.util::set-logger-level :warn)
 
 *global-midi-channel* ; => 5 (3 bits, #x5, #o5, #b101)
@@ -72,7 +73,7 @@
 
   )
 
-(incudine.util::set-logger-level :info)
+
 
 *midi-cc-state*
 *global-midi-channel*

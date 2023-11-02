@@ -2,14 +2,22 @@
 ;;; osc-midi.lisp
 ;;;
 ;;; code to enable remote machines to send/receive midi messages over
-;;; osc. The osc receiving port is 3011 (defined in osc.lisp).
+;;; osc. The osc receiving port is 3011 (defined in osc.lisp), the
+;;; sending port is 3010.
 ;;;
 ;;; The osc messages have these osc formats:
 ;;;
-;;; "ctlin/" iii  (controller-value controller-number midi-channel)
-;;; "notein/" iii  (keynum velocity midi-channel)
-;;; "pgmin/" ii  (program-number midi-channel)
-;;; "bendin/" ii  (bend-value midi-channel)
+;;; "/ctlin" iii  (controller-value controller-number midi-channel)
+;;; "/notein" iii  (keynum velocity midi-channel)
+;;; "/pgmin" ii  (program-number midi-channel)
+;;; "/bendin" ii  (bend-value midi-channel)
+;;;
+;;; in addition, the message:
+;;;
+;;; "osc-midi-register" s (host-ip)
+;;;
+;;; registers the ip address of a remote computer for sending outgoing
+;;; midi messages via osc.
 ;;;
 ;;; **********************************************************************
 ;;; Copyright (c) 2023 Orm Finnendahl <orm.finnendahl@selma.hfmdk-frankfurt.de>
@@ -30,6 +38,7 @@
 
 (in-package :cl-orgelctl)
 
+(defparameter *osc-midi-registry* nil)
 
 (defun make-osc-midi-responders (stream)
   (incudine::make-osc-responder
@@ -41,5 +50,12 @@
    stream "/notein" "fff"
    (lambda (keynum velo channel)
      (setf (notein (round keynum) (round (1- channel))) (/ velo 127))
-     (incudine::msg :info "notein: ~a ~a ~a" keynum velo channel))))
+     (incudine::msg :info "notein: ~a ~a ~a" keynum velo channel)))
+  (incudine::make-osc-responder
+   stream "/osc-midi-register" "s"
+   (lambda (host)
+     (pushnew host *osc-midi-registry* :test #'string-equal)
+     (incudine::msg :info "osc-midi-register: ~a" host))))
 
+(defun clear-osc-midi-registry ()
+  (setf *osc-midi-registry* nil))
