@@ -14,6 +14,7 @@
 
 (incudine:remove-all-responders *oscin*)
 (make-all-responders *orgelcount* *oscin*)
+(make-osc-midi-responders *oscin*)
 
 
 
@@ -48,4 +49,3 @@
 (register-notein-ref-cell-hooks)
 (incudine:rt-stop)
 (start-orgel-gui)
-

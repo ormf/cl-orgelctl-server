@@ -24,5 +24,6 @@
                (:file "midi-cc-handler")
                (:file "midi-notein-handler")
                (:file "midi-keymap-handler")
+               (:file "osc-midi")
                (:file "ats-player")
                (:file "cl-orgelctl")))

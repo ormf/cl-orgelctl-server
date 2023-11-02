@@ -22,6 +22,41 @@
 (in-package :cl-orgelctl)
 (incudine::remove-all-responders cm:*midi-in1*)
 
+(incudine:rt-start)
+
+(orgel-ctl :orgel01 :bias-pos 0.2)
+
+(setf (val (slot-value (aref *curr-state* 0) 'bias-pos))
+      0.7) ; => #<m 0.2>
+
+(setf (bias-pos 1) 0.0)
+
+(bias-pos 1) ; => 0.0
+
+(setf (bias-pos 1) 0.6) ; => 0.6 (60.000004%)
+
+(base-freq 1) ; => 55.0
+
+(setf (base-freq 1) 72) ; => 72.0
+
+(level 1 1) ; => 0.21 (21.0%)
+
+(defparameter *chord1* '((1 3) (2 5)))
+
+(ccin 0) ; => 0.6771653 (67.71653%)
+
+(setf (ccin 0) 1) ; => 1 (1 bit, #x1, #o1, #b1)
+
+(incudine.util::set-logger-level :warn)
+
+*global-midi-channel* ; => 5 (3 bits, #x5, #o5, #b101)
+
+(ccin 0 5)  ; => 1 (1 bit, #x1, #o1, #b1)
+(ccin 0) ; => 1 (1 bit, #x1, #o1, #b1)y
+
+(dolist (ton *chord1*)
+  (setf (level (first ton) (second ton)) 0.7))
+
 (copy-preset *curr-state* (aref *orgel-presets* 2))
 (copy-preset *curr-state* (aref *orgel-presets* 0))
 (save-presets)
@@ -37,7 +72,7 @@
 
   )
 
-(incudine.util::set-logger-level :warn)
+(incudine.util::set-logger-level :info)
 
 *midi-cc-state*
 *global-midi-channel*

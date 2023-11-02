@@ -59,10 +59,10 @@
 
 ;;; (incudine::remove-responder *orgel-note-responder*)
 
-(defun note-in (keynum &optional (channel *global-midi-channel*))
+(defun notein (keynum &optional (channel *global-midi-channel*))
   (val (aref (aref *midi-note-state* channel) keynum)))
 
-(defun (setf note-in) (value keynum &optional (channel *global-midi-channel*))
+(defun (setf notein) (value keynum &optional (channel *global-midi-channel*))
   (progn
     (setf (val (aref (aref *midi-note-state* channel) keynum)) value)))
 

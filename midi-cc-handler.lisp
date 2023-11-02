@@ -69,7 +69,7 @@
 ;;; (incudine::remove-responder *orgel-midi-responder*)
 ;;; (remove-orgel-cc-responder)
 ;;; (make-orgel-cc-responder)
-;;; (setf (incudine::logger-level) :warn)
+;;; (incudine.util::set-logger-level) :warn)
 ;;; (incudine::remove-all-responders cm:*midi-in1*)
 
 (defun add-cc-responder (ccnum fn &key (channel *global-midi-channel*))
