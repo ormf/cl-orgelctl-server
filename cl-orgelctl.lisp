@@ -14,12 +14,12 @@
 
 (incudine:remove-all-responders *oscin*)
 (make-all-responders *orgelcount* *oscin*)
-(make-osc-midi-responders *oscin*)
-
-
+(start-osc-midi-receive)
 
 (incudine:recv-start cm:*midi-in1*)
 (incudine:remove-all-responders cm:*midi-in1*)
+(make-orgel-cc-responder)
+(make-orgel-note-responder)
 
 
 ;;; (init-orgel-keymaps)
@@ -43,9 +43,5 @@
 
 
 (setup-ref-cell-hooks)
-(make-orgel-cc-responder)
-(make-orgel-note-responder)
-(register-cc-ref-cell-hooks)
-(register-notein-ref-cell-hooks)
 (incudine:rt-stop)
 (start-orgel-gui)

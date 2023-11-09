@@ -149,7 +149,9 @@ events from the dsp engine)."
                                          (setf (clog:attribute elem "data-db") meter-value))))))
                                clog-connection::*connection-data*)))))))
       *orgel-fader-target-syms*
-      *orgel-fader-targets*)))
+      *orgel-fader-targets*))
+  (register-cc-ref-cell-hooks)
+  (register-notein-ref-cell-hooks))
 
 
 ;;; (setup-ref-cell-hooks)
