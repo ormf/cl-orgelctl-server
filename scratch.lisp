@@ -22,7 +22,12 @@
 (in-package :cl-orgelctl)
 (incudine::remove-all-responders cm:*midi-in1*)
 
+(aref *midi-cc-state* 5)
+
+(ccin 20)
 (incudine:rt-start)
+
+(start-osc-midi-receive)
 
 (orgel-ctl :orgel01 :bias-pos 0.2)
 

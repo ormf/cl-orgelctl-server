@@ -53,11 +53,11 @@
 
 ;;; osc responder:
 
-(defun start-osc-midi-receive (&key (port 4711))
-  "start osc on localhost:port and its receivers."
+(defun start-osc-midi-receive (&key (host "127.0.0.1") (port 4711))
+  "start osc on host:port and its receivers."
   (when *osc-midi-in* (incudine.osc:close *osc-midi-in*))
   (maphash (lambda (key val) key (incudine:remove-responder val)) *midictl-osc-responders*)
-  (setf *osc-midi-in* (incudine.osc:open :host "127.0.0.1" :port port :direction :input :protocol :udp))
+  (setf *osc-midi-in* (incudine.osc:open :host host :port port :direction :input :protocol :udp))
   (setf (gethash :osc-midi-register *midictl-osc-responders*)
         (incudine::make-osc-responder
          *osc-midi-in* "/osc-midi-register" "sf"
@@ -74,8 +74,13 @@
              (case (cm:status->opcode st)
                (:cc (let ((channel (cm:status->channel st))
                           (val (float (/ d2 127) 1.0)))
-                      (incudine::msg info "orgel-midi-responder: ~d ~d ~,2f" channel d1 val)
-                      (setf (ccin d1 channel) val))))))))
+                      (incudine::msg info "orgel-osc-midi-responder: ~d ~d ~,2f" channel d1 val)
+                      (setf (ccin d1 channel) val)))
+               ;; (:cc (let ((channel (cm:status->channel st))
+               ;;            (val (float (/ d2 127) 1.0)))
+               ;;        (incudine::msg info "orgel-osc-midi-responder: ~d ~d ~,2f" channel d1 val)
+               ;;        (setf (ccin d1 channel) val)))
+               )))))
   (incudine:recv-start *osc-midi-in*))
 
 (defun stop-osc-midi-receive (&optional local-midi-in)

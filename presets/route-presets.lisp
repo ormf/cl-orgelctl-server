@@ -3,8 +3,8 @@
 (setf *route-presets*
 #((:preset 0 :routes nil)
   (:preset nil :routes
-           (:all (:main (ccin 7)) :orgel01
-            (:bias-pos (ccin 0) :bias-bw (ccin 1) :level
+           (:all (:main (main 1)) :orgel01
+            (:main (ccin 7) :bias-pos (ccin 21) :bias-bw (ccin 22) :level
              (bias-cos :bias-pos :bias-bw))))
   (:preset nil :routes
            (:orgel01
