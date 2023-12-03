@@ -35,18 +35,36 @@
 
 (defparameter *orgel-freqs*
   (sort
-   (loop
-     for base-freq in *base-freqs*
-     for orgeltarget from 1
-     append (loop
-              for partial from 1 to 16
-              collect (list (* base-freq partial)
-                            (ftom (* base-freq partial))
-                            orgeltarget partial)))
-   #'<
-   :key #'first)
+      (loop
+        for base-freq in *base-freqs*
+        for orgeltarget from 1
+        append (loop
+                 for partial from 1 to 16
+                 collect (list (* base-freq partial)
+                               (ftom (* base-freq partial))
+                               orgeltarget partial)))
+      #'<
+      :key #'first)
   "all available frequencies in orgel. The entries contain frequency,
 keynum, orgelno and partialno.")
+
+(defparameter *orgel-freqs-vector*
+  (coerce
+   (sort
+    (loop
+      for base-freq in *base-freqs*
+      for orgeltarget from 1
+      append (loop
+               for partial from 1 to 16
+               collect (list (* base-freq partial)
+                             (ftom (* base-freq partial))
+                             orgeltarget partial)))
+    #'<
+    :key #'first)
+   'vector)
+  "all available frequencies in orgel. The entries contain frequency,
+keynum, orgelno and partialno.")
+
 
 (defparameter *orgel-max-freq* (caar (last *orgel-freqs*)))
 (defparameter *orgel-min-freq* (caar *orgel-freqs*))

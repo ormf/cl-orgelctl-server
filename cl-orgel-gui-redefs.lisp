@@ -52,6 +52,18 @@
  ;;;        (format t "array-received: orgel~2,'0d ~a ~a~%" (1+ orgelidx) idx orgel-val)
         (set-cell (aref (funcall accessor global-orgel-ref) idx) orgel-val :src self)))))
 
+(defun make-orgel-kbd-array-receiver (slot global-orgel-ref)
+  (let ((g-accessor (slot->function "g-orgel" slot))
+        (accessor (slot->function "orgel" slot)))
+    (declare (ignore g-accessor))
+    (lambda (idx val self)
+      (let* ((orgel-val (read-from-string (ensure-string val)))
+             (orgel-ref (aref cl-orgelctl::*orgel-freqs-vector* idx))
+             (orgel-idx (1- (third orgel-ref)))
+             (array-idx (1- (fourth orgel-ref))))
+        (format t "kbd-array-received: orgel~2,'0d ~a ~a ~a~%" (1+ orgel-idx) array-idx idx orgel-val)
+        (set-cell (aref (funcall accessor (aref global-orgel-ref orgel-idx)) array-idx)
+                  orgel-val :src self)))))
 
 (defun create-preset-panel (container vu-container)
   (let ((preset-panel

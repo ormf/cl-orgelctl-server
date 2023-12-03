@@ -16,6 +16,8 @@
 (make-all-responders *orgelcount* *oscin*)
 (start-osc-midi-receive)
 
+(cm:midi-open-default :direction :input)
+(cm:midi-open-default :direction :output)
 (incudine:recv-start cm:*midi-in1*)
 (incudine:remove-all-responders cm:*midi-in1*)
 (make-orgel-cc-responder)
