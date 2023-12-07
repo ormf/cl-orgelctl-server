@@ -92,7 +92,7 @@ events from the dsp engine)."
                                   (when orgel-gui (let ((elem (slot-value
                                                                (aref (orgel-gui-orgeln orgel-gui) orgelidx)
                                                                slot-sym)))
-                                                    (unless (equal src elem)
+                                                    (unless (or (equal src elem) (not elem))
                                                       (if attribute
                                                           (setf (clog:attribute elem attribute) val-string)
                                                           (setf (clog:value elem) val-string)))))))
@@ -119,7 +119,7 @@ events from the dsp engine)."
                                             (let* ((orgel-gui (gethash "orgel-gui" connection-hash)))
                                               (when orgel-gui (let ((elem (aref (slot-value (aref (orgel-gui-orgeln orgel-gui) orgelidx) slot-sym)
                                                                                 faderidx)))
-                                                                (unless (equal src elem) (setf (clog:value elem) val-string))))))
+                                                                (unless (or (equal src elem) (not elem)) (setf (clog:value elem) val-string))))))
                                           clog-connection::*connection-data*))
  ;;; call the defined route functions
                                (dolist (fn (aref (slot-value (aref *osc-responder-registry* orgelidx) slot-sym) faderidx))
@@ -145,7 +145,7 @@ events from the dsp engine)."
                                                        (aref (orgel-gui-orgeln orgel-gui) orgelidx)
                                                        'cl-orgel-gui::meters)
                                                       faderidx)))
-                                       (unless (equal src elem)
+                                       (unless (or (equal src elem) (not elem))
                                          (setf (clog:attribute elem "data-db") meter-value))))))
                                clog-connection::*connection-data*)))))))
       *orgel-fader-target-syms*
