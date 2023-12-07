@@ -39,6 +39,14 @@
 
 (defparameter *orgel-note-responder* nil)
 
+(defun notein (keynum &optional (channel *global-midi-channel*))
+  (val (aref (aref *midi-note-state* channel) keynum)))
+
+(defsetf notein (keynum &optional (channel *global-midi-channel*)) (velo)
+  `(progn
+     (setf (val (aref (aref *midi-note-state* ,channel) ,keynum)) ,velo)
+     ,velo))
+
 (defun make-orgel-note-responder ()
   (if *orgel-note-responder* (incudine::remove-responder *orgel-note-responder*))
   (setf *orgel-note-responder*
