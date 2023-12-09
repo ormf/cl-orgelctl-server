@@ -21,6 +21,16 @@
 (in-package :cl-user)
 
 (ql:quickload :slynk)
-(slynk:create-server :interface "127.0.0.1" :port 4007 :dont-close t)
+
+(let* ((interface "enp6s0f3u1u3c2")
+       (host
+         (string-right-trim
+          '(#\NEWLINE)
+          (uiop:run-program
+           (format nil "ip -f inet addr show ~a | grep inet | awk '{print $2}' | sed -e 's/\\/[0-9]*$//g'"
+                   interface)
+           :output :string))))
+  (slynk:create-server :interface host :port 4007 :dont-close t))
+
 ;;; (slynk:create-server :port 4007 :dont-close t)
 (setf slynk*use-dedicated-output-stream* nil)
