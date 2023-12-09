@@ -52,13 +52,18 @@ system."
 
 (destructuring-bind (&optional interface host)
     (get-ifname-and-ip)
-  (declare (ignore interface))
-  (if host
-      (slynk:create-server :interface host :port 4007 :dont-close t)
-      (warn "no ethernet interface found")))
+  (sleep 0.5)
+  (let* ((port 4007)
+         (str (format nil "~&~%using interface ~a~%creating server on host ~a, port ~a~%"
+                      interface host port)))
+    (if host
+        (progn
+          (slynk:create-server :interface host :port port :dont-close t)
+          (format t str))
+        (warn "no ethernet interface found"))))
 
 
-(slynk:create-server :interface host :port 4007 :dont-close t)
+;;; (slynk:create-server :interface host :port 4007 :dont-close t)
 
 ;;; (slynk:create-server :port 4007 :dont-close t)
 (setf slynk*use-dedicated-output-stream* nil)
