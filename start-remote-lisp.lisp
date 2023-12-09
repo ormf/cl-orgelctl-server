@@ -22,6 +22,49 @@
 
 (ql:quickload :slynk)
 
+(defun get-interface-ip (line)
+  "get the interface name and its ip address as strings from a line like
+\"lo 127.0.0.1\""
+  (let ((split-point (position #\SPACE line)))
+    (list (subseq line 0 split-point)
+          (string-trim '(#\SPACE) (subseq line split-point)))))
+
+(defun get-ifname-and-ip ()
+  "get the interface name and its ip address for the first interface name
+starting with \"en*\" or \"eth*\". As the function uses the ip and the
+cut command in a shell, those programs need to be installed on the
+system."
+  (with-input-from-string
+      (in
+       (string-right-trim
+        '(#\NEWLINE)
+        (uiop:run-program
+         "ip -4 -o a | cut -d ' ' -f 2,7 | cut -d '/' -f 1"
+         :output :string)))
+    (loop
+      for line = (read-line in nil nil)
+      while line
+      for if-ip = (get-interface-ip line) 
+      until (and (> (length (first if-ip)) 2)
+                 (or (string= (subseq (first if-ip) 0 2) "en")
+                     (string= (subseq (first if-ip) 0 3) "eth")))
+      finally (return (if line if-ip)))))
+
+(destructuring-bind (&optional interface host)
+    (get-ifname-and-ip)
+  (declare (ignore interface))
+  (if host
+      (slynk:create-server :interface host :port 4007 :dont-close t)
+      (warn "no ethernet interface found")))
+
+
+(slynk:create-server :interface host :port 4007 :dont-close t)
+
+;;; (slynk:create-server :port 4007 :dont-close t)
+(setf slynk*use-dedicated-output-stream* nil)
+
+
+#|
 (let* ((interface "enp6s0f3u1u3c2")
        (host
          (string-right-trim
@@ -31,6 +74,9 @@
                    interface)
            :output :string))))
   (slynk:create-server :interface host :port 4007 :dont-close t))
+|#
 
-;;; (slynk:create-server :port 4007 :dont-close t)
-(setf slynk*use-dedicated-output-stream* nil)
+
+
+
+
