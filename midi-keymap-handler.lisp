@@ -96,7 +96,7 @@
                          (make-array 128 :element-type 'list
                                          :initial-element nil))))
   (loop ;;; Keynums 24->103 for organs 1-5 in organ order
-    with keymap = (aref *orgel-keymaps* 0) 
+    with keymap = (aref *orgel-keymaps* 0)
         for keynum from 24 to 103
         with offset = -24
         do (setf (aref keymap keynum)
@@ -203,7 +203,12 @@ end and reset the list to the result."
 
 (defparameter *keymap-note-responder-fn*
   (let ((pending nil))
-    (lambda (st &optional d1 d2)
+    (lambda (st d1 d2)
+      (if (keywordp st)
+          (incudine.util:msg "keymap-note-responder: ~S~%" st)
+          (incudine.util:msg "keymap-note-responder: ~S ~a ~a ~%"
+                             (cm:status->opcode st) d1 d2
+                             (cm:status->channel st)))
       (case (if (numberp st) (cm:status->opcode st) st)
         ;;; Midi messages
         (:note-on (let* ((chan (cm:status->channel st))
@@ -217,7 +222,7 @@ end and reset the list to the result."
                         (push (list* d1 entry) pending) ;;; register entry
                         ))))
         (:note-off
-;;;             (format t "note-off: ~a ~a ~%" d1 d2)
+         (incudine.util:msg "note-off: ~a ~a ~%" d1 d2)
          (unless *sticky* (let ((entry (assoc d1 pending)))
                             (when entry
                               (orgel-ctl-fader (orgel-name (fourth entry))
@@ -263,4 +268,16 @@ end and reset the list to the result."
       (incudine::remove-responder *orgel-keymap-note-responder*))
   :stopped)
 
+;;; (funcall *keymap-note-responder-fn* 144 60 0)
 
+
+;;; (funcall *keymap-note-responder-fn* :clear)
+
+#|
+(incudine::remove-all-responders cm:*midi-in1*)
+
+(dolist (responder (gethash cm:*midi-in1* incudine::*responders*))
+  (format t "~a~%" (incudine::responder-function responder))
+ )
+
+|#

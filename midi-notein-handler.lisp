@@ -68,13 +68,10 @@
              (:note-on (let ((channel (cm:status->channel st))
                              (val (float (/ d2 127) 1.0)))
                          (incudine::msg info "orgel-note-responder: ~d ~d ~,2f" channel d1 val)
-;;;                         (setf (note-in d1 channel) val)
-                         (setf (val (aref (aref *midi-note-state* channel) d1)) val)))
+                         (setf (notein d1 channel) val)))
              (:note-off (let ((channel (cm:status->channel st)))
                           (incudine::msg info "orgel-note-responder: ~d ~d ~,2f" channel d1 0.0)
-                          (setf (val (aref (aref *midi-note-state* channel) d1)) 0.0)
-;;;                          (setf (note-in d1 channel) 0.0)
-                          )))))))
+                          (setf (notein d1 channel) 0.0))))))))
 
 ;;; (make-orgel-note-responder)
 
@@ -101,9 +98,9 @@
   (dotimes (channel 16)
     (remove-channel-note-responders channel)))
 
-(defun all-notes-off (&key (chan nil))
-  (dolist (chn (or chan (ou:range 16)))
-    (dotimes (key 128) (setf (note-in key chn) 0.0))))
+(defun all-notes-off (&optional chans)
+  (dolist (chn (or chans (ou:range 16)))
+    (dotimes (key 128) (setf (notein key chn) 0.0))))
 
 (defun register-notein-ref-cell-hooks ()
   (dotimes (chan 16)

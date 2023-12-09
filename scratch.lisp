@@ -50,6 +50,15 @@
 
 (ccin 0) ; => 0.6771653 (67.71653%)
 
+(all-notes-off)
+
+(all-faders-off '(:q :gain))
+
+(all-faders-off :level :orgeln '(1))
+
+(all-faders-off :level)
+
+(setf )
 (setf (ccin 0) 1) ; => 1 (1 bit, #x1, #o1, #b1)
 
 (incudine.util::set-logger-level :info)
@@ -1070,3 +1079,35 @@ faders are interpolated between the faders at bw 15/15.5 and 1."
 (notein 96)
 
 (parse-observed '(cl-orgelctl::ccin 60))
+
+
+(defun split-str (string &optional (separator " "))
+  (split-1 string separator))
+
+(defun split-1 (string &optional (separator " ") (r nil))
+  (let ((n (position separator string
+		     :from-end t
+		     :test #'(lambda (x y)
+			       (find y x :test #'string=)))))
+    (if n
+	(split-1 (subseq string 0 n) separator (cons (subseq string (1+ n)) r))
+      (cons string r))))
+
+(defun split-str (string &optional (separator " "))
+  (labels ((split (str acc)
+             (cond
+               ((or (null str) (string= str "")) acc)
+               (t (let ((n (position separator str)))
+                    (split (subseq str (1+ n)) (cons (subseq str 0 n) acc)))))))
+    (split string nil)))
+
+(defun split-str (string &optional (separator " "))
+  (loop
+    for str = string then (subseq str (1+ n))
+    for n = (position separator str)
+    while n
+    collect (subseq str 0 n)))
+
+(split-str "Aber Aber  Herr Nachbar")
+
+(reduce #'+ '(1 2 3 4 5))

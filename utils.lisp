@@ -53,6 +53,15 @@
   (min max (max x min)))
 
 
+(defun all-faders-off (&optional target orgeln)
+  (let ((targets (cond ((keywordp target) (list target))
+                       ((null target) *orgel-fader-targets*)
+                       (t target))))
+    (dolist (target targets)
+      (dolist (orgel-nr (or orgeln (range 1 (1+ *orgelcount*))))
+        (dotimes (fader 16)
+          (orgel-ctl-fader orgel-nr target (1+ fader) 0.0))))))
+
 (defun set-faders (orgel target fn)
   "set all faders of <target> at orgel <orgelno> to the values
 determined by fn, called on all partials."

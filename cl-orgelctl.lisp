@@ -22,7 +22,8 @@
 (incudine:remove-all-responders cm:*midi-in1*)
 (make-orgel-cc-responder)
 (make-orgel-note-responder)
-
+(init-orgel-keymaps)
+(start-keymap-note-responder)
 
 ;;; (init-orgel-keymaps)
 ;;; (stop-keymap-note-responder)
