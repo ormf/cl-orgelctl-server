@@ -149,7 +149,7 @@ zerobased index.")
   '(:mlevel))
 
 (defparameter *midi-targets*
-  '())
+  '(ccin notein))
 
 (defparameter *orgel-nr-lookup* nil
   "property list of orgel names and their number.")

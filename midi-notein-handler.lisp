@@ -39,6 +39,8 @@
 
 (defparameter *orgel-note-responder* nil)
 
+#|
+
 (defun notein (keynum &optional (channel *global-midi-channel*))
   (val (aref (aref *midi-note-state* channel) keynum)))
 
@@ -46,6 +48,15 @@
   `(progn
      (setf (val (aref (aref *midi-note-state* ,channel) ,keynum)) ,velo)
      ,velo))
+
+|#
+
+(defun notein (keynum &optional (channel *global-midi-channel*))
+  (val (aref (aref *midi-note-state* channel) keynum)))
+
+(defun (setf notein) (value keynum &optional (channel *global-midi-channel*))
+  (progn
+    (setf (val (aref (aref *midi-note-state* channel) keynum)) value)))
 
 (defun make-orgel-note-responder ()
   (if *orgel-note-responder* (incudine::remove-responder *orgel-note-responder*))
@@ -57,22 +68,20 @@
              (:note-on (let ((channel (cm:status->channel st))
                              (val (float (/ d2 127) 1.0)))
                          (incudine::msg info "orgel-note-responder: ~d ~d ~,2f" channel d1 val)
-                         (setf (note-in d1 channel) val)))
+;;;                         (setf (note-in d1 channel) val)
+                         (setf (val (aref (aref *midi-note-state* channel) d1)) val)))
              (:note-off (let ((channel (cm:status->channel st)))
                           (incudine::msg info "orgel-note-responder: ~d ~d ~,2f" channel d1 0.0)
-                          (setf (note-in d1 channel) 0.0))))))))
+                          (setf (val (aref (aref *midi-note-state* channel) d1)) 0.0)
+;;;                          (setf (note-in d1 channel) 0.0)
+                          )))))))
+
+;;; (make-orgel-note-responder)
 
 (defun clear-orgel-note-responder ()
   (incudine:remove-responder *orgel-note-responder*))
 
 ;;; (incudine::remove-responder *orgel-note-responder*)
-
-(defun notein (keynum &optional (channel *global-midi-channel*))
-  (val (aref (aref *midi-note-state* channel) keynum)))
-
-(defun (setf notein) (value keynum &optional (channel *global-midi-channel*))
-  (progn
-    (setf (val (aref (aref *midi-note-state* channel) keynum)) value)))
 
 (defun add-note-responder (keynum fn &key (channel *global-midi-channel*))
   "push fn to the the responders of <keynum> at <channel>."

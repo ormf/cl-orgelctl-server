@@ -64,7 +64,9 @@
   (mapcar (lambda (x) (setf (gethash (read-from-string (format nil ":~a" x)) *observed*)
                        `(,(read-from-string (format nil "~a" x)))))
           *orgel-global-targets*)
-  (setf (gethash 'ccin *observed*) t))
+;;;  (setf (gethash 'ccin *observed*) t)
+;;;   (setf (gethash 'notein *observed*) t)  
+ *observed*)
 
 (defun replace-keywords (form orgelno)
   "replace all keywords of observed slots in form by their expansion into
@@ -135,6 +137,9 @@ a fader target, or length 2 for a global target."
   (cond
     ((eql (first observed) 'ccin)
      (push fn (aref (aref *midi-cc-responders* (or (third observed) *global-midi-channel*))
+                    (second observed))))
+    ((eql (first observed) 'notein)
+     (push fn (aref (aref *midi-note-responders* (or (third observed) *global-midi-channel*))
                     (second observed))))
     ((= (length observed) 3)
      (push fn (aref (slot-value (aref *osc-responder-registry* (1- (second observed))) (first observed))

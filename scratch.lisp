@@ -1058,3 +1058,15 @@ points left/right of the bias-pos. At 15/15.5<bw<1 the values of the
 faders are interpolated between the faders at bw 15/15.5 and 1."
   (let* ()
     (lambda (x) (declare (ignore x)) level)))
+
+(setf (notein 0) 12)
+
+(setf (cl-orgelctl::notein 10) 54)
+
+(aref *midi-note-state* 5)
+
+(setf (incudine.util:logger-level) :info)
+
+(notein 96)
+
+(parse-observed '(cl-orgelctl::ccin 60))
