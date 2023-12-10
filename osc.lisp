@@ -118,7 +118,7 @@ bp, gain, osc-level)."
           ,stream ,(format nil "/orgel~2,'0d/~a" (1+ orgelidx) (symbol-value target)) "ff"
           (lambda (faderidx value)
             (orgel-fader-value-callback ,orgelidx ',(read-from-string (format nil "~a" (symbol-value target))) faderidx value nil)
-            (if *debug* (format t "orgel~2,'0d: ~a ~a ~a~%" ,(1+ orgelidx) ,target (round faderidx) value))))))
+            (incudine.util:msg :info  "orgel~2,'0d: ~a ~a ~a~%" ,(1+ orgelidx) ,target (round faderidx) value)))))
 
 (defmacro get-orgel-fader-responders (stream orgelidx targets)
   `(append
@@ -132,8 +132,8 @@ amps, etc.)"
          (incudine::make-osc-responder
           ,stream ,(format nil "/orgel~2,'0d/~a" (1+ orgelidx) (symbol-value target)) "f"
           (lambda (value)
-            (orgel-global-value-callback ,orgelidx ',(read-from-string (format nil "~a" (symbol-value target))) value nil)
-            (if *debug* (format t "orgel~2,'0d: ~a ~a~%" ,(1+ orgelidx) ,target value))))))
+            (orgel-global-value-callback ,orgelidx ',(read-from-string (format nil "~a" (symbol-value target))) value 100 nil)
+            (incudine.util:msg :info "orgel~2,'0d: ~a ~a~%" ,(1+ orgelidx) ,target value)))))
 
 ;;; (define-orgel-global-responder 'osc-stream 0 :base-freq)
 
@@ -149,7 +149,7 @@ amps, etc.)"
           ,stream ,(format nil "/orgel~2,'0d/~a" (1+ orgelidx) (symbol-value target)) "ff"
           (lambda (faderidx value)
             (orgel-mlevel-value-callback ,orgelidx faderidx value nil)
-            (if *debug* (format t "orgel~2,'0d: ~a ~a ~a~%" ,(1+ orgelidx) ,target (round faderidx) value))))))
+            (incudine.util:msg :info "orgel~2,'0d: ~a ~a ~a~%" ,(1+ orgelidx) ,target (round faderidx) value)))))
 
 (defmacro get-orgel-level-meter-responders (stream orgelidx targets)
   `(append

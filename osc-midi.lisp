@@ -20,7 +20,7 @@
 
 (in-package :cl-orgelctl)
 
-(defparameter *local-host* "127.0.0.1")
+(defparameter *localhost* "127.0.0.1")
 
 ;;; this has to be defined for every registered host:
 ;;; (defparameter *oscout* (incudine.osc:open :port 4711 :host *remote-host* :direction :output :protocol :udp))

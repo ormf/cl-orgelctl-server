@@ -127,9 +127,9 @@
 
 
 (defmacro init-kbd-multi-vu (slot parent gui-orgeln global-orgel
-                         &key (num 8) (width "80px") (height "100px") (background "#444") (direction :up) (border "none")
+                         &key (num 8) width (height "100px") (background "#444") (direction :up) (border "none")
                            (inner-background "var(--vu-background)") (inner-border "thin solid black") (inner-padding "0")
-                           (inner-padding-bottom "0px")
+                           (inner-padding-bottom "0px") (display-map :db-lin)
                            (led-colors :blue) (css '(:margin-bottom 10px :position absolute :top 0 :left 0))
                            val-change-cb)
   (declare (ignore orgelidx global-orgel))
@@ -139,13 +139,14 @@
         (g-accessor (intern (format nil "~:@(g-orgel-~a~)" slot)))
 ;;;        (accessor (intern (format nil "~:@(orgel-~a~)" slot)))
         )
-    `(let* ((,mvu (multi-vu ,parent :num ,num :width ,width :height ,height
+    `(let* ((,mvu (multi-vu ,parent :num ,num :height ,height
                                     :led-colors ,led-colors
                                     :direction ,direction :background ,background
                                     :inner-background ,inner-background
                                     :border ,border :inner-border ,inner-border
                                     :inner-padding-bottom ,inner-padding-bottom
                                     :inner-padding ,inner-padding
+                                    :display-map ,display-map
                                     :css ,css
                                     :val-change-cb ,val-change-cb))
             (orgel-freq-vector cl-orgelctl::*orgel-freqs-vector*)
@@ -166,65 +167,43 @@
        ,mvu)))
 
 (defun create-orgel-kbd-gui (container gui-orgeln global-orgel-ref)
-      (let* (p1 p2 p3 p4 p5 p7 nbs1 nbs2 tg1-container tg2-container)
-        (create-br container)
-        (setf p1  (create-div container :css '(:margin-left "10px" :width "1800px")))
-;;;        (create-div p1 :content (format nil "Orgel~2,'0d" (1+ orgelidx)) :css '(:align "bottom" :padding-bottom 10px))
-        (setf p4  (create-div p1 :width 180 :height 150 :css '(:display flex :justify-content space-between :flex "0 0 auto")))
-        (setf p3  (create-div p4))
-        (setf p2 (create-div p3 :css '(:width 160px :height 60px :display flex :justify-content space-between :margin-bottom 10px)))
-        (setf nbs1 (create-div p2 :css '(:width 75px :font-size 6pt :display flex :flex-direction column :justify-content space-between))) ;;; container for numberbox(es)
-        (setf nbs2 (create-div p2 :css '(:width 73px  :font-size 6pt :display flex :flex-direction column :justify-content space-between))) ;;; container for numberbox(es)
- 
-       (let ((vu-container
-                (init-kbd-multi-vu :meters p1 gui-orgeln global-orgel-ref
-                                   :num 160 :width "1800px" :height "80px"
-                                   :led-colors :blue
-                                   :direction :up :background "#444"
-                                   :inner-background "#444"
-                                   :border "none" :inner-border "thin solid black"
-                                   :inner-padding-bottom "0px"
-                                   :inner-padding "0"
-                                   :css '(:margin-bottom 100px :margin-top 20px :margin-left 10px :position absolute :top 0 :left 0)
-                                   :val-change-cb nil))))
-;;           (when (zerop orgelidx)
-;;             (create-preset-panel p7 vu-container)))
-;; ;;;        main volume slider
-;;         (init-vslider :main p4 orgelidx orgel global-orgel-ref :height "150px" :css '(:margin-left 5px))
-;;         (create-div p1 :height 10) ;;; distance
-         (create-div p1 :content "Level" :css *msl-title-css*)
-;;         (setf p5 (create-div p1 :width 180 :height 100 :style "padding-bottom: 5px;display: flex;justify-content: space-between;flex: 0 0 auto;"))
-;; ;;;        (setf p6 (create-div p5 :style "display: block;"))
+  (create-br container)
+  (let* ((p1 (create-div container :css '(:margin-left "10px" :width "1800px"))))
+        (init-kbd-multi-vu :meters p1 gui-orgeln global-orgel-ref
+                           :num 160 :height "80px"
+                           :led-colors :blue
+                           :display-map :pd
+                           :direction :up :background "#444"
+                           :inner-background "#444"
+                           :border "none" :inner-border "thin solid black"
+                           :inner-padding-bottom "0px"
+                           :inner-padding "0"
+                           :css '(:margin-bottom 10px :margin-top 20px :top 0 :left 0)
+                           :val-change-cb nil)        
+        (create-div p1 :content "Level" :css *msl-title-css*)
         (let ((msl
-                (apply #'multi-slider p1 :num 160 :css '(:margin-top 40px :width 1800)
-                        :val-change-cb (make-orgel-kbd-array-receiver :osc-level global-orgel-ref)
+                (apply #'multi-slider p1 :num 160 :css '(:margin-top 10px :margin-bottom 10px)
+                        :val-change-cb (make-orgel-kbd-array-receiver :level global-orgel-ref)
                        *msl-style*)))
-;;;          (init-vslider :bias-bw p5 orgelidx orgel global-orgel-ref :width "8px" :height "100px")
           (loop for vsl across (sliders msl)
                 for idx from 0
                 do (let* ((orgel-ref (aref cl-orgelctl::*orgel-freqs-vector* idx))
                           (orgel-idx (1- (third orgel-ref)))
                           (array-idx (1- (fourth orgel-ref))))
                      (setf (value vsl) (val (aref (orgel-level (aref global-orgel-ref orgel-idx)) array-idx)))
-                     (setf (aref (g-orgel-osc-level (aref gui-orgeln orgel-idx)) array-idx) vsl))))
-;;         (init-hslider :bias-pos p1 orgelidx orgel global-orgel-ref :height "8px" :width "160px")
-;; 
-;;         (dolist (label '("Delay" "Q" "Gain" "Osc-Level"))
-;;           (let ((slot-name (make-symbol (format nil "~:@(~a~)" label))))
-;;             (let ((msl
-;;                     (create-slider-panel
-;;                      p1
-;;                      :label label
-;;                      :val-change-cb (make-orgel-array-receiver slot-name orgelidx global-orgel-ref))))
-;; ;;;        (create-br p1)
-;;               (let ((g-accessor-fn (slot->function "g-orgel" slot-name))
-;;                     (accessor-fn (slot->function "orgel" slot-name)))
-;;                 (loop for vsl across (sliders msl)
-;;                       for idx from 0
-;;                       do (progn
-;;                            (setf (value vsl) (val (aref (funcall accessor-fn global-orgel-ref) idx)))
-;;                            (setf (aref (funcall g-accessor-fn orgel) idx) vsl)))))))
-        ))
+                     (setf (aref (g-orgel-level (aref gui-orgeln orgel-idx)) array-idx) vsl))))
+        (create-div p1 :content "Osc-Level" :css *msl-title-css*)
+        (let ((msl
+                (apply #'multi-slider p1 :num 160 :css '(:margin-top 10px)
+                        :val-change-cb (make-orgel-kbd-array-receiver :osc-level global-orgel-ref)
+                       *msl-style*)))
+          (loop for vsl across (sliders msl)
+                for idx from 0
+                do (let* ((orgel-ref (aref cl-orgelctl::*orgel-freqs-vector* idx))
+                          (orgel-idx (1- (third orgel-ref)))
+                          (array-idx (1- (fourth orgel-ref))))
+                     (setf (value vsl) (val (aref (orgel-osc-level (aref global-orgel-ref orgel-idx)) array-idx)))
+                     (setf (aref (g-orgel-osc-level (aref gui-orgeln orgel-idx)) array-idx) vsl))))))
 
 (defun orgel-kbd (body)
   (let ((orgel-gui (make-orgel-gui))
@@ -240,7 +219,6 @@
     (with-connection-cache (body)
       (let ((gui-container (create-div body
                                        :css '(:display "flex"
-                                              :overflow "auto"
                                               :margin-right "15px"
                                               :padding-bottom "30px"))))
         (create-orgel-kbd-gui gui-container (orgel-gui-orgeln orgel-gui) *curr-state*)))))

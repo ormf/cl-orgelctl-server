@@ -139,3 +139,6 @@ of orgel at <orgelnummer> in *curr-state*."
   (let ((orgelidx (gethash orgelnummer *orgeltargets*)))
     (val (aref (aref *orgel-mlevel* orgelidx) (1- partial)))))
 
+(defun (setf mlevel) (value orgelnummer partial)
+  (let ((orgelidx (gethash orgelnummer *orgeltargets*)))
+    (setf (val (aref (aref *orgel-mlevel* orgelidx) (1- partial))) value)))

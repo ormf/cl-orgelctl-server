@@ -614,8 +614,47 @@ https://hmwk.heconf.de/r?room=HMWK%3A+MPK-Digitalisierung
 
 (level 1 1)
 
-(mlevel 1 1)
+(float (cm:interpl 100 (loop
+                                                         for idx from 0
+                                                         for val in
+                                                         '(0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 3 3 3 3 3 4 4 4 4 4 5 5 5 5 5 6 6 6 6 6 7 7 7 7 7 8 8 8 8 8 9 9 9 10 10 11 11 11 12 12 13 13 14 14 15 15 16 16 17 17 18 19 19 20 21 22 23 24 25 27 29 31 33 34 35 36 37 37 38 39 39 39 40)
+                                                         with curr = -1
+                                                         if (/= val curr) append
+                                                                          (prog1 (list idx (* 100/40 val))
+                                                                            (setf curr val)))) 1.0)
 
+
+(setf (mlevel 1 1) 60)
+
+(format t "[~{~,2f~^, ~}]"
+        (loop for idx below 113 collect
+                                (float (cm:interpl idx (loop
+                                                         for idx from 0
+                                                         for val in
+                                                         '(0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 3 3 3 3 3 4 4 4 4 4 5 5 5 5 5 6 6 6 6 6 7 7 7 7 7 8 8 8 8 8 9 9 9 10 10 11 11 11 12 12 13 13 14 14 15 15 16 16 17 17 18 19 19 20 21 22 23 24 25 27 29 31 33 34 35 36 37 37 38 39 39 39 40)
+                                                         with curr = -1
+                                                         if (/= val curr) append
+                                                                          (prog1 (list idx (* 100/40 val))
+                                                                            (setf curr val)))) 1.0)))
+
+(format t "~%~%[~{~,2f~^, ~}]"
+        (loop for idx below 113 collect
+                                (float (cm:interpl idx '(0 0 100 145/2 112 100)) 1.0)))
+
+(format t "[~{~,2f~^, ~}]"
+        (loop for idx below 113 collect
+                                (float (cm:interpl idx (loop
+                                                         for idx from 0
+                                                         for val in
+                                                         '(0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 3 3 3 3 3 4 4 4 4 4 5 5 5 5 5 6 6 6 6 6 7 7 7 7 7 8 8 8 8 8 9 9 9 10 10 11 11 11 12 12 13 13 14 14 15 15 16 16 17 17 18 19 19 20 21 22 23 24 25 27 29 31 33 34 35 36 37 37 38 39 39 39 40)
+                                                         with curr = -1
+                                                         if (/= val curr) append
+                                                                          (prog1 (list idx (* 100/40 val))
+                                                                            (setf curr val)))) 1.0)))
+
+
+(/ 100 70)
+(/ 80 1.12)
 (let ((fn (lambda () (orgel-ctl 1 :level 4 (+ (mlevel 1 1) (gain 1 1) 2)))))
   (funcall fn))
 
