@@ -22,7 +22,7 @@
 
 (ql:quickload :slynk)
 
-(defun get-ifname-and-ip ()
+(defun get-ifname-and-ip (s)
   "get the interface name and its ip address for the first interface name
 starting with \"en*\" or \"eth*\". As the function uses the ip and the
 cut command in a shell, those programs need to be installed on the
@@ -38,15 +38,14 @@ system."
       for line = (read-line in nil nil)
       while line
       for if-ip = (remove "" (uiop:split-string line) :test #'string=) 
-      until (and (> (length (first if-ip)) 2)
-                 (or (string= (subseq (first if-ip) 0 2) "en")
-                     (string= (subseq (first if-ip) 0 3) "eth")))
+      until (and (> (length (first if-ip)) 1) (string= (subseq (first if-ip) 0 1) s))
       finally (return (if line if-ip)))))
 
 ;;; (get-ifname-and-ip)
 
 (destructuring-bind (&optional interface host &rest rest)
-    (get-ifname-and-ip)
+    (or (get-ifname-and-ip "e")
+        (get-ifname-and-ip "w"))
   (declare (ignore rest))
   (sleep 0.5)
   (let* ((port 4007)
@@ -58,7 +57,7 @@ system."
           (format t str))
         (warn "no ethernet interface found"))))
 
-(setf slynk*use-dedicated-output-stream* nil)
+(setf slynk::*use-dedicated-output-stream* nil)
 
 
 #|
@@ -72,8 +71,3 @@ system."
            :output :string))))
   (slynk:create-server :interface host :port 4007 :dont-close t))
 |#
-
-
-
-
-

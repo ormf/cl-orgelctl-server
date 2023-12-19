@@ -61,7 +61,7 @@
              (orgel-ref (aref cl-orgelctl::*orgel-freqs-vector* idx))
              (orgel-idx (1- (third orgel-ref)))
              (array-idx (1- (fourth orgel-ref))))
-        (format t "kbd-array-received: orgel~2,'0d ~a ~a ~a~%" (1+ orgel-idx) array-idx idx orgel-val)
+        (incudine.util:msg :info "kbd-array-received: orgel~2,'0d ~a ~a ~a~%" (1+ orgel-idx) array-idx idx orgel-val)
         (set-cell (aref (funcall accessor (aref global-orgel-ref orgel-idx)) array-idx)
                   orgel-val :src self)))))
 

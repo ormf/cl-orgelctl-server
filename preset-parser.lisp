@@ -155,14 +155,14 @@ a fader target, or length 2 for a global target."
       (register-responder fn observed)
       (when (and reset (not (member fn registered-fns)))
           (push fn registered-fns)
-          (funcall fn)))))
+          (if reset (funcall fn))))))
 
 (defun digest-route (orgel form reset)
   (loop
     for (target form) on form by #'cddr
     do (register-responders target orgel form reset)))
 
-(defun digest-routes (form &key (reset t))
+(defun digest-routes (form &key (reset nil))
   (clear-osc-responder-registry)
   (remove-all-cc-responders)
   (loop

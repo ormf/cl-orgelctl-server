@@ -118,7 +118,7 @@ bp, gain, osc-level)."
           ,stream ,(format nil "/orgel~2,'0d/~a" (1+ orgelidx) (symbol-value target)) "ff"
           (lambda (faderidx value)
             (orgel-fader-value-callback ,orgelidx ',(read-from-string (format nil "~a" (symbol-value target))) faderidx value nil)
-            (incudine.util:msg :info  "orgel~2,'0d: ~a ~a ~a~%" ,(1+ orgelidx) ,target (round faderidx) value)))))
+            (incudine.util:msg :info "orgel~2,'0d in: ~a ~a ~a~%" ,(1+ orgelidx) ,target (round faderidx) value)))))
 
 (defmacro get-orgel-fader-responders (stream orgelidx targets)
   `(append
@@ -132,8 +132,8 @@ amps, etc.)"
          (incudine::make-osc-responder
           ,stream ,(format nil "/orgel~2,'0d/~a" (1+ orgelidx) (symbol-value target)) "f"
           (lambda (value)
-            (orgel-global-value-callback ,orgelidx ',(read-from-string (format nil "~a" (symbol-value target))) value 100 nil)
-            (incudine.util:msg :info "orgel~2,'0d: ~a ~a~%" ,(1+ orgelidx) ,target value)))))
+            (orgel-global-value-callback ,orgelidx ',(read-from-string (format nil "~a" (symbol-value target))) value nil)
+            (incudine.util:msg :info "orgel~2,'0d in: ~a ~a~%" ,(1+ orgelidx) ,target value)))))
 
 ;;; (define-orgel-global-responder 'osc-stream 0 :base-freq)
 
@@ -165,7 +165,7 @@ amps, etc.)"
     ""
     (lambda ()
       ,fn
-      (if *debug* (format t "preset-ctl: ~a~%" ,path)))))
+      (incudine.util:msg :info "preset-ctl: ~a~%" ,path))))
 
 (defmacro define-orgel-ccin-responder (stream)
   "responder for external ccin."
@@ -174,7 +174,7 @@ amps, etc.)"
           ,stream "/ccin"  "fff"
           (lambda (ccval ccnum channel)
             (setf (val (aref (aref *midi-cc-state* channel) ccnum)) ccval)
-            (if *debug* (format t "ccin: ~a ~a ~a~%" ccnum ccval channel))))))
+            (incudine.util:msg :info "ccin: ~a ~a ~a~%" ccnum ccval channel)))))
 
 (defmacro define-orgel-notein-responder (stream)
   "responder for external notein."
@@ -183,7 +183,7 @@ amps, etc.)"
           ,stream "/notein"  "fff"
           (lambda (keynum velo channel)
             (setf (val (aref (aref *midi-note-state* channel) keynum)) velo)
-            (if *debug* (format t "ccin: ~a ~a ~a~%" keynum velo channel))))))
+            (incudine.util:msg :info "ccin: ~a ~a ~a~%" keynum velo channel)))))
 
 (defmacro get-preset-responders (stream)
   `(progn
@@ -198,12 +198,35 @@ amps, etc.)"
       "/preset-ctl/preset-no" "f"
       (lambda (f)
         (setf *curr-orgel-preset-nr* (round f))
-        (if *debug* (format t "preset-ctl: preset-no ~a~%" (round f)))))))
+        (incudine.util:msg :info "preset-ctl: preset-no ~a~%" (round f))))))
+
+(defun define-orgel-plist-responders (stream)
+  (incudine.util:msg :info "defining plist responders on ~a." stream)
+  `(let ((curr-plist nil))
+     (incudine:make-osc-responder
+      ,stream "/plist-ctl/start" ""
+      (lambda ()
+        (setf curr-plist nil)
+        (incudine.util:msg :info "plist-ctl: start~%")))
+     (incudine:make-osc-responder
+      ,stream "/plist-ctl/stop" ""
+      (lambda ()
+        (setf *global-targets* curr-plist)
+        (setf curr-plist nil)
+        (incudine.util:msg :info "plist-ctl: stop~%")))
+     (incudine:make-osc-responder
+      ,stream "/plist-ctl/fader" "fff"
+      (lambda (orgelno partial amp)
+        (push (list orgelno partial amp) curr-plist)
+        (incudine.util:msg :info "plist-ctl/fader: ~a ~a ~a ~%" orgelno partial amp)))))
+
 
 (defmacro make-all-responders (maxorgel stream)
   (let ((maxorgel (eval maxorgel)))
     `(progn
+       (incudine:remove-all-responders ,stream)
        (get-preset-responders ,stream)
+       ,(define-orgel-plist-responders stream)
        ,@(loop
            for orgelidx below maxorgel
            collect `(setf (gethash ,(ou:make-keyword (format nil "orgel~2,'0d" (1+ orgelidx))) *orgel-osc-responder*)
@@ -211,6 +234,8 @@ amps, etc.)"
                            (get-orgel-fader-responders ,stream ,orgelidx *orgel-fader-targets*)
                            (get-orgel-global-responders ,stream ,orgelidx *orgel-global-targets*)
                            (get-orgel-level-meter-responders ,stream ,orgelidx *orgel-level-meter-targets*)
+                           
+
 ;;;                           (define-orgel-ccin-responder ,stream)
 ;;;                           (define-orgel-notein-responder ,stream)
                            )))
@@ -233,13 +258,14 @@ amps, etc.)"
   (let ((orgelidx (gethash orgel *orgeltargets*)))
     (unless orgelidx (error "Orgel \"~S\" doesn't exist" orgel))
 ;;;  (break "orgel: ~a ~a ~a ~a" orgel target idx val)
-    (set-cell (aref
-               (slot-value (aref *curr-state* orgelidx)
-                           (target-key->sym target))
-               (1- partial))
-              (float val 1.0))))
+    (set-cell
+     (aref
+      (slot-value (aref *curr-state* orgelidx)
+                  (target-key->sym target))
+      (1- partial))
+     (float val 1.0))))
 
-;;; (orgel-ctl-fader :orgel04 :level 4 0.5)
+;;; (orgel-ctl-fader :orgel04 :level 2 0.5)
 
 
 (declaim (inline target-key))
@@ -253,7 +279,7 @@ amps, etc.)"
                     ((keywordp target) (gethash target *observed*))
                     (t (list target))))
         (orgeltarget (target-key orgeltarget)))
-    (if *debug* (format t (format nil "/~a/~a" orgeltarget (first form))))
+    (incudine.util:msg :info (format nil "/~a/~a" orgeltarget (first form)))
     (unless form (error "target ~S doesn't exist" target))
     (if (cdr form)
         (incudine.osc:message *oscout* (format nil "/~a/~a" orgeltarget (first form)) "if"
@@ -282,15 +308,25 @@ amps, etc.)"
                     ((keywordp target) (gethash target *observed*))
                     (t (list target))))
         (orgeltarget (target-key orgeltarget)))
-    (if *debug* (format t (format nil "/~a/~a" orgeltarget (first form))))
     (unless form (error "target ~S doesn't exist" target))
+    (unless (eq (incudine:rt-status) :started) (error "Incudine dsp engine not started!"))
     (if (cdr form)
-        (incudine.osc:message *oscout* (format nil "/~a/~a" orgeltarget (first form)) "if"
-                              (second form) (float val 1.0))
-        (incudine.osc:message *oscout* (format nil "/~a/~a" orgeltarget (first form)) "f" (float val 1.0)))))
+        (let ((address (format nil "/~a/~a" orgeltarget (first form))))
+          (incudine.util:nrt-msg :info "osc-out: ~a ~a ~a ~a" address "if" (second form) (float val 1.0))
+          (incudine:at (incudine:now) (lambda () (incudine.osc:message *oscout* address "if" (second form) (float val 1.0)))))
+        (let ((address (format nil "/~a/~a" orgeltarget (first form))))
+          (incudine.util:nrt-msg :info "osc-out: ~a ~a ~a" address "f" (float val 1.0))
+          (incudine:at (incudine:now) (lambda () (incudine.osc:message *oscout* address "f" (float val 1.0))))
+         ;;; (incudine.osc:message *oscout* address "f" (float val 1.0))
+          ))))
 
 (defun fader-to-pd (orgel target idx val)
   "send orgel fader slot values to pd via osc."
   (unless (gethash orgel *orgeltargets*) (error "Orgel \"~S\" doesn't exist" orgel))
+  (unless (eq (incudine:rt-status) :started) (error "Incudine dsp engine not started!"))
 ;;;  (break "orgel: ~a ~a ~a ~a" orgel target idx val)
-  (incudine.osc:message *oscout* (format nil "/~a/~a" orgel target) "if" (round idx) (float val 1.0)))
+  (let ((address (format nil "/~a/~a" orgel target)))
+    (incudine.util:nrt-msg :info "osc-out: ~a ~a ~a ~a" address "if" (round idx) (float val 1.0))
+;;;    (incudine.osc:message *oscout* address "if" (round idx) (float val 1.0))
+    (incudine:at (incudine:now) (lambda () (incudine.osc:message *oscout* address "if" (round idx) (float val 1.0))))
+    ))

@@ -22,14 +22,51 @@
 (in-package :cl-orgelctl)
 (incudine::remove-all-responders cm:*midi-in1*)
 
+(incudine.util::set-logger-level :info)
+
+(incudine:rt-start)
+
+(incudine:rt-status)
+
+(val (orgel-base-freq (aref *curr-state* 0)))
+*midi-cc-state*
+
+*midi-cc-responders*
+*route-presets*
+
+(incudine.osc:message *oscout* "/orgel01/level" "if" 1 (float 0.1 1.0))
+
+(orgel-ctl-fader :orgel01 :level 1 0.1)
+
+(make-instance 'model-slot)
+
+(push 'blah (orgel-dependencies ()))
+(orgel-ctl-fader :orgel01 :level 1 0.3)
 (aref *midi-cc-state* 5)
 
+(defparameter
+    *org-oscout*
+  (incudine.osc:open
+   :host "127.0.0.1"
+   :port 3011
+   :direction :output
+   :protocol :udp))
+
+(incudine.osc:close *org-oscout*)
+
+(incudine.osc:message *org-oscout* "/plist-ctl/start"  "")
+
+(incudine.osc:message *org-oscout* "/orgel01/mlevel"  "fff" 0.2 2 0.5)
+
+*oscin*
 (ccin 20)
 (incudine:rt-start)
 
 (start-osc-midi-receive)
 
 (orgel-ctl :orgel01 :bias-pos 0.2)
+
+
 
 (setf (val (slot-value (aref *curr-state* 0) 'bias-pos))
       0.7) ; => #<m 0.2>
@@ -62,7 +99,20 @@
 (setf (ccin 0) 1) ; => 1 (1 bit, #x1, #o1, #b1)
 
 (incudine.util::set-logger-level :info)
-(incudine.util::set-logger-level :warn)
+
+
+(let ((address "/orgel01/osc-level"))
+  (loop for x below 1000 do (incudine.osc:message *oscout* address "if" (mod x 16) (float 0.0 1.0))))
+
+(let ((address "/orgel01/osc-level"))
+  (loop for x below 1000 do (incudine.osc:message *oscout* address "if" (mod x 16) (float (random 1.0) 1.0))))
+
+(let ((address "/orgel01/osc-level"))
+  (incudine:at (incudine:now) (lambda () (loop for x below 1000 do (incudine.osc:message *oscout* address "if" (mod x 16) (float (random 1.0) 1.0)))))
+  (incudine:at (+ (incudine:now) 10000) (lambda () (loop for x below 1000 do (incudine.osc:message *oscout* address "if" (mod x 16) (float (random 1.0) 1.0))))))
+
+(loop for x below 1000 do (incudine.osc:message *oscout* address "if" (mod x 16) (float (random 1.0) 1.0)))
+
 
 (orgel-ctl)
 
