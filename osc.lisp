@@ -202,7 +202,7 @@ amps, etc.)"
 
 (defun define-orgel-plist-responders (stream)
   (incudine.util:msg :info "defining plist responders on ~a." stream)
-  `(let ((curr-plist nil))
+  `(let ((curr-plist nil) (trigger nil))
      (incudine:make-osc-responder
       ,stream "/plist-ctl/start" ""
       (lambda ()
@@ -211,7 +211,7 @@ amps, etc.)"
      (incudine:make-osc-responder
       ,stream "/plist-ctl/stop" ""
       (lambda ()
-        (setf *global-targets* curr-plist)
+        (switch-targets curr-plist trigger)
         (setf curr-plist nil)
         (incudine.util:msg :info "plist-ctl: stop~%")))
      (incudine:make-osc-responder
@@ -330,3 +330,15 @@ amps, etc.)"
 ;;;    (incudine.osc:message *oscout* address "if" (round idx) (float val 1.0))
     (incudine:at (incudine:now) (lambda () (incudine.osc:message *oscout* address "if" (round idx) (float val 1.0))))
     ))
+
+(defun send-plist (seq)
+  "send the list of partials to set the *global-targets* parameter using osc."
+  (let ((osc-msgs
+          (loop for s in seq
+                collect
+                (list* "/plist-ctl/fader" "fff" (mapcar #'float s)))))
+    (apply #'incudine.osc:bundle
+           *org-oscout* 0
+           `(("/plist-ctl/start" "")
+             ,@osc-msgs
+             ("/plist-ctl/stop" "")))))

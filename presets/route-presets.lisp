@@ -49,7 +49,20 @@
                           (bias-cos :bias-pos :bias-bw :levels
                                     #(1 0.5 1 0.5 1 0.5 1 0.5 1 0.5 1 0.5 1 0.5
                                       1 0.5))))))
-  nil (:preset nil :routes (:orgel01 (:level (bias-cos (ccin 0) (ccin 1)))))
+  nil
+  (:preset nil :routes
+           (:all (:main (main 1)) :orgel01
+            (:main (ccin 7) :bias-pos (ccin 21) :bias-bw (ccin 22) :osc-level
+             (bias-cos :bias-pos :bias-bw))
+            :orgel02 (:osc-level (bias-cos :bias-pos :bias-bw)) :orgel03
+            (:osc-level (bias-cos :bias-pos :bias-bw)) :orgel04
+            (:osc-level (bias-cos :bias-pos :bias-bw)) :orgel05
+            (:osc-level (bias-cos :bias-pos :bias-bw)) :orgel06
+            (:osc-level (bias-cos :bias-pos :bias-bw)) :orgel07
+            (:osc-level (bias-cos :bias-pos :bias-bw)) :orgel08
+            (:osc-level (bias-cos :bias-pos :bias-bw)) :orgel09
+            (:osc-level (bias-cos :bias-pos :bias-bw)) :orgel10
+            (:osc-level (bias-cos :bias-pos :bias-bw))))
   (:preset nil :routes
            (:orgel01
             (:bias-pos (ccin 0) :bias-bw (ccin 1) :level

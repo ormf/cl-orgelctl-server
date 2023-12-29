@@ -54,9 +54,28 @@
 
 (incudine.osc:close *org-oscout*)
 
-(incudine.osc:message *org-oscout* "/plist-ctl/start"  "")
+(incudine.osc:message *org-oscout* "/plist-ctl/stop"  "")
 
 (incudine.osc:message *org-oscout* "/orgel01/mlevel"  "fff" 0.2 2 0.5)
+
+(incudine.osc:bundle)
+
+(loop for )
+
+
+
+(send-plist '())
+
+(send-plist '((1 2 0.3) (4 5 0.6) (2 1 0.1)))
+
+*global-targets*
+
+
+
+(incudine.osc:send-bundle *org-oscout* 0)
+
+(loop for i below (incudine.osc:required-values *org-oscout*)
+      collect (incudine.osc:value *oscout* i))
 
 *oscin*
 (ccin 20)
