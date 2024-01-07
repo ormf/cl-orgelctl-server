@@ -1,9 +1,10 @@
-* cl-orgelctl
+* cl-orgelctl-server
 *** Orm Finnendahl <orm.finnendahl@selma.hfmdk-frankfurt.de>
 
     Lisp Steuerung für die Papierorgel des gleichnamigen Seminars von
     Nicolas Buzzi und Orm Finnendahl im WS 22-23, SS 23, etc..
-    
+
+    Dies ist der Server Teil. Für den Client siehe [[https://github.com/ormf/cl-orgelctl-client][cl-orgelctl-client]]
 ** License
 
 gpl 2.0 or later
