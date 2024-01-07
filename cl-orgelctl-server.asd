@@ -30,4 +30,4 @@
                (:file "midi-keymap-handler")
                (:file "osc-midi")
 ;;;               (:file "ats-player")
-               (:file "cl-orgelctl")))
+               (:file "cl-orgelctl-server")))
