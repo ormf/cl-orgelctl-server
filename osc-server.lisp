@@ -53,7 +53,7 @@
                            :port *lisp-server-port*
                            :direction :input))
   (incudine:remove-all-responders *oscin-lisp-server*)
-  (make-all-server-responders *orgelcount* *oscin-lisp-server*)
+  (make-all-server-responders)
   (incudine:make-osc-responder
    *oscin-lisp-server*
    "/connect-client"
@@ -205,7 +205,7 @@ amps, etc.)"
      ,@(loop for target in (symbol-value targets)
              collect `(define-server-orgel-level-meter-responder ,stream ,orgelidx ,target))))
 
-(defun define-server-preset-responder (stream path fn)
+(defmacro define-server-preset-responder (stream path fn)
   `(incudine:make-osc-responder
     ,stream
     ,(format nil "/preset-ctl/~a" path)
@@ -233,13 +233,13 @@ amps, etc.)"
             (incudine.util:msg :info "ccin: ~S ~a ~a ~a~%" client keynum velo channel)))))
 
 (defmacro get-server-preset-responders (stream)
-  `(progn
-     ,(define-server-preset-responder stream "prev-preset" '(previous-orgel-preset))
-     ,(define-server-preset-responder stream "next-preset" '(next-orgel-preset))
-     ,(define-server-preset-responder stream "recall-preset" '(recall-orgel-preset *curr-orgel-preset-nr*))
-     ,(define-server-preset-responder stream "store-preset" '(store-orgel-preset *curr-orgel-preset-nr*))
-     ,(define-server-preset-responder stream "load-presets" '(load-orgel-presets))
-     ,(define-server-preset-responder stream "save-presets" '(save-orgel-presets))
+  `(list
+     (define-server-preset-responder ,stream "prev-preset" '(previous-orgel-preset))
+     (define-server-preset-responder ,stream "next-preset" '(next-orgel-preset))
+     (define-server-preset-responder ,stream "recall-preset" '(recall-orgel-preset *curr-orgel-preset-nr*))
+     (define-server-preset-responder ,stream "store-preset" '(store-orgel-preset *curr-orgel-preset-nr*))
+     (define-server-preset-responder ,stream "load-presets" '(load-orgel-presets))
+     (define-server-preset-responder ,stream "save-presets" '(save-orgel-presets))
      (incudine:make-osc-responder
       ,stream
       "/preset-ctl/preset-no" "sf"
@@ -270,12 +270,13 @@ amps, etc.)"
         (incudine.util:msg :info "plist-ctl/fader: ~a" (list (my-make-symbol (string-upcase target)) (round orgelno) (round partial) value) curr-plist orgelno partial value)))))
 |#
 
-(defmacro make-all-server-responders (maxorgel stream)
-  (let ((maxorgel (eval maxorgel)))
+(defmacro %make-all-server-responders ()
+  (let ((maxorgel (eval '*orgelcount*))
+        (stream '*oscin-lisp-server*))
     `(progn
        (incudine:remove-all-responders ,stream)
        (get-server-preset-responders ,stream)
-;;       ,(define-orgel-plist-responders stream)
+       ;;       ,(define-orgel-plist-responders stream)
        ,@(loop
            for orgelidx below maxorgel
            collect `(setf (gethash ,(ou:make-keyword (format nil "orgel~2,'0d" (1+ orgelidx))) *orgel-server-osc-responder*)
@@ -290,7 +291,10 @@ amps, etc.)"
                            )))
        nil)))
 
-;;; (make-all-server-responders *orgelcount* *oscin-lisp-server*)
+(defun make-all-server-responders ()
+  (%make-all-server-responders))
+
+;;; (make-all-server-responders)
 
 (defun orgel-ctl-fader (orgel target partial val)
   (let ((orgelidx (gethash orgel *orgeltargets*)))

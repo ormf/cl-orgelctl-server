@@ -71,7 +71,8 @@
                          (setf (notein d1 channel) val)))
              (:note-off (let ((channel (status->channel st)))
                           (incudine::msg info "orgel-note-responder: ~d ~d ~,2f" channel d1 0.0)
-                          (setf (notein d1 channel) 0.0))))))))
+                          (setf (notein d1 channel) 0.0)))))))
+  )
 
 ;;; (make-orgel-note-responder)
 

@@ -11,7 +11,7 @@
 (load-route-presets)
 
 ;;; (permute)
-*midi-in1*
+;;; *midi-in1*
 
 (start-lisp-server)
 (start-osc-midi-receive)
