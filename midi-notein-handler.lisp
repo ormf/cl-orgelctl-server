@@ -62,14 +62,14 @@
   (if *orgel-note-responder* (incudine::remove-responder *orgel-note-responder*))
   (setf *orgel-note-responder*
         (incudine:make-responder
-         cm:*midi-in1*
+         *midi-in1*
          (lambda (st d1 d2)
-           (case (cm:status->opcode st)
-             (:note-on (let ((channel (cm:status->channel st))
+           (case (status->opcode st)
+             (:note-on (let ((channel (status->channel st))
                              (val (float (/ d2 127) 1.0)))
                          (incudine::msg info "orgel-note-responder: ~d ~d ~,2f" channel d1 val)
                          (setf (notein d1 channel) val)))
-             (:note-off (let ((channel (cm:status->channel st)))
+             (:note-off (let ((channel (status->channel st)))
                           (incudine::msg info "orgel-note-responder: ~d ~d ~,2f" channel d1 0.0)
                           (setf (notein d1 channel) 0.0))))))))
 

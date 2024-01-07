@@ -88,7 +88,7 @@ interpolating all values between presets <num> and <next>."
     (loop for orgel below *orgelcount*
           for time from 0 by 0.02
           do (let ((orgel orgel))
-               (cm::at (+ (cm:now) time)
+               (incudine:at (+ (incudine:now) (* time incudine.util:*sample-rate*))
                        (lambda () (recall-orgel orgel num next interp)))))
     (let ((preset (elt *orgel-presets* num)))
       (dotimes (idx *orgelcount*)

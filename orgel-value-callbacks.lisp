@@ -72,17 +72,24 @@ events from the dsp engine)."
  also takes care of calling the route functions defined in presets, so
  triggering all necessary respond actions to gui, cc or osc messages
  boils down to simply setting the ref-cell in *curr-state*."
+  (format t "setup-ref-cell-hooks!~%")
   (dotimes (orgelidx *orgelcount*)
     (let ((global-orgel (aref *curr-state* orgelidx)))
       (map
        nil
        (lambda (slot-sym slot-key)
-         (let ((orgelidx orgelidx))
+         (let* ((orgelidx orgelidx)
+                (orgel-name (orgel-name (1+ orgelidx))))
            (setf (set-cell-hook (slot-value global-orgel slot-sym))
                  (lambda (val &key src)
                    (declare (ignorable src))
-;;;                   (format t "setup-ref-cell-hooks, slot-sym: ~a, val: ~a~%" slot-sym val)
-                   (if val (global-to-pd (orgel-name (1+ orgelidx)) slot-key val))
+;;;                   (if val (global-to-pd orgel-name slot-key val))
+                   (maphash
+                    (lambda (key client)
+                      (unless (equal key src)
+;;                        (incudine.util:msg :info "set-cell-hook: to ~a: /~a/~a ~a" key orgel-name slot-sym val)
+                        (incudine:at (incudine:now) #'incudine.osc:message (oscout client) (format nil "/~a/~a" orgel-name slot-key) "f"  (float val 1.0))))
+                    *clients*)
                    (let ((val-string (format nil "~,3f" val ))
                          (attribute (if (member slot-key '(:bias-type :phase)) "data-val")))
                      (maphash (lambda (connection-id connection-hash)
@@ -97,20 +104,29 @@ events from the dsp engine)."
                                                           (setf (clog:attribute elem attribute) val-string)
                                                           (setf (clog:value elem) val-string)))))))
                               clog-connection::*connection-data*)) ;;; call the defined route functions
-                   (dolist (fn (slot-value (aref *osc-responder-registry* orgelidx) slot-sym))
+                   (dolist (fn (slot-value (aref *route-responder-registry* orgelidx) slot-sym)) ;;; call fns established with route presets.
                      (funcall fn val))))))
            *orgel-global-target-syms*
            *orgel-global-targets*)
 
       (map nil (lambda (slot-sym slot-key)
-                 (let ((orgelidx orgelidx))
+                 (let* ((orgelidx orgelidx)
+                        (orgel-name (orgel-name (1+ orgelidx))))
                    (dotimes (faderidx 16)
-                     (let ((faderidx faderidx))
+                     (let* ((faderidx faderidx)
+                            (faderno (float (1+ faderidx) 1.0)))
                        (setf (set-cell-hook (aref (slot-value global-orgel slot-sym) faderidx))
                              (lambda (val &key src)
                                (declare (ignorable src))
 ;;;                               (format t "setup-ref-cell-hooks, slot-sym: ~a, fader-idx: ~a, val: ~a~%" slot-sym faderidx val)
-                               (if val (fader-to-pd (orgel-name (1+ orgelidx)) slot-key (1+ faderidx) val))
+                               (maphash
+                                (lambda (key client)
+                                  (unless (equal key src)
+;;                                    (incudine.util:msg :info "set-cell-hook: to ~a: /~a/~a ~a" key orgel-name slot-sym val)
+                                    (incudine:at (incudine:now) #'incudine.osc:message (oscout client)
+                                                 (format nil "/~a/~a" orgel-name slot-key) "ff" faderno (float val 1.0))))
+                                *clients*)
+;;;                               (if val (fader-to-pd orgel-name slot-key (1+ faderidx) val))
 ;;;                               (format t "setting: ~a ~a ~a ~a~%" (orgel-name (1+ orgelidx)) slot-key (1+ faderidx) val)
                                (let ((val-string (format nil "~,3f" val)))
                                  (maphash (lambda (connection-id connection-hash)
@@ -122,20 +138,27 @@ events from the dsp engine)."
                                                                 (unless (or (equal src elem) (not elem)) (setf (clog:value elem) val-string))))))
                                           clog-connection::*connection-data*))
  ;;; call the defined route functions
-                               (dolist (fn (aref (slot-value (aref *osc-responder-registry* orgelidx) slot-sym) faderidx))
+                               (dolist (fn (aref (slot-value (aref *route-responder-registry* orgelidx) slot-sym) faderidx)) ;;; call fns established with route presets.
                                  (funcall fn val))))))))
             *orgel-fader-target-syms*
             *orgel-fader-targets*)
 
       (let* ((orgelidx orgelidx)
              (slot-key :mlevel)
-             (global-meter-ref (aref *orgel-mlevel* orgelidx)))
+             (global-meter-ref (aref *orgel-mlevel* orgelidx))
+             (orgel-name (1+ orgelidx)))
         (dotimes (faderidx 16)
           (let ((faderidx faderidx))
             (setf (set-cell-hook (aref global-meter-ref faderidx))
                   (lambda (val &key src)
                     (declare (ignorable src))
-                    (if val (fader-to-pd (orgel-name (1+ orgelidx)) slot-key (1+ faderidx) val))
+;;;                    (if val (fader-to-pd orgel-name slot-key (1+ faderidx) val))
+                    (maphash
+                    (lambda (key client)
+                      (unless (equal key src)
+  ;;                      (incudine.util:msg :info "set-cell-hook: to ~a: /~a/~a ~a" key orgel-name slot-key val)
+                        (incudine:at (incudine:now) #'incudine.osc:message (oscout client) (format nil "/~a/~a" orgel-name slot-key) "f"  (float val 1.0))))
+                    *clients*)
                     (let ((meter-value (- (val (aref (aref *orgel-mlevel* orgelidx) faderidx)) 100)))
                       (maphash (lambda (connection-id connection-hash)
                                  (declare (ignore connection-id))
@@ -147,9 +170,7 @@ events from the dsp engine)."
                                                       faderidx)))
                                        (unless (or (equal src elem) (not elem))
                                          (setf (clog:attribute elem "data-db") meter-value))))))
-                               clog-connection::*connection-data*)))))))
-      *orgel-fader-target-syms*
-      *orgel-fader-targets*))
+                               clog-connection::*connection-data*)))))))))
   (register-cc-ref-cell-hooks)
   (register-notein-ref-cell-hooks))
 

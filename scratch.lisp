@@ -22,7 +22,8 @@
 (in-package :cl-orgelctl)
 (incudine::remove-all-responders cm:*midi-in1*)
 
-(incudine.util::set-logger-level :info)
+(setf (incudine.util::logger-level) :info)
+(setf (incudine.util::logger-level) :warn)
 
 (incudine:rt-start)
 
@@ -36,14 +37,64 @@
 
 (incudine.osc:message *oscout* "/orgel01/level" "if" 1 (float 0.1 1.0))
 
+(defparameter *testoscout* nil)
+(defparameter *testoscout2* nil)
+
+(setf *testoscout* (incudine.osc:open :host "127.0.0.1" :port 3015 :direction :output))
+(setf *testoscout2* (incudine.osc:open :host "127.0.0.1" :port 3020 :direction :output))
+(incudine.osc:message *testoscout* "/orgel01/level" "sif" "client1" 1 (float 0.1 1.0))
+(incudine.osc:message *testoscout2* "/orgel01/level" "sif" "client1" 1 (float 0.1 1.0))
+
+(incudine::make-osc-responder
+ *oscin-lisp-server*
+ (format nil "/orgel01/test") "sff"
+          (lambda (client faderidx value)
+            (incudine.util:msg :info "orgel01 in: ~S test ~a ~a~%" client  (round faderidx) value)))
+
+(incudine::make-osc-responder
+   *oscin-lisp-server* (format nil "/orgel01/level") "sff"
+          (lambda (client faderidx value)
+            (incudine.util:msg :info "orgel01 in: ~S ~a ~a ~a~%" client 'level (round faderidx) value)
+))
+*curr-state*
+(format t "~a" (symbol-value :level))
+
+
+
+
+
+
+(type-of 'orgel)
+
+(get-orgel-fader-responders *oscin-lisp-server* 0 *orgel-fader-targets*)
+(incudine:recv-start *oscin-lisp-server*)
+
+(setup-ref-cell-hooks)
+*clients*
+(incudine.osc:message *testoscout* "/orgel01/level" "sff" "client1" (float 1 1.0) (float 0.8 1.0))
+
+(incudine.osc:message *testoscout* "/orgel01/base-freq" "sf" "client1" (float (+ 200 (random 1000)) 1.0))
+(orgel-name 1)
+(aref *curr-state*)
+
+(incudine.osc:message *testoscout* "/orgel01/delay" "sff" "client1" (float 1 1.0) (float 0.4 1.0))
+
+(incudine.osc:message *testoscout* "/orgel01/test" "sff" "client1" (float 1 1.0) (float 0.1 1.0))
+
+(incudine.osc:message *testoscout* "/connect-client" "si" "127.0.0.1" 3040)
+
+(setf (incudine.util:logger-level) :info)
+
 (orgel-ctl-fader :orgel01 :level 1 0.1)
 
+(start-lisp-server)
 (make-instance 'model-slot)
 
 (push 'blah (orgel-dependencies ()))
 (orgel-ctl-fader :orgel01 :level 1 0.3)
 (aref *midi-cc-state* 5)
 
+(incudine.osc:close *org-oscout*)
 (defparameter
     *org-oscout*
   (incudine.osc:open
@@ -66,10 +117,43 @@
 
 (send-plist '())
 
-(send-plist '((1 2 0.3) (4 5 0.6) (2 1 0.1)))
+(send-plist '((:level 2 2 0.5) (:level 1 2 0.5)))
+
+(orgel-ctl-fader)
+
+(incudine.util:msg :info "Hallo")
+(intern (string-upcase (caar *global-targets*)) 'cl-orgelctl)
+
+(dolist (target *global-targets*)
+  (destructuring-bind (target orgelno partial value) target
+    (orgel-ctl-fader orgelno target partial value)))
+
+
+
+(read-from-string "common-lisp-user::level")
+
+(send-plist '((level 1 1 1) (level 1 2 1) (level 2 1 1) (level 2 2 1) (level 1 3 1)
+ (level 1 5 1) (level 1 4 1) (level 2 11 1) (level 2 13 1) (level 2 3 1)
+ (level 1 15 1) (level 1 12 1) (level 2 7 1) (level 1 6 1) (level 2 5 1)
+ (level 1 11 1)))
+
+(send-plist '((level 2 2 0.5) (level 1 2 0.5)))
+
+cl-orgelctl::*global-targets*
+
+(read-from-string ":hallo")
+
+(intern "HALLO" 'SYMBOL)
+
 
 *global-targets*
 
+(send-plist '((:level 2 2 0.5) (:level 1 2 0.5)))
+
+(setf *global-targets* '((:level 1 1 1) (:level 1 2 1) (:level 2 1 1) (:level 2 2 1) (:level 1 3 1)
+ (:level 1 5 1) (:level 1 4 1) (:level 2 11 1) (:level 2 13 1) (:level 2 3 1)
+ (:level 1 15 1) (:level 1 12 1) (:level 2 7 1) (:level 1 6 1) (:level 2 5 1)
+ (:level 1 11 1)))
 
 
 (incudine.osc:send-bundle *org-oscout* 0)

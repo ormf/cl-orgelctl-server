@@ -5,22 +5,20 @@
 (setf *debug* nil)
 
 
-;;(cm:cd "/home/orm/work/unterricht/frankfurt/ws_22_23/musikinformatik/papierorgel/lisp/cl-orgelctl")
+;;(cd "/home/orm/work/unterricht/frankfurt/ws_22_23/musikinformatik/papierorgel/lisp/cl-orgelctl")
 (uiop:chdir (asdf:system-relative-pathname :cl-orgelctl ""))
 (load-orgel-presets)
 (load-route-presets)
 
 ;;; (permute)
+*midi-in1*
 
-(incudine:remove-all-responders *oscin*)
-(make-all-responders *orgelcount* *oscin*)
+(start-lisp-server)
 (start-osc-midi-receive)
 
-(cm:midi-open-default :direction :input)
-(cm:midi-open-default :direction :output)
-(incudine:recv-start cm:*midi-in1*)
-(incudine:remove-all-responders cm:*midi-in1*)
-(make-orgel-cc-responder)
+(incudine:recv-start *midi-in1*)
+(incudine:remove-all-responders *midi-in1*)
+;; (make-orgel-cc-responder)
 (make-orgel-note-responder)
 (init-orgel-keymaps)
 (start-keymap-note-responder)
@@ -39,12 +37,12 @@
   (slot-value test 'ramp-up))
 |#
 
-(incudine:recv-start *oscin*)
+;;; (incudine:recv-start *oscin*)
 
 ;;; (incudine.osc:close *oscout*)
 ;;; (incudine.osc:close *oscin*)
 
 
 (setup-ref-cell-hooks)
-(incudine:rt-stop)
+(incudine:rt-start)
 (start-orgel-gui)

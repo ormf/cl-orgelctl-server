@@ -20,6 +20,11 @@
 
 (in-package :cl-orgelctl)
 
+(defun my-make-symbol (string)
+  "will return a symbol without the leading hash as the common-lisp function does."
+  (read-from-string (format nil ":~a" string)))
+
+
 (defun r-elt (seq)
   (elt seq (random (length seq))))
 
@@ -222,13 +227,14 @@ faders are interpolated between the faders at bw 15/15.5 and 1."
 (defun switch-targets (new &key (old '*global-targets*) (trigger nil))
   "set *global-targets* to new, zeroeing all faders of old, which are
 not contained in new."
+;;;  (break "~a ~a"  (symbol-value old) new)
   (let* ((last (symbol-value old))
          (to-remove (remove-if (lambda (x) (member x new :test #'equal)) last)))
-;;;    (break "~a " to-remove)
     (loop
-      for (target orgelno faderno)
+      for (target orgelno faderno value)
         in to-remove
-      do (orgel-ctl-fader (orgel-name orgelno) target faderno 0))
+      do (progn
+           (orgel-ctl-fader (orgel-name orgelno) target faderno 0)))
     (setf (symbol-value old) new)
     (if trigger (mapcar #'funcall (get-trig-fns trigger)))))
 
@@ -283,7 +289,7 @@ sent using orgel-ctl-fader."
   "transpose seqs and return them as a list of vectors. The number of
 seqs returned equals the number of the first element of seqs.  If an
 element of seqs is shorter then the length of the first element, the
-elemtn gets nil padded at the end."
+element gets nil padded at the end."
   (labels ((inner (seq accum)
              (if (null seq)
                  (mapcar #'reverse accum)
@@ -348,6 +354,20 @@ elemtn gets nil padded at the end."
 (defun wellenlaenge (freq &key (schallgeschwindigkeit 343.2))
   (/ schallgeschwindigkeit freq 2))
 
+(defun send-plist (seq)
+  "send the list of partials to set the *global-targets* parameter using osc."
+  (let ((osc-msgs
+          (loop for s in seq
+                collect
+                (list* "/plist-ctl/fader" "sfff"
+                       (format nil "~a" (first s)) (mapcar #'float (cdr s))))))
+    (apply #'incudine.osc:bundle
+           *org-oscout* 0
+           `(("/plist-ctl/start" "")
+             ,@osc-msgs
+             ("/plist-ctl/stop" "")))))
+
+
 #|
 (destructuring-bind (targets amps)
     (find-orgel-fader-amps
@@ -377,7 +397,7 @@ elemtn gets nil padded at the end."
 ;;; respective amps. The vectors are reduced by removing duplicate faders 
 ;;; (the loudest one is kept).          
                                         
-(find-orgel-level-amps                  
+(find-orgel-fader-amps                  
 '((311.3 0.5) (412.2 0.3)               
 (1230.5 0.1) (3410.8 0.191)             
 (311.3 0.2) (412.2 0.247)               
@@ -392,9 +412,9 @@ elemtn gets nil padded at the end."
 ;;; set *global-targets*:               
                                         
 (setf *global-targets*                  
-'((level 1 1) (level 1 2) (level 2 1) (level 2 2) (level 1 3) 
-(level 1 5) (level 1 4) (level 2 11) (level 2 13) (level 2 3) 
-(level 1 15) (level 1 12) (level 2 7) (level 1 6) (level 2 5) (level 1 11))) 
+'((level 1 1 1) (level 1 2 1) (level 2 1 1) (level 2 2 1) (level 1 3 1) 
+(level 1 5 1) (level 1 4 1) (level 2 11 1) (level 2 13 1) (level 2 3 1) 
+(level 1 15 1) (level 1 12 1) (level 2 7 1) (level 1 6 1) (level 2 5 1) (level 1 11 1)))
                                         
 ;;; digest the route (:bias-pos, :bias-bw and _bias-type trigger 
 ;;; recalculation of the *global-targets*): 
@@ -411,16 +431,16 @@ elemtn gets nil padded at the end."
 ;;; targets, after old targets not contained in new targets have been set 
 ;;; to 0:                               
                                         
-(switch-targets '((level 3 1) (level 1 2) (level 1 1) (level 2 5) (level 1 3) 
-(level 1 5) (level 1 4) (level 2 11) (level 2 13) (level 2 3) 
-(level 3 15) (level 2 12) (level 2 7) (level 1 6) (level 2 5) (level 1 11)) 
+(switch-targets '((level 3 1 1) (level 1 2 1) (level 1 1 1) (level 2 5 1) (level 1 3 1) 
+(level 1 5 1) (level 1 4 1) (level 2 11 1) (level 2 13 1) (level 2 3 1) 
+(level 3 15 1) (level 2 12 1) (level 2 7 1) (level 1 6 1) (level 2 5 1) (level 1 11 1)) 
 :trigger '(bias-pos 1))                 
                                         
 ;;; change *global-targets* back to previous values: 
                                         
-(switch-targets '((level 1 1) (level 1 2) (level 2 1) (level 2 2) (level 1 3) 
-(level 1 5) (level 1 4) (level 2 11) (level 2 13) (level 2 3) 
-(level 1 15) (level 1 12) (level 2 7) (level 1 6) (level 2 5) (level 1 11)) 
+(switch-targets '((level 1 1 1) (level 1 2 1) (level 2 1 1) (level 2 2 1) (level 1 3 1) 
+(level 1 5 1) (level 1 4 1) (level 2 11 1) (level 2 13 1) (level 2 3 1) 
+(level 1 15 1) (level 1 12 1) (level 2 7 1) (level 1 6 1) (level 2 5 1) (level 1 11 1)) 
 :trigger '(bias-pos 1))                 
                                         
 |#

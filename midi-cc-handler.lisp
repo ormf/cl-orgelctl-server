@@ -52,13 +52,46 @@
 
 (defparameter *orgel-cc-responder* nil)
 
+(defconstant +ml-opcode-mask+ #xf0)
+(defconstant +ml-channel-mask+ #x0f)
+(defparameter +ml-note-on-opcode+ 9)
+(defparameter +ml-note-off-opcode+ 8)
+(defparameter +ml-key-pressure-opcode+ 10)
+(defparameter +ml-control-change-opcode+ 11)
+(defparameter +ml-program-change-opcode+ 12)
+(defparameter +ml-channel-pressure-opcode+ 13)
+(defparameter +ml-pitch-bend-opcode+ 14)
+(defparameter *ml-opcodes*
+  `((,+ml-control-change-opcode+ . :cc)
+    (,+ml-note-on-opcode+ . :note-on)
+    (,+ml-note-off-opcode+ . :note-off)
+    (,+ml-program-change-opcode+ . :pgm-change)
+    (,+ml-pitch-bend-opcode+ . :pitch-bend)
+    (,+ml-key-pressure-opcode+ . :key-pressure)
+    (,+ml-channel-pressure-opcode+ . :channel-pressure)))
+
+(defun status->opcode (st)
+  (cdr (assoc (ash (logand st +ml-opcode-mask+) -4)
+              *ml-opcodes*)))
+
+(defun status->channel (st)
+  (logand st +ml-channel-mask+))
+
+(defparameter *midi-in1*
+  (jackmidi:open :direction :input
+                 :port-name "midi_in-1"))
+
+(defparameter *midi-out1*
+  (jackmidi:open :direction :output
+                 :port-name "midi_out-1"))
+
 (defun make-orgel-cc-responder ()
   (setf *orgel-cc-responder*
         (incudine:make-responder
-         cm:*midi-in1*
+         *midi-in1*
          (lambda (st d1 d2)
-           (case (cm:status->opcode st)
-             (:cc (let ((channel (cm:status->channel st))
+           (case (status->opcode st)
+             (:cc (let ((channel (status->channel st))
                         (val (float (/ d2 127) 1.0)))
                     (incudine::msg info "orgel-midi-responder: ~d ~d ~,2f" channel d1 val)
                     (setf (ccin d1 channel) val))))))))

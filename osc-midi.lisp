@@ -71,9 +71,9 @@
          (lambda (st d1 d2)
            (let ((st (round st))
                  (d1 (round d1)))
-             (incudine::msg info "orgel-osc-midi-responder: ~S ~d ~,2f ~d "  (cm:status->opcode st) d1 (float (/ d2 127) 1.0) (cm:status->channel st))
-             (dolist (responder (gethash cm:*midi-in1* incudine::*responders*))
-               (funcall (incudine::responder-function responder) st d1 d2 cm:*midi-in1*))))))
+             (incudine::msg info "orgel-osc-midi-responder: ~S ~d ~,2f ~d "  (status->opcode st) d1 (float (/ d2 127) 1.0) (status->channel st))
+             (dolist (responder (gethash *midi-in1* incudine::*responders*))
+               (funcall (incudine::responder-function responder) st d1 d2 *midi-in1*))))))
   (incudine:recv-start *osc-midi-in*))
 
 ;;; (start-osc-midi-receive)

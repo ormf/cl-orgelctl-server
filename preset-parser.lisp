@@ -24,6 +24,46 @@
 
 (in-package :cl-orgelctl)
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;; responders used for route presets. They are removable without
+;;; interfering with the ref-cell-hooks, which is necessary for the
+;;; preset model used. This could be solved more generally with the
+;;; ref object model, but that would need major restructuring of the
+;;; code. As it doesn't provide any performance gain it is left as is.
+;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defparameter *route-responder-registry*
+  (make-array *orgelcount*
+              :initial-contents (loop
+                                  for i below *orgelcount*
+                                  collect (make-instance 'orgel-registry))))
+#|
+(loop for target in *orgel-global-targets*
+collect `(setf (,(read-from-string (format nil "orgel-registry-~a" target)) (aref *orgel-responder-registry* orgelidx)) nil))
+
+|#
+
+;;; The funcalls are spelled out for speed. Too lazy to do it with a macro...
+
+(defmacro %clear-route-responder-registry ()
+  "clear all function calls to be called on osc message receive."
+  `(loop
+     for orgelidx below *orgelcount*
+     do (progn
+          ,@(mapcar (lambda (sym) `(setf (slot-value (aref *route-responder-registry* orgelidx) ',sym) nil)) *orgel-global-target-syms*)
+          ,@(mapcar (lambda (sym) `(dotimes (idx 16)
+                                (setf (aref (slot-value (aref *route-responder-registry* orgelidx) ',sym) idx) nil)))
+                    (append '(bias-level mlevel) *orgel-fader-target-syms*)))))
+
+;;; (clear-osc-responder-registry)
+
+(defun clear-route-responder-registry ()
+  (%clear-route-responder-registry))
+
+
+
 ;;; association of orgel-slots to their setter functions
 
 (defparameter *orgel-preset-def-lookup* (make-hash-table))

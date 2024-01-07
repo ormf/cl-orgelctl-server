@@ -3,8 +3,11 @@
   (delete-region (point-min) (point-max))
   (insert "(in-package :cl-orgelctl)\n\n;;; preset: ")
   (insert (format "%s\n\n" ref))
-  (insert (replace-regexp-in-string "cl-orgelctl::" ""
-                                    (replace-regexp-in-string "orm-utils:" "" str)))
+  (insert
+   (replace-regexp-in-string ") :" ")\n :"
+                             (replace-regexp-in-string "\n +(" " (" 
+                                                       (replace-regexp-in-string "cl-orgelctl::" ""
+                                                                                 (replace-regexp-in-string "orm-utils:" "" str)))))
 ;;;  (insert (format "\n\n(state-store-curr-preset %s)" ref))
   (insert "\n\n;;; (save-route-presets)")
   (delete-region (point) (point-max))
@@ -16,7 +19,8 @@
   (forward-line)
   (forward-line)
   (forward-line)
-  (save-buffer))
+  (save-buffer)
+  )
 
 (defun next-orgelctl-preset ()
     (interactive)
