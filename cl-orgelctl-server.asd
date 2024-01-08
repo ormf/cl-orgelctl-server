@@ -18,7 +18,6 @@
                (:file "globals")
                (:file "orgel-accessor-fns")
                (:file "orgel-value-callbacks")
-;;;               (:file "osc")
                (:file "osc-server")
                (:file "preset-parser")
                (:file "presets")
@@ -29,5 +28,4 @@
                (:file "midi-notein-handler")
                (:file "midi-keymap-handler")
                (:file "osc-midi")
-;;;               (:file "ats-player")
                (:file "cl-orgelctl-server")))
