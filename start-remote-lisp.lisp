@@ -59,6 +59,7 @@ system."
 
 (setf slynk::*use-dedicated-output-stream* nil)
 
+(ql:quickload "cl-orgelctl-server")
 
 #|
 (let* ((interface "enp6s0f3u1u3c2")

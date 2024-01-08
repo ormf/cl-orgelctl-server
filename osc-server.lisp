@@ -93,7 +93,8 @@
                            :port port
                            :id "papierrohrorgel-pd"
                            :oscout (incudine.osc:open :host host :port port :direction :output))))
-  (send-orgel-state (gethash "papierrohrorgel-pd" *clients*)))
+;;;  (send-orgel-state (gethash "papierrohrorgel-pd" *clients*))
+  )
 
 ;;; (unregister-client "pd")
 

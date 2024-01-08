@@ -137,6 +137,7 @@ interpolating all values between presets <num> and <next>."
 ;;; (recall-route-preset 0)
 ;;; (save-route-presets)
 
+#|
 #+swank
 (defparameter *emcs-conn* swank::*emacs-connection*)
 
@@ -160,7 +161,7 @@ interpolating all values between presets <num> and <next>."
       (set-window-dedicated-p (get-buffer-window "curr-preset.lisp" t) t)
       (load ,(namestring (merge-pathnames "sly-edit-orgel-presets.el" (asdf:system-source-directory :cl-orgelctl-server))))
       ) t))
-
+|#
 
 (defun preset->string (preset-form ref)
   (format nil "(digest-route-preset~%~d~%`(~S ~d~%~S ~S))"
@@ -170,6 +171,7 @@ interpolating all values between presets <num> and <next>."
           (third preset-form)
           (fourth preset-form)))
 
+#|
 #+swank
 (defun edit-preset-in-emacs (ref &key (presets *route-presets*))
   "send the preset form referenced by <ref> to emacs for display in the
@@ -203,6 +205,7 @@ curr-preset.lisp buffer."
          (switch-to-buffer (get-buffer "curr-preset.lisp"))) t)))
 
 (define-elisp-code)
+|#
 
 (defparameter *curr-orgel-preset-nr* 0)
 (defparameter *max-orgel-preset-nr* 127)
@@ -217,6 +220,7 @@ curr-preset.lisp buffer."
   (if (> *curr-orgel-preset-nr* 0)
       (incudine.osc:message *oscout* "/preset-ctl/preset-no" "i" (decf *curr-orgel-preset-nr*))))
 
+#|
 (defun next-route-preset ()
   (if (< *curr-route-preset-nr* *max-route-preset-nr*)
       (edit-preset-in-emacs (incf *curr-route-preset-nr*))))
@@ -224,7 +228,7 @@ curr-preset.lisp buffer."
 (defun previous-route-preset ()
   (if (> *curr-route-preset-nr* 0)
       (edit-preset-in-emacs (decf *curr-route-preset-nr*))))
-
+|#
 ;;; (previous-route-preset)
 ;;; (next-route-preset)
 

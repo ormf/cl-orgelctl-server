@@ -20,6 +20,14 @@
 
 (in-package :cl-orgelctl)
 
+;; presets can't save the state of a model-slot directly. As
+;; *curr-state* uses model-slots for all its values, we define a
+;; val-orgel of the same structure as an orgel, using numbers in place
+;; of the model-slots to read/save presets into/from *curr-state* and
+;; to save/load the presets to/from disk. The copy functions below
+;; take care of converting between the two struct formats for
+;; reading/storing *curr-state* from/to presets.
+
 (defstruct val-orgel
   (base-freq 0.0 :type number)
   (phase 1 :type number)
@@ -86,7 +94,8 @@
     (setf (val (slot-value dest slot)) (slot-value src slot)))
   (dolist (slot *orgel-fader-target-syms*)
     (dotimes (i 16)
-      (setf (val (aref (slot-value dest slot) i)) (aref (slot-value src slot) i)))))
+      (setf (val (aref (slot-value dest slot) i))
+            (aref (slot-value src slot) i)))))
 
 (defclass orgel-registry ()
   ((base-freq :initform nil)
