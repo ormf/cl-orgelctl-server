@@ -13,7 +13,7 @@
 ;;; (permute)
 ;;; *midi-in1*
 
-(start-lisp-server)
+(start-lisp-server :local-host "127.0.0.1")
 (start-osc-midi-receive)
 
 (incudine:recv-start *midi-in1*)

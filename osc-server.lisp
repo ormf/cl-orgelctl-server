@@ -39,17 +39,17 @@
 (defparameter *oscin-lisp-server* nil)
 (defparameter *curr-client-id* 0)
 
-(defparameter *local-host* "127.0.0.1")
+(defparameter *local-host* "192.168.178.103")
 ;;; (defparameter *pd-in-port* 3011)
 (defparameter *pd-out-host* "127.0.0.1")
 (defparameter *pd-out-port* 3010)
 
-(defun start-lisp-server ()
+(defun start-lisp-server (&key (local-host *local-host*))
   (format t "~&starting lisp server...")
   (when *oscin-lisp-server*
     (incudine.osc:close *oscin-lisp-server*))
   (setf *oscin-lisp-server*
-        (incudine.osc:open :host *local-host*
+        (incudine.osc:open :host local-host
                            :port *lisp-server-port*
                            :direction :input))
   (incudine:remove-all-responders *oscin-lisp-server*)
@@ -60,8 +60,11 @@
    "si"
    (lambda (host port)
      (incudine.util:msg :info "connect-client: ~a ~a" host port)
+     (incudine.util:with-logger (:level :info)
+         (incudine.util:msg :info "connecting new lisp client at ~a:~d" host port))
      (let ((id (register-client host port)))
-       (incudine.util:msg :info "registered new lisp client: ~a" id))))
+       (incudine.util:with-logger (:level :info)
+         (incudine.util:msg :info "registered new lisp client: ~S" id)))))
   (incudine:make-osc-responder
    *oscin-lisp-server*
    "/disconnect-client"
@@ -117,7 +120,8 @@
                                          :port port
                                          :id (new-client-id)
                                          :oscout (incudine.osc:open :host host :port port :direction :output)))))
-    (unless old-client (setf (gethash (id curr-client) *clients*) curr-client ))
+    (unless old-client (setf (gethash (id curr-client) *clients*) curr-client))
+    (incudine.util:msg :info "new client-id: ~a" (id curr-client))
     (incudine.osc:message (oscout curr-client) "/client-id" "s" (id curr-client))
     (send-orgel-state curr-client)
     (id curr-client)))
