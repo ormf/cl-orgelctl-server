@@ -208,7 +208,7 @@
 (defun orgel-kbd (body)
   (let ((orgel-gui (make-orgel-gui))
         connection-id)
-    (clog-dsp-widgets-initialize body)
+    (clog-orgel-widgets-initialize body)
     (setf connection-id (clog::connection-id body))
     (setf (title (html-document body)) "Orgel Keyboard Sliders")
     (add-class body "w3-blue-grey") ;;; background color
