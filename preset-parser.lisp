@@ -89,6 +89,8 @@ collect `(setf (,(read-from-string (format nil "orgel-registry-~a" target)) (are
 ;;; lookup of accessor function-names and keywords of all slots within
 ;;; the current orgel.
 
+#|
+
 (defparameter *observed* (make-hash-table))
 
 (progn
@@ -208,3 +210,4 @@ a fader target, or length 2 for a global target."
   (loop
     for (orgel form) on form by #'cddr
     do (digest-route orgel form reset)))
+|#

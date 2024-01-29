@@ -32,6 +32,8 @@
 
 (in-package :cl-orgelctl)
 
+(defparameter *route-responder-registry* nil)
+
 (defparameter *orgel-server-osc-responder* (make-hash-table))
 
 (defparameter *clients* (make-hash-table :test #'equal))
