@@ -41,7 +41,7 @@
 (defparameter *oscin-lisp-server* nil)
 (defparameter *curr-client-id* 0)
 
-(defparameter *local-host* "192.168.178.103")
+(defparameter *local-host* "127.0.0.1")
 ;;; (defparameter *pd-in-port* 3011)
 (defparameter *pd-out-host* "127.0.0.1")
 (defparameter *pd-out-port* 3010)

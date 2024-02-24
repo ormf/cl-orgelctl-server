@@ -22,4 +22,4 @@
 
 (in-package :cl-orgelctl)
 
-(start-lisp-server)
+(start-orgel-server)
