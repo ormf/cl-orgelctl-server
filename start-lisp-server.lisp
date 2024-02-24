@@ -43,23 +43,25 @@ system."
 
 ;;; (get-ifname-and-ip)
 
-(destructuring-bind (&optional interface host &rest rest)
-    (or (get-ifname-and-ip "e")
-        (get-ifname-and-ip "w"))
-  (declare (ignore rest))
-  (sleep 0.5)
-  (let* ((port 4007)
-         (str (format nil "~&~%using interface ~a~%creating server on host ~a, port ~a~%"
-                      interface host port)))
-    (if host
-        (progn
-          (slynk:create-server :interface host :port port :dont-close t)
-          (format t str))
-        (warn "no ethernet interface found"))))
+(defun create-slynk-server ()
+  (destructuring-bind (&optional interface host &rest rest)
+      (or (get-ifname-and-ip "e")
+          (get-ifname-and-ip "w"))
+    (declare (ignore rest))
+    (sleep 0.5)
+    (let* ((port 4007)
+           (str (format nil "~&~%using interface ~a~%creating server on host ~a, port ~a~%"
+                        interface host port)))
+      (if host
+          (progn
+            (slynk:create-server :interface host :port port :dont-close t)
+            (format t str))
+          (warn "no ethernet interface found"))))
+  (setf slynk::*use-dedicated-output-stream* nil))
 
-(setf slynk::*use-dedicated-output-stream* nil)
+;;; (create-slynk-server)
 
-(ql:quickload "cl-orgelctl-server")
+;;; (ql:quickload "cl-orgelctl-server")
 
 #|
 (let* ((interface "enp6s0f3u1u3c2")

@@ -77,13 +77,16 @@
 (defun status->channel (st)
   (logand st +ml-channel-mask+))
 
-(defparameter *midi-in1*
-  (jackmidi:open :direction :input
-                 :port-name "orgel_server_midi_in-1"))
+(defparameter *midi-in1* nil)
+(defparameter *midi-out1* nil)
 
-(defparameter *midi-out1*
-  (jackmidi:open :direction :output
-                 :port-name "orgel_server_midi_out-1"))
+(defun start-midi ()
+  (setf *midi-in1*
+        (jackmidi:open :direction :input
+                       :port-name "orgel_server_midi_in-1"))
+  (setf *midi-out1*
+        (jackmidi:open :direction :output
+                       :port-name "orgel_server_midi_out-1")))
 
 (defun make-orgel-cc-responder ()
   (setf *orgel-cc-responder*

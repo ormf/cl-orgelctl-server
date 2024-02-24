@@ -8,12 +8,13 @@
   :author "Orm Finnendahl <orm.finnendahl@selma.hfmdk-frankfurt.de>"
   :depends-on (#:incudine
                ;; #:cm-all
-               #:cl-orgel-gui #:cellctl ;;; #:ats-cuda
+               #:slynk #:cl-orgel-gui #:cellctl ;;; #:ats-cuda
                           )
   :license  "GPL 2.0 or later"
   :version "0.0.1"
   :serial t
-  :components ((:file "package")
+  :components ((:file "start-lisp-server")
+               (:file "package")
                (:file "structs")
                (:file "globals")
                (:file "orgel-accessor-fns")
