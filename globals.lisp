@@ -48,10 +48,24 @@
     (gain (make-array 16 :initial-contents (v-collect (n 16) (make-instance 'model-slot))) :type simple-array)
     (osc-level (make-array 16 :initial-contents (v-collect (n 16) (make-instance 'model-slot))) :type simple-array)))
 
+;;;
+'(220.0  188.13 160.77 137.48 117.49 100.47 85.86 73.42)
+
 (defparameter *base-freqs*
-  '(27.5 32.401794 38.49546 46.19711 56.132587 69.28748 87.30706 113.156204
-    152.76933 220.0)
+'(220.0 188.13 160.77 137.48 117.49 100.47 85.86 73.42)
   "all base frequencies of the orgel.")
+
+(defun set-ramp (orgel freq)
+  (let ((ramp (float (* 1/16 (/ 48000 freq)))))
+    (orgel-ctl orgel :ramp-down ramp)
+    (orgel-ctl orgel :ramp-up ramp)))
+
+(defun set-ramps ()
+  (mapc #'set-ramp
+	(ou:range 1 9)
+	*base-freqs*))
+
+;;;   '(27.5 32.401794 38.49546 46.19711 56.132587 69.28748 87.30706 113.156204 152.76933 220.0)
 
 (defparameter *orgel-freqs*
   (sort

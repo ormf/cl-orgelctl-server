@@ -13,7 +13,7 @@
 ;;; (permute)
 ;;; *midi-in1*
 
-
+;;; (js-execute msl (format nil "multislider(~A, { \"colors\": ~a, \"thumb\": '~(~a~)'})" (jquery msl) data-colors (if thumb "true" "false")))
 
 ;; (make-orgel-cc-responder)
 (init-orgel-keymaps)
