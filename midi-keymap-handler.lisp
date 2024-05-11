@@ -120,7 +120,7 @@
                   (elt *orgel-freqs* (+ keynum offset)))))
   (loop ;;; Keynums 24->103 for second part of freqs in sorted order
     with keymap = (aref *orgel-keymaps* 3) 
-        for keynum from 24 to 103
+        for keynum from 24 to 71
         with offset = (- 80 24)
         do (setf (aref keymap keynum)
                  (list
