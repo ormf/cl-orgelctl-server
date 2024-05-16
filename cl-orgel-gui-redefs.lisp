@@ -33,16 +33,16 @@
 
 ;;; (cl-orgelctl::orgel-ctl :orgel01 :phase -1.0)
 
-(defun make-orgel-val-receiver (slot orgelidx global-orgel-ref)
+(defun make-orgel-val-receiver (slot orgelidx global-orgel-ref &key db)
   (declare (ignore orgelidx))
   (let ((slot-symbol (intern (format nil "~:@(~a~)" slot) 'cl-orgel-gui)))
     (lambda (val self)
       (let* ((val-string (ensure-string val))
              (orgel-val (read-from-string val-string)))
 ;;;        (format t "make-orgel-val-receiver: ~a~%" orgel-val)
-        (set-cell (slot-value global-orgel-ref slot-symbol) orgel-val :src self)))))
+        (set-cell (slot-value global-orgel-ref slot-symbol) (if db (ndb-slider->amp orgel-val) orgel-val) :src self)))))
 
-(defun make-orgel-array-receiver (slot orgelidx global-orgel-ref)
+(defun make-orgel-array-receiver (slot orgelidx global-orgel-ref &key db)
   (declare (ignorable orgelidx))
   (let ((g-accessor (slot->function "g-orgel" slot))
         (accessor (slot->function "orgel" slot)))
@@ -50,7 +50,7 @@
     (lambda (idx val self)
       (let* ((orgel-val (read-from-string (ensure-string val))))
  ;;;        (format t "array-received: orgel~2,'0d ~a ~a~%" (1+ orgelidx) idx orgel-val)
-        (set-cell (aref (funcall accessor global-orgel-ref) idx) orgel-val :src self)))))
+        (set-cell (aref (funcall accessor global-orgel-ref) idx) (if db (ndb-slider->amp orgel-val) orgel-val) :src self)))))
 
 (defun make-orgel-kbd-array-receiver (slot global-orgel-ref)
   (let ((g-accessor (slot->function "g-orgel" slot))
