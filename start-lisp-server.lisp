@@ -56,9 +56,9 @@ system."
           (progn
             (slynk:create-server :interface host :port port :dont-close t)
             (format t str))
-          (warn "no ethernet interface found"))))
-  (setf slynk::*use-dedicated-output-stream* nil)
-  host)
+          (warn "no ethernet interface found")))
+    (setf slynk::*use-dedicated-output-stream* nil)
+    host))
 
 ;;; (create-slynk-server)
 
