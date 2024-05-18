@@ -34,12 +34,11 @@
 ;;; (cl-orgelctl::orgel-ctl :orgel01 :phase -1.0)
 
 (defun make-orgel-val-receiver (slot orgelidx global-orgel-ref &key db)
-  (declare (ignore orgelidx))
   (let ((slot-symbol (intern (format nil "~:@(~a~)" slot) 'cl-orgel-gui)))
     (lambda (val self)
       (let* ((val-string (ensure-string val))
              (orgel-val (read-from-string val-string)))
-;;;        (format t "make-orgel-val-receiver: ~a~%" orgel-val)
+        (incudine.util:msg :info "orgel-value-received: orgel~2,'0d ~a~%" (1+ orgelidx) orgel-val)
         (set-cell (slot-value global-orgel-ref slot-symbol) (if db (ndb-slider->amp orgel-val) orgel-val) :src self)))))
 
 (defun make-orgel-array-receiver (slot orgelidx global-orgel-ref &key db)
@@ -49,10 +48,10 @@
     (declare (ignore g-accessor))
     (lambda (idx val self)
       (let* ((orgel-val (read-from-string (ensure-string val))))
- ;;;        (format t "array-received: orgel~2,'0d ~a ~a~%" (1+ orgelidx) idx orgel-val)
+        (incudine.util:msg :info "orgel-array-received: orgel~2,'0d ~a ~a~%" (1+ orgelidx) idx orgel-val)
         (set-cell (aref (funcall accessor global-orgel-ref) idx) (if db (ndb-slider->amp orgel-val) orgel-val) :src self)))))
 
-(defun make-orgel-kbd-array-receiver (slot global-orgel-ref)
+(defun make-orgel-kbd-array-receiver (slot global-orgel-ref &key db)
   (let ((g-accessor (slot->function "g-orgel" slot))
         (accessor (slot->function "orgel" slot)))
     (declare (ignore g-accessor))
@@ -63,7 +62,7 @@
              (array-idx (1- (fourth orgel-ref))))
         (incudine.util:msg :info "kbd-array-received: orgel~2,'0d ~a ~a ~a~%" (1+ orgel-idx) array-idx idx orgel-val)
         (set-cell (aref (funcall accessor (aref global-orgel-ref orgel-idx)) array-idx)
-                  orgel-val :src self)))))
+                  (if db (ndb-slider->amp orgel-val) orgel-val) :src self)))))
 
 (defun create-preset-panel (container vu-container)
   (let ((preset-panel
@@ -169,41 +168,45 @@
 (defun create-orgel-kbd-gui (container gui-orgeln global-orgel-ref)
   (create-br container)
   (let* ((p1 (create-div container :css '(:margin-left "10px" :width "1800px"))))
-        (init-kbd-multi-vu :meters p1 gui-orgeln global-orgel-ref
-                           :num 160 :height "80px"
-                           :led-colors :blue
-                           :display-map :pd
-                           :direction :up :background "#444"
-                           :inner-background "#444"
-                           :border "none" :inner-border "thin solid black"
-                           :inner-padding-bottom "0px"
-                           :inner-padding "0"
-                           :css '(:margin-bottom 10px :margin-top 20px :top 0 :left 0)
-                           :val-change-cb nil)        
-        (create-div p1 :content "Level" :css *msl-title-css*)
-        (let ((msl
-                (apply #'multi-slider p1 :num 160 :css '(:margin-top 10px :margin-bottom 10px)
-                        :val-change-cb (make-orgel-kbd-array-receiver :level global-orgel-ref)
-                       *msl-style*)))
-          (loop for vsl across (sliders msl)
-                for idx from 0
-                do (let* ((orgel-ref (aref cl-orgelctl::*orgel-freqs-vector* idx))
-                          (orgel-idx (1- (third orgel-ref)))
-                          (array-idx (1- (fourth orgel-ref))))
-                     (setf (value vsl) (val (aref (orgel-level (aref global-orgel-ref orgel-idx)) array-idx)))
-                     (setf (aref (g-orgel-level (aref gui-orgeln orgel-idx)) array-idx) vsl))))
-        (create-div p1 :content "Osc-Level" :css *msl-title-css*)
-        (let ((msl
-                (apply #'multi-slider p1 :num 160 :css '(:margin-top 10px)
-                        :val-change-cb (make-orgel-kbd-array-receiver :osc-level global-orgel-ref)
-                       *msl-style*)))
-          (loop for vsl across (sliders msl)
-                for idx from 0
-                do (let* ((orgel-ref (aref cl-orgelctl::*orgel-freqs-vector* idx))
-                          (orgel-idx (1- (third orgel-ref)))
-                          (array-idx (1- (fourth orgel-ref))))
-                     (setf (value vsl) (val (aref (orgel-osc-level (aref global-orgel-ref orgel-idx)) array-idx)))
-                     (setf (aref (g-orgel-osc-level (aref gui-orgeln orgel-idx)) array-idx) vsl))))))
+    (init-kbd-multi-vu :meters p1 gui-orgeln global-orgel-ref
+                       :num 128 :height "80px"
+                       :led-colors :blue
+                       :display-map :pd
+                       :direction :up :background "#444"
+                       :inner-background "#444"
+                       :border "none" :inner-border "thin solid black"
+                       :inner-padding-bottom "0px"
+                       :inner-padding "0"
+                       :css '(:margin-bottom 10px :margin-top 20px :top 0 :left 0)
+                       :val-change-cb nil)        
+    (create-div p1 :content "Level" :css *msl-title-css*)
+    (let* ((db t)
+           (msl
+             (apply #'multi-slider p1 :num 128 :css '(:margin-top 10px :margin-bottom 10px)
+                                      :val-change-cb (make-orgel-kbd-array-receiver :level global-orgel-ref :db db)
+                                      *msl-style*)))
+      (loop for vsl across (sliders msl)
+            for idx from 0
+            do (let* ((orgel-ref (aref cl-orgelctl::*orgel-freqs-vector* idx))
+                      (orgel-idx (1- (third orgel-ref)))
+                      (array-idx (1- (fourth orgel-ref)))
+                      (amp (val (aref (orgel-level (aref global-orgel-ref orgel-idx)) array-idx))))
+                 (setf (value vsl) (if db (amp->ndb-slider amp) amp))
+                 (setf (aref (g-orgel-level (aref gui-orgeln orgel-idx)) array-idx) vsl))))
+    (create-div p1 :content "Osc-Level" :css *msl-title-css*)
+    (let* ((db t)
+           (msl
+             (apply #'multi-slider p1 :num 128 :css '(:margin-top 10px)
+                                      :val-change-cb (make-orgel-kbd-array-receiver :osc-level global-orgel-ref :db db)
+                                      *msl-style*)))
+      (loop for vsl across (sliders msl)
+            for idx from 0
+            do (let* ((orgel-ref (aref cl-orgelctl::*orgel-freqs-vector* idx))
+                      (orgel-idx (1- (third orgel-ref)))
+                      (array-idx (1- (fourth orgel-ref)))
+                      (amp (val (aref (orgel-osc-level (aref global-orgel-ref orgel-idx)) array-idx))))
+                 (setf (value vsl) (if db (amp->ndb-slider amp) amp))
+                 (setf (aref (g-orgel-osc-level (aref gui-orgeln orgel-idx)) array-idx) vsl))))))
 
 (defun orgel-kbd (body)
   (let ((orgel-gui (make-orgel-gui))
@@ -217,10 +220,13 @@
     ;; When doing extensive setup of a page using connection cache
     ;; reduces rountrip traffic and speeds setup.
     (with-connection-cache (body)
-      (let ((gui-container (create-div body
-                                       :css '(:display "flex"
-                                              :margin-right "15px"
-                                              :padding-bottom "30px"))))
-        (create-orgel-kbd-gui gui-container (orgel-gui-orgeln orgel-gui) *curr-state*)))))
+      (let* ((gui-container (create-div body
+                                        :css '(:display "flex"
+                                               :margin-right "15px"
+                                               :padding-bottom "30px")))
+             (margin (create-div gui-container :style "margin: 10px")))
+        (create-button margin :class "slider-constrain" :style "height: 10px;width: 10px;")
+        (create-orgel-kbd-gui gui-container (orgel-gui-orgeln orgel-gui) *curr-state*)
+        (js-execute body "orgelSetupGlobal()")))))
 
 (set-on-new-window 'orgel-kbd :path "/kbd")

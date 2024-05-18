@@ -303,19 +303,27 @@ amps, etc.)"
 
 ;;; (make-all-server-responders)
 
+(defun slider->val (target val)
+  (float (if (member target '(:level :gain :osc-level)) (ndb-slider->amp val) val) 1.0))
+
+(defun val->slider (target val)
+  (float (if (member target '(:level :gain :osc-level)) (amp->ndb-slider val) val) 1.0))
+
 (defun orgel-ctl-fader (orgel target partial val)
-  (let ((orgelidx (gethash orgel *orgeltargets*)))
+  (let ((orgelidx (gethash orgel *orgeltargets*))
+        (target-sym (target-key->sym target)))
     (unless orgelidx (error "Orgel \"~S\" doesn't exist" orgel))
 ;;;  (break "orgel: ~a ~a ~a ~a" orgel target idx val)
     (set-cell
      (aref
       (slot-value (aref *curr-state* orgelidx)
-                  (target-key->sym target))
+                  target-sym)
       (1- partial))
-     (float val 1.0))))
+     (slider->val target val))))
+
+
 
 ;;; (orgel-ctl-fader :orgel04 :level 2 0.5)
-
 
 (declaim (inline target-key))
 (defun target-key (target)

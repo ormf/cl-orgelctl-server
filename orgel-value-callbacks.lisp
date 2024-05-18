@@ -66,6 +66,16 @@ events from the dsp engine)."
   (let ((f-idx (round (1- faderidx))))
     (set-cell (aref (aref *orgel-mlevel* orgelidx) f-idx) value :src src)))
 
+(defun ndb-slider->amp (ndb &key (min -40) (max 0))
+  (if (zerop ndb)
+      0
+      (ou:db->amp (ou:n-lin ndb min max))))
+
+(defun amp->ndb-slider (amp &key (min -40) (max 0))
+  (if (zerop amp)
+      0
+      (ou:lin-n (ou:amp->db amp) min max)))
+
 (defun setup-ref-cell-hooks ()
   "Set up propagating changes in the model-slots of *curr-state* and
 *orgel-mlevel* to all connected clients (gui and pd via osc). This
@@ -90,7 +100,7 @@ events from the dsp engine)."
 ;;                        (incudine.util:msg :info "set-cell-hook: to ~a: /~a/~a ~a" key orgel-name slot-sym val)
                         (incudine:at (incudine:now) #'incudine.osc:message (oscout client) (format nil "/~a/~a" orgel-name slot-key) "f"  (float val 1.0))))
                     *clients*)
-                   (let ((val-string (format nil "~,3f" val ))
+                   (let ((val-string (format nil "~,3f" val))
                          (attribute (if (member slot-key '(:bias-type :phase)) "data-val")))
                      (maphash (lambda (connection-id connection-hash)
                                 (declare (ignore connection-id))
@@ -111,10 +121,12 @@ events from the dsp engine)."
 
       (map nil (lambda (slot-sym slot-key)
                  (let* ((orgelidx orgelidx)
-                        (orgel-name (orgel-name (1+ orgelidx))))
+                        (orgel-name (orgel-name (1+ orgelidx)))
+                        (db (member slot-key '(:level :gain :osc-level))))
                    (dotimes (faderidx 16)
                      (let* ((faderidx faderidx)
-                            (faderno (float (1+ faderidx) 1.0)))
+                            (faderno (float (1+ faderidx) 1.0))
+                            (db db))
                        (setf (set-cell-hook (aref (slot-value global-orgel slot-sym) faderidx))
                              (lambda (val &key src)
                                (declare (ignorable src))
@@ -127,11 +139,10 @@ events from the dsp engine)."
                                                  (format nil "/~a/~a" orgel-name slot-key) "ff" faderno (float val 1.0))))
                                 *clients*)
 ;;;                               (if val (fader-to-pd orgel-name slot-key (1+ faderidx) val))
-;;;                               (format t "setting: ~a ~a ~a ~a~%" (orgel-name (1+ orgelidx)) slot-key (1+ faderidx) val)
-                               (let ((val-string (format nil "~,3f" val)))
+                               (let ((val-string (format nil "~,3f" (if db (amp->ndb-slider val) val))))
                                  (maphash (lambda (connection-id connection-hash)
                                             (declare (ignore connection-id))
-;;;                   (break "~a" (gethash "orgel-gui" connection-hash))
+                                            (incudine.util:msg :info "setting: ~S ~S ~a to ~a (from ~a)%" (orgel-name (1+ orgelidx)) slot-key (1+ faderidx) val-string val)
                                             (let* ((orgel-gui (gethash "orgel-gui" connection-hash)))
                                               (when orgel-gui (let ((elem (aref (slot-value (aref (orgel-gui-orgeln orgel-gui) orgelidx) slot-sym)
                                                                                 faderidx)))

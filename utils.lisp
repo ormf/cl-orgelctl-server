@@ -125,6 +125,23 @@ respect to the range [0..1] (0->1, 1->0, 0.5->0.5, 0.2-0.8) if
   (let ((diff (- max min)))
     (+ min (* diff x))))
 
+(defun lin-n (val min max)
+  "return normalized val linearly between min and max.
+
+(lin-n min min max) -> 0
+(lin-n max min max) -> 1
+"
+  (/ (- val min) (- max min)))
+
+(defmacro exp-n (val min max)
+  "return normalized val exponentially between min and max:
+
+(exp-n min min max) -> 0
+(exp-n max min max) -> 1
+"
+  (let ((quot (if (zerop min) 0 (/ max min))))
+    `(log ,(/ val min) ,quot)))
+
 (defun recalc-bw (bw num-faders)
   (n-lin bw 0.5 num-faders))
 
