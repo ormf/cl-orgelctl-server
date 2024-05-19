@@ -51,7 +51,7 @@ interpolating all values between presets <num> and <next>."
   (dolist (slot '(:level :delay :q :gain :osc-level)) ;;; sliders
     (dotimes (i 16) ;;; iterate over all 16 sliders
       (let* (;; (g-accessor (cl-orgel-gui::slot->function "g-orgel" slot))
-             (val (if next
+             (amp (if next
                       (+
                        (* (if interp (- 1 interp) 0.5)
                           (aref (funcall (val-orgel-access-fn slot)
@@ -64,11 +64,14 @@ interpolating all values between presets <num> and <next>."
                       (aref (funcall (val-orgel-access-fn slot)
                                      (aref (aref *orgel-presets* num) orgelidx))
                             i))))
-        (orgel-ctl-fader (orgel-name (1+ orgelidx)) slot (1+ i) val))))
+	(setf (val (aref (funcall (orgel-access-fn slot)
+				  (aref *curr-state* orgelidx))
+			 i))
+	      amp))))
 
   (dolist (slot *orgel-global-targets*) ;;; global slots
     (let* (;;; (slot-symbol (intern (format nil "~:@(~a~)" slot) 'cl-orgel-gui))
-           (val (if next
+           (global-val (if next
                     (+
                      (* (if interp (- 1 interp) 0.5)
                         (funcall (val-orgel-access-fn slot)
@@ -77,8 +80,10 @@ interpolating all values between presets <num> and <next>."
                         (funcall (val-orgel-access-fn slot)
                                  (aref (aref *orgel-presets* next) orgelidx))))
                     (funcall (val-orgel-access-fn slot) (aref (aref *orgel-presets* num) orgelidx)))))
-      (if *debug* (format t "sending: orgel~2,'0d: ~a ~a~%" (1+ orgelidx) slot val))
-      (orgel-ctl (orgel-name (1+ orgelidx)) slot val))))
+;;;      (if *debug* (format t "sending: orgel~2,'0d: ~a ~a~%" (1+ orgelidx) slot val))
+      (setf (val (funcall (orgel-access-fn slot)
+			  (aref *curr-state* orgelidx)))
+	     global-val))))
 
 ;;; (recall-orgel 0 2)
 

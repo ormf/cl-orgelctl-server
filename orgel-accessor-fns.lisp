@@ -63,10 +63,12 @@
      (defun ,(intern (string-upcase (format nil "~a" target))) (orgelnummer partial)
        ,(format nil "access function for the ~a slot with index <idx>
 of orgel at <orgelnummer> in *curr-state*." target)
-       (let ((orgelidx (gethash orgelnummer *orgeltargets*)))
-         (val (aref (,(intern (string-upcase (format nil "orgel-~a" target)) :cl-orgelctl)
-                     (aref *curr-state* orgelidx))
-                    (1- partial)))))
+       (let* ((orgelidx (gethash orgelnummer *orgeltargets*))
+	      (amp (val (aref (,(intern (string-upcase (format nil "orgel-~a" target)) :cl-orgelctl)
+			       (aref *curr-state* orgelidx))
+			      (1- partial)))))
+	 (if (member ,target '(:level :gain :osc-level)) (amp->ndb-slider amp) amp)
+         ))
      (defsetf ,(intern (string-upcase (format nil "~a" target))) (orgelnummer partial) (value)
        ,(format nil "access function for the ~a slot with index <idx>
 of orgel at <orgelnummer> in *curr-state*." target)
@@ -85,6 +87,8 @@ of orgel at <orgelnummer> in *curr-state*." target)
 ;; (define-orgel-fader-access-fn :delay)
 ;; (define-orgel-fader-access-fn :q)
 ;; (define-orgel-fader-access-fn :osc-level)
+
+;;; (funcall (gethash :level *orgel-access-fns*) (aref *curr-state* 0))
 
 (defmacro define-orgel-global-access-fn (target)
   `(progn
@@ -106,6 +110,16 @@ of orgel at <orgelnummer> in *curr-state*." target)
 ;;; symbol is used and we call the access function "ophase":
 
 (define-all-orgel-global-access-fns (remove :bias-type (remove :phase *orgel-global-targets*)))
+
+(defparameter *orgel-access-fns*
+  (let ((hashtable (make-hash-table)))
+    (dolist (key (append *orgel-fader-targets* *orgel-global-targets*))
+      (setf (gethash key hashtable)
+	    (symbol-function (intern (format nil "~:@(orgel-~a~)" key)))))
+    hashtable))
+
+(defun orgel-access-fn (slot)
+  (gethash slot *orgel-access-fns*))
 
 (deftype orgel-phase () `(member -1 1 -1.0 1.0))
 (deftype orgel-bias-type () `(member 0 1 0.0 1.0))
