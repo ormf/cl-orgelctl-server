@@ -89,7 +89,8 @@ events from the dsp engine)."
        nil
        (lambda (slot-sym slot-key)
          (let* ((orgelidx orgelidx)
-                (orgel-name (orgel-name (1+ orgelidx))))
+                (orgel-name (orgel-name (1+ orgelidx)))
+                (db (if (eql slot-key :main) -60)))
            (setf (set-cell-hook (slot-value global-orgel slot-sym))
                  (lambda (val &key src)
                    (declare (ignorable src))
@@ -100,7 +101,9 @@ events from the dsp engine)."
 ;;                        (incudine.util:msg :info "set-cell-hook: to ~a: /~a/~a ~a" key orgel-name slot-sym val)
                         (incudine:at (incudine:now) #'incudine.osc:message (oscout client) (format nil "/~a/~a" orgel-name slot-key) "f"  (float val 1.0))))
                     *clients*)
-                   (let ((val-string (format nil "~,3f" val))
+                   (let ((val-string (format nil "~,3f" (if db (apply #'amp->ndb-slider val
+                                                                      (if (numberp db) `(:min ,db)))
+                                                            val)))
                          (attribute (if (member slot-key '(:bias-type :phase)) "data-val")))
                      (maphash (lambda (connection-id connection-hash)
                                 (declare (ignore connection-id))

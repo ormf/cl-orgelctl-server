@@ -39,7 +39,14 @@
       (let* ((val-string (ensure-string val))
              (orgel-val (read-from-string val-string)))
         (incudine.util:msg :info "orgel-value-received: orgel~2,'0d ~a~%" (1+ orgelidx) orgel-val)
-        (set-cell (slot-value global-orgel-ref slot-symbol) (if db (ndb-slider->amp orgel-val) orgel-val) :src self)))))
+        (set-cell (slot-value global-orgel-ref slot-symbol)
+                  (if db
+                      (apply #'ndb-slider->amp
+                             orgel-val
+                             (if (numberp db)
+                                 `(:min ,db)) )
+                      orgel-val)
+                  :src self)))))
 
 (defun make-orgel-array-receiver (slot orgelidx global-orgel-ref &key db)
   (declare (ignorable orgelidx))
@@ -49,7 +56,14 @@
     (lambda (idx val self)
       (let* ((orgel-val (read-from-string (ensure-string val))))
         (incudine.util:msg :info "orgel-array-received: orgel~2,'0d ~a ~a~%" (1+ orgelidx) idx orgel-val)
-        (set-cell (aref (funcall accessor global-orgel-ref) idx) (if db (ndb-slider->amp orgel-val) orgel-val) :src self)))))
+        (set-cell (aref (funcall accessor global-orgel-ref) idx)
+                  (if db
+                      (apply #'ndb-slider->amp
+                             orgel-val
+                             (if (numberp db)
+                                 `(:min ,db)) )
+                      orgel-val)
+                  :src self)))))
 
 (defun make-orgel-kbd-array-receiver (slot global-orgel-ref &key db)
   (let ((g-accessor (slot->function "g-orgel" slot))
@@ -62,7 +76,13 @@
              (array-idx (1- (fourth orgel-ref))))
         (incudine.util:msg :info "kbd-array-received: orgel~2,'0d ~a ~a ~a~%" (1+ orgel-idx) array-idx idx orgel-val)
         (set-cell (aref (funcall accessor (aref global-orgel-ref orgel-idx)) array-idx)
-                  (if db (ndb-slider->amp orgel-val) orgel-val) :src self)))))
+                  (if db
+                      (apply #'ndb-slider->amp
+                             orgel-val
+                             (if (numberp db)
+                                 `(:min ,db)) )
+                      orgel-val)
+                  :src self)))))
 
 (defun create-preset-panel (container vu-container)
   (let ((preset-panel
