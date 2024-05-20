@@ -20,6 +20,16 @@
 
 (in-package :cl-orgelctl)
 
+(defun ndb-slider->amp (ndb &key (min -20) (max 0))
+  (if (zerop ndb)
+      0
+      (ou:db->amp (n-lin ndb min max))))
+
+(defun amp->ndb-slider (amp &key (min -20) (max 0))
+  (if (zerop amp)
+      0
+      (ou:lin-n (ou:amp->db amp) min max)))
+
 (defun my-make-symbol (string)
   "will return a symbol without the leading hash as the common-lisp function does."
   (read-from-string (format nil ":~a" string)))
