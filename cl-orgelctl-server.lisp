@@ -50,5 +50,9 @@
     (sleep 2)
     (start-orgel-gui)))
 
-(setup-ref-cell-hooks)
+(defun orgel-setup ()
+  (setup-ref-cell-hooks))
 
+;;; initialization:
+
+(orgel-setup)

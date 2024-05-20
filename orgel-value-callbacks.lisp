@@ -66,16 +66,6 @@ events from the dsp engine)."
   (let ((f-idx (round (1- faderidx))))
     (set-cell (aref (aref *orgel-mlevel* orgelidx) f-idx) value :src src)))
 
-(defun ndb-slider->amp (ndb &key (min -40) (max 0))
-  (if (zerop ndb)
-      0
-      (ou:db->amp (ou:n-lin ndb min max))))
-
-(defun amp->ndb-slider (amp &key (min -40) (max 0))
-  (if (zerop amp)
-      0
-      (ou:lin-n (ou:amp->db amp) min max)))
-
 (defun setup-ref-cell-hooks ()
   "Set up propagating changes in the model-slots of *curr-state* and
 *orgel-mlevel* to all connected clients (gui and pd via osc). This
