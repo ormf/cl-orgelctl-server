@@ -3,17 +3,20 @@
 (when (find-package :slynk) (pushnew :slynk *features*))
 (when (find-package :swank) (pushnew :swank *features*))
 
+(pushnew :cuda-usocket-osc *features*)
+
 (asdf:defsystem #:cl-orgelctl-server
   :description "Controller für HfMDK Orgelprojekt 2022/23"
   :author "Orm Finnendahl <orm.finnendahl@selma.hfmdk-frankfurt.de>"
   :depends-on (#:incudine
                ;; #:cm-all
-               #:slynk #:cl-orgel-gui #:cellctl ;;; #:ats-cuda
+               #:slynk #:cl-orgel-gui #:cellctl;;; #:ats-cuda
                           )
   :license  "GPL 2.0 or later"
   :version "0.0.1"
   :serial t
-  :components ((:file "start-lisp-server")
+  :components ((:file "load-cuda-usocket-osc")
+               (:file "start-lisp-server")
                (:file "package")
                (:file "structs")
                (:file "globals")
