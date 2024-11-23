@@ -3,7 +3,13 @@
 (when (find-package :slynk) (pushnew :slynk *features*))
 (when (find-package :swank) (pushnew :swank *features*))
 
-(pushnew :cuda-usocket-osc *features*)
+;;; put the follwoing line (uncommented) into
+;;; ~/.orgel-server-init.lisp if you want to replace the standard osc
+;;; functions of incudine with the ones of cuda-usocket-osc:
+;;;
+;;; (pushnew :cuda-usocket-osc *features*)
+
+(load "~/.orgel-server-init.lisp")
 
 (asdf:defsystem #:cl-orgelctl-server
   :description "Controller für HfMDK Orgelprojekt 2022/23"
