@@ -15,7 +15,7 @@
   :license  "GPL 2.0 or later"
   :version "0.0.1"
   :serial t
-  :components ((:file "load-cuda-usocket-osc")
+  :components ((:file "load-cuda-usocket-osc" :if-feature :cuda-usocket-osc)
                (:file "start-lisp-server")
                (:file "package")
                (:file "structs")
