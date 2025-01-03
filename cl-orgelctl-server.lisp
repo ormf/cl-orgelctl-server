@@ -48,7 +48,9 @@
     (start-lisp-server :local-host host)
     (incudine:rt-start)
     (sleep 2)
-    (start-orgel-gui)))
+    (start-orgel-gui)
+    (setf *package* (find-package :cl-orgelctl))
+    (uiop:chdir (asdf:system-relative-pathname :cl-orgelctl-server ""))))
 
 (defun orgel-setup ()
   (setup-ref-cell-hooks))
@@ -56,3 +58,14 @@
 ;;; initialization:
 
 (orgel-setup)
+
+(in-package :cl-user)
+
+(defun papierrohrorgel-start ()
+  (setf *package* (find-package :cl-orgelctl))
+  (cl-orgelctl:start-orgel-server)
+  (setf *package* (find-package :cl-orgelctl)))
+
+(export 'papierrohrorgel-start 'cl-user)
+
+(papierrohrorgel-start)
