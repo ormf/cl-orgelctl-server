@@ -37,7 +37,7 @@
 ;;; (incudine.osc:close *oscout*)
 ;;; (incudine.osc:close *oscin*)
 
-(defun start-orgel-server ()
+(defun start-orgel-server (&key (send-to-pd t))
   (let ((host (or (cl-user::create-slynk-server) "127.0.0.1")))
     (if *midi-in1* (incudine:remove-all-responders *midi-in1*))
     (start-midi)
@@ -45,7 +45,7 @@
     (start-keymap-note-responder)
     (incudine:recv-start *midi-in1*)
     (start-osc-midi-receive)
-    (start-lisp-server :local-host host)
+    (start-lisp-server :local-host host :send-to-pd send-to-pd)
     (incudine:rt-start)
     (sleep 2)
     (start-orgel-gui)
@@ -61,11 +61,11 @@
 
 (in-package :cl-user)
 
-(defun papierrohrorgel-start ()
+(defun papierrohrorgel-start (&key (send-to-pd t))
   (setf *package* (find-package :cl-orgelctl))
-  (cl-orgelctl:start-orgel-server)
+  (cl-orgelctl:start-orgel-server :send-to-pd send-to-pd)
   (setf *package* (find-package :cl-orgelctl)))
 
 (export 'papierrohrorgel-start 'cl-user)
 
-(papierrohrorgel-start)
+(papierrohrorgel-start :send-to-pd cl-user::*send-to-pd-on-orgel-server-startup*)

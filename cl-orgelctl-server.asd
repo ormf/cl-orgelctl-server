@@ -3,6 +3,8 @@
 (when (find-package :slynk) (pushnew :slynk *features*))
 (when (find-package :swank) (pushnew :swank *features*))
 
+(defparameter *send-to-pd-on-orgel-server-startup* t)
+
 ;;; put the follwoing line (uncommented) into
 ;;; ~/.orgel-server-init.lisp if you want to replace the standard osc
 ;;; functions of incudine with the ones of cuda-usocket-osc:

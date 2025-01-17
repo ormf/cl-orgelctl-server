@@ -52,7 +52,7 @@
     (:start (register-pd-client *pd-out-host* *pd-out-port*))
     (:stop (unregister-pd-client))))
 
-(defun start-lisp-server (&key (local-host *local-host*))
+(defun start-lisp-server (&key (local-host *local-host*) (send-to-pd t))
   (format t "~&starting lisp server...")
   (when *oscin-lisp-server*
     (incudine.osc:close *oscin-lisp-server*))
@@ -82,7 +82,7 @@
      (unregister-client client)
      (incudine.util:msg :info "unregistered lisp client: ~a" client)))
   (incudine:recv-start *oscin-lisp-server*)
-  (pd-client :start)
+  (when send-to-pd (pd-client :start))
   (format t "lisp server started~%"))
 
 (defclass client ()
