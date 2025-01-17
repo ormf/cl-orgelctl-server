@@ -46,6 +46,12 @@
 (defparameter *pd-out-host* "127.0.0.1")
 (defparameter *pd-out-port* 3010)
 
+(defun pd-client (cmd)
+  "start/stop sending to pd."
+  (case cmd
+    (:start (register-pd-client *pd-out-host* *pd-out-port*))
+    (:stop (unregister-pd-client))))
+
 (defun start-lisp-server (&key (local-host *local-host*))
   (format t "~&starting lisp server...")
   (when *oscin-lisp-server*
@@ -76,7 +82,7 @@
      (unregister-client client)
      (incudine.util:msg :info "unregistered lisp client: ~a" client)))
   (incudine:recv-start *oscin-lisp-server*)
-  (register-pd-client *pd-out-host* *pd-out-port*)
+  (pd-client :start)
   (format t "lisp server started~%"))
 
 (defclass client ()
@@ -100,6 +106,10 @@
                            :oscout (incudine.osc:open :host host :port port :direction :output))))
 ;;;  (send-orgel-state (gethash "papierrohrorgel-pd" *clients*))
   )
+
+(defun unregister-pd-client ()
+  (or (gethash "papierrohrorgel-pd" *clients*)
+      (remhash "papierrohrorgel-pd" *clients*)))
 
 ;;; (unregister-client "pd")
 
