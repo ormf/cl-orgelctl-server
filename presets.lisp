@@ -197,9 +197,6 @@ result-type is non-nil, return the results of fn in a sequence of type
 
 ;;; (recall-preset 2)
 
-
-
-
 (defparameter *route-presets* (make-array 128 :initial-element nil :element-type 'list))
 
 (defun digest-route-preset (preset-num form &key (reset t))
