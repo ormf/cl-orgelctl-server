@@ -85,7 +85,7 @@ interpolating all values between presets <num> and <next>."
 			  (aref *curr-state* orgelidx)))
 	     global-val))))
 
-;;; (recall-orgel 0 2)
+;;; (recall-orgel 0 0)
 
 
 (defun recall-orgel-preset (num &optional next interp)

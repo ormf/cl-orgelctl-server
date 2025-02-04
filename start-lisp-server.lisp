@@ -50,7 +50,7 @@ system."
     (declare (ignore rest))
     (sleep 0.5)
     (let* ((port 4007)
-           (str (format nil "~&~%using interface ~a~%creating server on host ~a, port ~a~%"
+           (str (format nil "~&~%using interface ~a~%creating slynk server for emacs on host ~a, port ~a~%"
                         interface host port)))
       (if host
           (progn

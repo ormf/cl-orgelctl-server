@@ -52,13 +52,14 @@
     (:start (register-pd-client *pd-out-host* *pd-out-port*))
     (:stop (unregister-pd-client))))
 
-(defun start-lisp-server (&key (local-host *local-host*) (send-to-pd t))
-  (format t "~&starting lisp server...")
+(defun start-lisp-server (&key (host *local-host*) (port *lisp-server-port*) (send-to-pd t) (protocol :udp))
+  (format t "~&starting lisp server on ~a, port ~a, protocol ~S ... " host port protocol)
   (when *oscin-lisp-server*
     (incudine.osc:close *oscin-lisp-server*))
   (setf *oscin-lisp-server*
-        (incudine.osc:open :host local-host
-                           :port *lisp-server-port*
+        (incudine.osc:open :host host
+                           :port port
+                           :protocol protocol
                            :direction :input))
   (incudine:remove-all-responders *oscin-lisp-server*)
   (make-all-server-responders)
@@ -69,8 +70,8 @@
    (lambda (host port)
      (incudine.util:msg :info "connect-client: ~a ~a" host port)
      (incudine.util:with-logger (:level :info)
-         (incudine.util:msg :info "connecting new lisp client at ~a:~d" host port))
-     (let ((id (register-client host port)))
+         (incudine.util:msg :info "connecting new lisp client at ~a:~d with protocol ~S" host port protocol))
+     (let ((id (register-client host port :protocol protocol)))
        (incudine.util:with-logger (:level :info)
          (incudine.util:msg :info "registered new lisp client: ~S" id)))))
   (incudine:make-osc-responder
@@ -115,8 +116,8 @@
 
 ;;; (register-pd-client *pd-out-host* *pd-out-port*)
 
-(defun register-client (host port)
-  (incudine.util:msg :info "register-client ~a ~a" host port)
+(defun register-client (host port &key (protocol :udp))
+  (incudine.util:msg :info "register-client ~a ~a" host port protocol)
   (let* ((old-client
           (block nil
             (maphash (lambda (id client)
@@ -131,7 +132,7 @@
                                          :host host
                                          :port port
                                          :id (new-client-id)
-                                         :oscout (incudine.osc:open :host host :port port :direction :output)))))
+                                         :oscout (incudine.osc:open :host host :port port :direction :output :protocol protocol)))))
     (unless old-client (setf (gethash (id curr-client) *clients*) curr-client))
     (incudine.util:msg :info "new client-id: ~a" (id curr-client))
     (incudine.osc:message (oscout curr-client) "/client-id" "s" (id curr-client))

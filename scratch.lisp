@@ -20,8 +20,60 @@
 
 (ql:quickload "cl-orgelctl")
 (in-package :cl-orgelctl)
-(incudine::remove-all-responders cm:*midi-in1*)
 
+(defparameter *test* (funcall (orgel-access-fn :delay) (aref *curr-state* 0)))
+
+(let ((arr (funcall (orgel-access-fn :delay) (aref *curr-state* 0))))
+  (dotimes (i 16) (setf (val (aref arr i)) 0.2)))
+
+(defparameter *my-arr* (funcall (orgel-access-fn :delay) (aref *curr-state* 0)))
+
+(aref *orgel-presets* 1)
+*curr-state*
+(store-orgel-preset)
+
+(let ((arr (funcall (orgel-access-fn :delay) (aref *curr-state* 0))))
+  (dotimes (i 16) (setf (val (aref arr i)) (random 1.0))))
+
+
+(dotimes (i 16) (setf (val (aref *my-arr* i)) (random 1.0)))
+
+
+(setup-ref-cell-hooks)
+
+(setf (val (aref *my-arr* 0)) (random 1.0))
+(dotimes (i 16)
+  (let ((orgel-name "orgel01")
+        (slot-key :delay)
+        (faderno (1+ i))
+        (val (random 1.0))
+        (i i))
+    (incudine::at (+ (incudine:now) (* 48000 i 0.01))
+                  (lambda () (incudine.osc:message
+                         (oscout (gethash "client1" *clients*))
+                         (format nil "/~a/~a" orgel-name slot-key)
+                         "ff"
+                         (float faderno 1.0) (float val 1.0))))))
+
+(incudine.osc:close *oscout5*)
+(defparameter *oscout5* (incudine.osc:open :direction :output :port 32145 :protocol :tcp))
+(defparameter *oscout6* (incudine.osc:open :direction :output :port 32146 :protocol :udp))
+
+(incudine.osc:close *oscout6*)
+
+(dotimes (i 160)
+  (incudine.util:msg :warn "~a" i)
+  (incudine.osc:message *oscout5* "/hello/world" "ff" (float i) 3.4)
+)
+
+(incudine::remove-all-responders cm:*midi-in1*)
+(in-package :scratch)
+
+(incudine.osc:close *oscout*)
+
+(defparameter *oscout* (incudine.osc:open :direction :output :port 32145 :protocol :tcp))
+
+(dotimes (i 160) (incudine.osc:message *oscout* "/hello/world" "ff" (float i) 3.4))
 (setf (incudine.util::logger-level) :info)
 (setf (incudine.util::logger-level) :warn)
 
