@@ -306,16 +306,18 @@ amps, etc.)"
        (get-server-preset-responders ,stream)
        ;;       ,(define-orgel-plist-responders stream)
        (incudine::make-osc-responder
-        ,stream "/orgelfaderctl" "sfsff"
-        (lambda (client orgelno target faderno value)
-          (set-cell (aref (slot-value (aref *curr-state* (round (1- orgelno))) target-sym) (1- (round faderno))) value :src client)
-          (incudine.util:msg :info "osc in: /orgelctlfader ~a ~S ~a ~S ~a ~a~%" orgelno client target (round faderno) value)
+        ,stream "/orgelctlfader" "sfsff"
+        (lambda (src orgelno target faderno value)
+          (let ((target-sym (target-string->sym target)))
+            (set-cell (aref (slot-value (aref *curr-state* (round (1- orgelno))) target-sym) (1- (round faderno))) value :src src)
+            (incudine.util:msg :info "osc in: /orgelctlfader ~S ~a ~S ~a ~a~%" src orgelno target (round faderno) value))
           ))
        (incudine::make-osc-responder
-        ,stream "/orgelctl" "fssf"
+        ,stream "/orgelctl" "sfsf"
         (lambda (src orgelno target value)
-          (set-cell (slot-value (aref *curr-state* (round (1- orgelno))) target-sym) value :src src)
-          (incudine.util:msg :info "osc in: /orgelctl ~S ~a ~S ~a ~a~%" src orgelno target value)))
+          (let ((target-sym (target-string->sym target)))
+            (set-cell (slot-value (aref *curr-state* (round (1- orgelno))) target-sym) value :src src)
+            (incudine.util:msg :info "osc in: /orgelctl ~S ~a ~S ~a ~a~%" src orgelno target value))))
        ,@(loop
            for orgelidx below maxorgel
            collect `(setf (gethash ,(ou:make-keyword (format nil "orgel~2,'0d" (1+ orgelidx))) *orgel-server-osc-responder*)
