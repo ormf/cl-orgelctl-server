@@ -25,6 +25,8 @@
 
 (incudine.osc:message (oscout (gethash "client1" *clients*)) "/orgelctl" "sfsf" "orgel-server" 1.0 "base-freq" 1212.0)
 
+(recall-orgel-preset 2)
+
 (defparameter *test* (funcall (orgel-access-fn :delay) (aref *curr-state* 0)))
 
 (let ((arr (funcall (orgel-access-fn :delay) (aref *curr-state* 0))))
