@@ -117,6 +117,8 @@
 ;;; (register-pd-client *pd-out-host* *pd-out-port*)
 
 (defun register-client (host port &key (protocol :udp))
+  "add a new client of host:port to the *clients* hashtable if it doesn't
+exist yet and send the current orgel-state to the client."
   (incudine.util:msg :info "register-client ~a ~a" host port protocol)
   (let* ((old-client
           (block nil
@@ -136,10 +138,11 @@
     (unless old-client (setf (gethash (id curr-client) *clients*) curr-client))
     (incudine.util:msg :info "new client-id: ~a" (id curr-client))
     (incudine.osc:message (oscout curr-client) "/client-id" "s" (id curr-client))
-    (send-orgel-state curr-client)
+    (send-orgel-state curr-client "orgel-server")
     (id curr-client)))
 
 (defun unregister-client (client-or-id)
+  "remove /client-or-id/ from *clients* hashtable."
   (unless
       (remhash
        (typecase client-or-id
@@ -148,30 +151,36 @@
        *clients*)
     (warn "Couldn't unregister client: ~S not found" client-or-id)))
 
-(defun send-orgel-state (client)
-  (let ((oscout (oscout client)))
+(defun send-orgel-state (client &optional from)
+  "send the complete state of *curr-state* to /client/ via osc."
+  (let ((oscout (oscout client))
+        (origin (or from "orgel-server"))
+        (client-id  (id client)))
     (dotimes (orgelidx *orgelcount*)
-      (let ((orgel-name (orgel-name (1+ orgelidx))))
-        (dolist (target-sym *orgel-global-target-syms*)
-          (let ((val (val (slot-value (aref *curr-state* orgelidx) target-sym))))
-            (incudine:at (incudine:now) #'incudine.osc:message oscout
-                         (format nil "/~a/~a" orgel-name target-sym) "f" (float val 1.0))))
-        (dolist (target-sym *orgel-fader-target-syms*)
+      (dolist (target-key *orgel-global-targets*)
+        (let* ((target-sym (target-key->sym target-key))
+               (val (val (slot-value (aref *curr-state* orgelidx) target-sym)))
+               (target-name (target-key->string target-key)))
+          (incudine.osc:message oscout "/orgelctl" "sfsf" origin (float (1+ orgelidx) 1.0) target-name (float val 1.0))
+          (incudine.util:msg :info "sending to ~S: /orgelctl ~S ~a ~S ~a" client-id origin (float (1+ orgelidx) 1.0) target-name (float val 1.0))))
+      (dolist (target-key *orgel-fader-targets*)
+        (let ((target-sym (target-key->sym target-key))
+              (target-name (target-key->string target-key)))
           (dotimes (faderidx 16)
             (let ((val (val (aref (slot-value (aref *curr-state* orgelidx) target-sym) faderidx))))
-              (incudine:at (incudine:now) #'incudine.osc:message oscout
-                           (format nil "/~a/~a" orgel-name target-sym) "ff" (float (1+ faderidx) 1.0) (float val 1.0)))))))))
-
-
+              (incudine.osc:message oscout "/orgelctlfader" "sfsff" origin (float (1+ orgelidx) 1.0) target-name (float (1+ faderidx) 1.0) (float val 1.0))
+              (incudine.util:msg :info "sending to ~S: /orgelctlfader ~S ~a ~S ~a ~a" client-id origin (float (1+ orgelidx) 1.0) target-name (float (1+ faderidx) 1.0) (float val 1.0)))))))))
 
 ;;; (incudine:at (incudine:now) #'incudine.osc:message (oscout client) (format nil "/~a/~a" orgel-name slot-key) "f"  (float val 1.0))
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; server responders
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+#|
+;;; not necessary with new osc-address architecture.
 
 (defmacro define-server-orgel-fader-responder (stream orgelidx target)
   "responder for the fader controllers of the 16 partials (level, delay,
@@ -180,8 +189,8 @@ bp, gain, osc-level)."
      (list ,target
            (let ((target-sym ',(read-from-string (format nil "~a" (symbol-value target)))))
              (incudine::make-osc-responder
-              ,stream ,(format nil "/orgel~2,'0d/~a" (1+ orgelidx) (symbol-value target)) "sff"
-              (lambda (client faderno value)
+              ,stream "/orgelfaderctl" "fssff"
+              (lambda (orgelno target client faderno value)
                 (set-cell (aref (slot-value (aref *curr-state* ,orgelidx) target-sym) (1- (round faderno))) value :src client)
                 (incudine.util:msg :info "orgel~2,'0d in: ~S ~a ~a ~a~%" ,(1+ orgelidx) client ,target (round faderno) value)
                 ))))))
@@ -208,6 +217,7 @@ amps, etc.)"
   `(append
      ,@(loop for target in (symbol-value targets)
              collect `(define-server-orgel-global-responder ,stream ,orgelidx ,target))))
+|#
 
 (defmacro define-server-orgel-level-meter-responder (stream orgelidx target)
   "responder for the 16 output level meters."
@@ -295,12 +305,23 @@ amps, etc.)"
        (incudine:remove-all-responders ,stream)
        (get-server-preset-responders ,stream)
        ;;       ,(define-orgel-plist-responders stream)
+       (incudine::make-osc-responder
+        ,stream "/orgelfaderctl" "sfsff"
+        (lambda (client orgelno target faderno value)
+          (set-cell (aref (slot-value (aref *curr-state* (round (1- orgelno))) target-sym) (1- (round faderno))) value :src client)
+          (incudine.util:msg :info "osc in: /orgelctlfader ~a ~S ~a ~S ~a ~a~%" orgelno client target (round faderno) value)
+          ))
+       (incudine::make-osc-responder
+        ,stream "/orgelctl" "fssf"
+        (lambda (src orgelno target value)
+          (set-cell (slot-value (aref *curr-state* (round (1- orgelno))) target-sym) value :src src)
+          (incudine.util:msg :info "osc in: /orgelctl ~S ~a ~S ~a ~a~%" src orgelno target value)))
        ,@(loop
            for orgelidx below maxorgel
            collect `(setf (gethash ,(ou:make-keyword (format nil "orgel~2,'0d" (1+ orgelidx))) *orgel-server-osc-responder*)
                           (append
-                           (get-server-orgel-fader-responders ,stream ,orgelidx *orgel-fader-targets*)
-                           (get-server-orgel-global-responders ,stream ,orgelidx *orgel-global-targets*)
+;;                           (get-server-orgel-fader-responders ,stream ,orgelidx *orgel-fader-targets*)
+;;                           (get-server-orgel-global-responders ,stream ,orgelidx *orgel-global-targets*)
                            (get-server-orgel-level-meter-responders ,stream ,orgelidx *orgel-level-meter-targets*)
                            
 
