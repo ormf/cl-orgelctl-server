@@ -157,6 +157,24 @@ zerobased index.")
   '(:base-freq :phase :bias-pos :bias-bw :bias-type :main :min-amp :max-amp
     :ramp-up :ramp-down :exp-base))
 
+(defun target-string->sym (key)
+  (cdr
+   (assoc key
+          '(("level" . level) ("delay" . delay) ("q" . q) ("gain" . gain)
+            ("osc-level" . osc-level) ("base-freq" . base-freq) ("phase" . phase)
+            ("bias-pos" . bias-pos) ("bias-bw" . bias-bw) ("bias-type" . bias-type)
+            ("main" . main) ("min-amp" . min-amp) ("max-amp" . max-amp)
+            ("ramp-up" . ramp-up) ("ramp-down" . ramp-down) ("exp-base" . exp-base))
+          :test #'string=)))
+
+(defun target-key->sym (key)
+  (cdr
+   (assoc key
+          '((:level . level) (:delay . delay) (:q . q) (:gain . gain) (:osc-level . osc-level)
+            (:base-freq . base-freq) (:phase . phase) (:bias-pos . bias-pos) (:bias-bw . bias-bw)
+            (:bias-type . bias-type) (:main . main) (:min-amp . min-amp) (:max-amp . max-amp)
+            (:ramp-up . ramp-up) (:ramp-down . ramp-down) (:exp-base . exp-base)))))
+
 (defparameter *orgel-global-target-syms*
   (mapcar (lambda (key) (intern (symbol-name key)))
           *orgel-global-targets*))
