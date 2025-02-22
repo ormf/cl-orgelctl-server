@@ -1,23 +1,33 @@
 ;;; 
 ;;; orgel-value-callbacks.lisp
 ;;;
-;;; callback functions when a value changes (triggered by osc messages
-;;; or by fader movements in the html gui).
+;;; callback functions for all slots of *curr-state* when a value
+;;; changes.
+;;;
+;;; They are triggered by #'set-ref on the slot, either directly or by
+;;; using the html gui or osc messages (the responders are set up in
+;;; #'make-all-server-responders in osc-server.lisp).
 ;;;
 ;;; the callback does 3 things:
 ;;;
 ;;; 1. update the respective slot of *curr-state*
-;;; 2. set the faders in the html gui
-;;; 3. set the values on the pd side
+;;; 2. update the respective gui elements of all connected html guis
+;;; 3. set the value on the pd main orgel patch
+;;; 4. send the value to all connected osc clients
 ;;;
-;;; the src argument is nil if the values are received from osc and
-;;; therefore the callbacks don't send to pd (another mechanism has to
-;;; be implemented if the patch should also receive osc messages from
-;;; other sources than the pd patch).
+;;; The src argument contains the source of the value change. It can
+;;; be either:
 ;;;
-;;; the src argument otherwise contains the html element which caused
-;;; the value change to prevent a loop in the value changes to the
-;;; connected html gui instances.
+;;; - The html element of the attached browser window where the value
+;;;   change happened.
+;;;
+;;; - A lisp client connected via osc.
+;;;
+;;; - the pd main patch. In this case, src is nil.
+;;;
+;;; The src argument is intended to prevent echoing the value change
+;;; back to its source to avoid a value change feedback loop.
+;;;
 ;;;
 ;;; **********************************************************************
 ;;; Copyright (c) 2023 Orm Finnendahl <orm.finnendahl@selma.hfmdk-frankfurt.de>

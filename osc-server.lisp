@@ -180,6 +180,9 @@ bp, gain, osc-level)."
     ,stream "/orgelctlfader" "sfsff"
     (lambda (src orgelno target faderno value)
       (incudine.util:msg :info "orgelctlfader in: ~S ~a ~S ~a ~a" src (round orgelno)  target (round faderno) value)
+      ;; defer action to the ref-listeners in the respective slot in
+      ;; *curr-state* (set up in #'setup-ref-cell-hooks in
+      ;; orgel-value-callbacks.lisp)
       (set-cell (aref (slot-value (aref *curr-state* (round (1- orgelno))) (target-string->sym target)) (1- (round faderno))) value :src src))))
 
 #|
@@ -197,6 +200,9 @@ amps, etc.)"
     (lambda (src orgelno target value)
 ;;;      (incf *count*)
       (incudine.util:msg :info "orgelctl in: ~S ~a ~S ~a"  src (round orgelno) target value)
+      ;; defer action to the ref-listeners in the respective slot in
+      ;; *curr-state* (set up in #'setup-ref-cell-hooks in
+      ;; orgel-value-callbacks.lisp)
       (set-cell (slot-value (aref *curr-state* (round (1- orgelno))) (target-string->sym target)) value :src src))))
 
 ;;; (define-server-orgel-global-responder 'osc-stream)
