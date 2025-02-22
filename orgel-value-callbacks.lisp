@@ -66,6 +66,17 @@ events from the dsp engine)."
   (let ((f-idx (round (1- faderidx))))
     (set-cell (aref (aref *orgel-mlevel* orgelidx) f-idx) value :src src)))
 
+#|
+(incudine.osc:message oscout
+                      (format nil "/orgelctlfader") "sfsff" client-id (float orgelno 1.0) (format nil "~a" target-sym) (float (1+ faderidx) 1.0) (float val 1.0))
+
+
+(dolist (target-sym *orgel-global-target-syms*)
+          (let ((val (val (slot-value (aref *curr-state* orgelidx) target-sym))))
+            (incudine.osc:message oscout (format nil "/orgelctl") "sfsf" client-id (float orgelno 1.0) (format nil "~a" target-sym) (float val 1.0))))
+|#
+
+
 (defun setup-ref-cell-hooks ()
   "Set up propagating changes in the model-slots of *curr-state* and
 *orgel-mlevel* to all connected clients (gui and pd via osc). This
@@ -79,7 +90,6 @@ events from the dsp engine)."
        nil
        (lambda (slot-sym slot-key)
          (let* ((orgelidx orgelidx)
-                (orgel-name (orgel-name (1+ orgelidx)))
                 (db (if (eql slot-key :main) -60)))
            (setf (set-cell-hook (slot-value global-orgel slot-sym))
                  (lambda (val &key src)
@@ -88,9 +98,11 @@ events from the dsp engine)."
                    (maphash
                     (lambda (key client)
                       (unless (equal key src)
-                        (incudine.util:msg :info "set-cell-hook: sending to ~a: /~a/~a ~a" key orgel-name slot-sym (float val 1.0))
-                        (incudine.osc:message (oscout client)
-                                              (format nil "/~a/~a" orgel-name slot-key) "f"  (float val 1.0))))
+                        (let ((oscout (oscout client))
+                              (client-id (id client))
+                              (orgelno (1+ orgelidx)))
+                          (incudine.util:msg :info "set-cell-hook: sending to ~a: /orgelctl ~a ~S ~a" key client-id slot-sym (float val 1.0))
+                          (incudine.osc:message oscout (format nil "/orgelctl") "sfsf" client-id (float orgelno 1.0) (format nil "~a" slot-sym) (float val 1.0)))))
                     *clients*)
                    (let ((val-string (format nil "~,3f" (if db (apply #'amp->ndb-slider val
                                                                       (if (numberp db) `(:min ,db)))
@@ -115,7 +127,6 @@ events from the dsp engine)."
 
       (map nil (lambda (slot-sym slot-key)
                  (let* ((orgelidx orgelidx)
-                        (orgel-name (orgel-name (1+ orgelidx)))
                         (db (member slot-key '(:level :gain :osc-level))))
                    (dotimes (faderidx 16)
                      (let* ((faderidx faderidx)
@@ -128,9 +139,16 @@ events from the dsp engine)."
                                (maphash
                                 (lambda (key client)
                                   (unless (equal key src)
-                                    (incudine.util:msg :info "ref-cell-hook: sending to ~a: /~a/~a ~a ~a" key orgel-name slot-sym (float faderidx 1.0) (float val 1.0))
-                                    (incudine.osc:message (oscout client)
-                                                          (format nil "/~a/~a" orgel-name slot-key) "ff" (float faderno 1.0) (float val 1.0))))
+                                    (let ((oscout (oscout client))
+                                          (client-id (id client))
+                                          (orgelno (1+ orgelidx)))
+                                      (incudine.util:msg :info "ref-cell-hook: sending to ~a: /orgelctlfader ~a ~a ~S ~a ~a"
+                                                         key  client-id (float orgelno 1.0)
+                                                         slot-key (float faderno 1.0) (float val 1.0))
+                                      (incudine.osc:message oscout
+                                                            (format nil "/orgelctlfader") "sfsff"
+                                                            client-id (float orgelno 1.0) (format nil "~a" slot-key)
+                                                            (float faderno 1.0) (float val 1.0)))))
                                 *clients*)
 ;;;                               (if val (fader-to-pd orgel-name slot-key (1+ faderidx) val))
                                (let ((val-string (format nil "~,3f" (if db (amp->ndb-slider val) val))))
