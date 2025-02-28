@@ -149,18 +149,17 @@
     (warn "Couldn't unregister client: ~S not found" client-or-id)))
 
 (defun send-orgel-state (client)
-  (let ((oscout (oscout client))
-        (client-id (id client)))
+  (let ((oscout (oscout client)))
     (dotimes (orgelidx *orgelcount*)
       (let ((orgelno (1+ orgelidx)))
         (dolist (target-sym *orgel-global-target-syms*)
           (let ((val (val (slot-value (aref *curr-state* orgelidx) target-sym))))
-            (incudine.osc:message oscout (format nil "/orgelctl") "sfsf" client-id (float orgelno 1.0) (format nil "~a" target-sym) (float val 1.0))))
+            (incudine.osc:message oscout (format nil "/orgelctl") "sfsf" "orgel-server" (float orgelno 1.0) (format nil "~a" target-sym) (float val 1.0))))
         (dolist (target-sym *orgel-fader-target-syms*)
           (dotimes (faderidx 16)
             (let ((val (val (aref (slot-value (aref *curr-state* orgelidx) target-sym) faderidx))))
               (incudine.osc:message oscout
-                                    (format nil "/orgelctlfader") "sfsff" client-id (float orgelno 1.0) (format nil "~a" target-sym) (float (1+ faderidx) 1.0) (float val 1.0)))))))))
+                                    (format nil "/orgelctlfader") "sfsff" "orgel-server" (float orgelno 1.0) (format nil "~a" target-sym) (float (1+ faderidx) 1.0) (float val 1.0)))))))))
 
 
 

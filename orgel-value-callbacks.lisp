@@ -109,10 +109,9 @@ events from the dsp engine)."
                     (lambda (key client)
                       (unless (equal key src)
                         (let ((oscout (oscout client))
-                              (client-id (id client))
                               (orgelno (1+ orgelidx)))
-                          (incudine.util:msg :info "set-cell-hook: sending to ~a: /orgelctl ~a ~S ~a" key client-id slot-sym (float val 1.0))
-                          (incudine.osc:message oscout (format nil "/orgelctl") "sfsf" client-id (float orgelno 1.0) (format nil "~a" slot-sym) (float val 1.0)))))
+                          (incudine.util:msg :info "set-cell-hook: sending to ~a: /orgelctl ~S ~S ~a" key "orgel-server" slot-sym (float val 1.0))
+                          (incudine.osc:message oscout (format nil "/orgelctl") "sfsf" "orgel-server" (float orgelno 1.0) (format nil "~a" slot-sym) (float val 1.0)))))
                     *clients*)
                    (let ((val-string (format nil "~,3f" (if db (apply #'amp->ndb-slider val
                                                                       (if (numberp db) `(:min ,db)))
@@ -150,14 +149,15 @@ events from the dsp engine)."
                                 (lambda (key client)
                                   (unless (equal key src)
                                     (let ((oscout (oscout client))
-                                          (client-id (id client))
+;;;                                          (client-id (id client))
+                                          
                                           (orgelno (1+ orgelidx)))
-                                      (incudine.util:msg :info "ref-cell-hook: sending to ~a: /orgelctlfader ~a ~a ~S ~a ~a"
-                                                         key  client-id (float orgelno 1.0)
+                                      (incudine.util:msg :info "ref-cell-hook: sending to ~a: /orgelctlfader ~S ~a ~S ~a ~a"
+                                                         key "orgel-server" (float orgelno 1.0)
                                                          slot-key (float faderno 1.0) (float val 1.0))
                                       (incudine.osc:message oscout
                                                             (format nil "/orgelctlfader") "sfsff"
-                                                            client-id (float orgelno 1.0) (format nil "~a" slot-key)
+                                                            "orgel-server" (float orgelno 1.0) (format nil "~a" slot-key)
                                                             (float faderno 1.0) (float val 1.0)))))
                                 *clients*)
 ;;;                               (if val (fader-to-pd orgel-name slot-key (1+ faderidx) val))
