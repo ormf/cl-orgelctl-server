@@ -110,7 +110,7 @@ events from the dsp engine)."
                       (unless (equal key src)
                         (let ((oscout (oscout client))
                               (orgelno (1+ orgelidx)))
-                          (incudine.util:msg :info "set-cell-hook: sending to ~a: /orgelctl ~S ~S ~a" key "orgel-server" slot-sym (float val 1.0))
+                          (incudine.util:msg :info "set-cell-hook: sending to ~a: /orgelctl ~S ~a ~S ~a" key "orgel-server" orgelno slot-sym (float val 1.0))
                           (incudine.osc:message oscout (format nil "/orgelctl") "sfsf" "orgel-server" (float orgelno 1.0) (format nil "~a" slot-sym) (float val 1.0)))))
                     *clients*)
                    (let ((val-string (format nil "~,3f" (if db (apply #'amp->ndb-slider val
