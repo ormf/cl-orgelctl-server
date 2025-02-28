@@ -1,23 +1,33 @@
 ;;; 
 ;;; orgel-value-callbacks.lisp
 ;;;
-;;; callback functions when a value changes (triggered by osc messages
-;;; or by fader movements in the html gui).
+;;; callback functions for all slots of *curr-state* when a value
+;;; changes.
+;;;
+;;; They are triggered by #'set-ref on the slot, either directly or by
+;;; using the html gui or osc messages (the responders are set up in
+;;; #'make-all-server-responders in osc-server.lisp).
 ;;;
 ;;; the callback does 3 things:
 ;;;
 ;;; 1. update the respective slot of *curr-state*
-;;; 2. set the faders in the html gui
-;;; 3. set the values on the pd side
+;;; 2. update the respective gui elements of all connected html guis
+;;; 3. set the value on the pd main orgel patch
+;;; 4. send the value to all connected osc clients
 ;;;
-;;; the src argument is nil if the values are received from osc and
-;;; therefore the callbacks don't send to pd (another mechanism has to
-;;; be implemented if the patch should also receive osc messages from
-;;; other sources than the pd patch).
+;;; The src argument contains the source of the value change. It can
+;;; be either:
 ;;;
-;;; the src argument otherwise contains the html element which caused
-;;; the value change to prevent a loop in the value changes to the
-;;; connected html gui instances.
+;;; - The html element of the attached browser window where the value
+;;;   change happened.
+;;;
+;;; - A lisp client connected via osc.
+;;;
+;;; - the pd main patch. In this case, src is nil.
+;;;
+;;; The src argument is intended to prevent echoing the value change
+;;; back to its source to avoid a value change feedback loop.
+;;;
 ;;;
 ;;; **********************************************************************
 ;;; Copyright (c) 2023 Orm Finnendahl <orm.finnendahl@selma.hfmdk-frankfurt.de>
@@ -66,6 +76,17 @@ events from the dsp engine)."
   (let ((f-idx (round (1- faderidx))))
     (set-cell (aref (aref *orgel-mlevel* orgelidx) f-idx) value :src src)))
 
+#|
+(incudine.osc:message oscout
+                      (format nil "/orgelctlfader") "sfsff" client-id (float orgelno 1.0) (format nil "~a" target-sym) (float (1+ faderidx) 1.0) (float val 1.0))
+
+
+(dolist (target-sym *orgel-global-target-syms*)
+          (let ((val (val (slot-value (aref *curr-state* orgelidx) target-sym))))
+            (incudine.osc:message oscout (format nil "/orgelctl") "sfsf" client-id (float orgelno 1.0) (format nil "~a" target-sym) (float val 1.0))))
+|#
+
+
 (defun setup-ref-cell-hooks ()
   "Set up propagating changes in the model-slots of *curr-state* and
 *orgel-mlevel* to all connected clients (gui and pd via osc). This
@@ -87,10 +108,11 @@ events from the dsp engine)."
                    (maphash
                     (lambda (key client)
                       (unless (equal key src)
-                        (let ((slot-name (target-key->string slot-key))
-                              (src "orgel-server"))
-                          (incudine.util:msg :info "ref-cell-hook: sending to ~a: /orgelctl ~a ~S ~S ~a" key (float (1+ orgelidx) 1.0) src slot-name (float val 1.0))
-                          (incudine.osc:message (oscout client) "/orgelctl" "sfsf" src (float (1+ orgelidx) 1.0) slot-name (float val 1.0)))))
+                        (let ((oscout (oscout client))
+                              (client-id (id client))
+                              (orgelno (1+ orgelidx)))
+                          (incudine.util:msg :info "set-cell-hook: sending to ~a: /orgelctl ~a ~S ~a" key client-id slot-sym (float val 1.0))
+                          (incudine.osc:message oscout (format nil "/orgelctl") "sfsf" client-id (float orgelno 1.0) (format nil "~a" slot-sym) (float val 1.0)))))
                     *clients*)
                    (let ((val-string (format nil "~,3f" (if db (apply #'amp->ndb-slider val
                                                                       (if (numberp db) `(:min ,db)))
@@ -127,10 +149,16 @@ events from the dsp engine)."
                                (maphash
                                 (lambda (key client)
                                   (unless (equal key src)
-                                    (let ((slot-name (target-key->string slot-key))
-                                          (src "orgel-server"))
-                                      (incudine.util:msg :info "ref-cell-hook: sending to ~a: /orgelctlfader ~S ~a ~S ~a ~a" key src (float (1+ orgelidx) 1.0) key slot-name (float faderidx 1.0) (float val 1.0))
-                                      (incudine.osc:message (oscout client) "/orgelctlfader" "sfsff" src (float (1+ orgelidx) 1.0) slot-name faderno (float val 1.0)))))
+                                    (let ((oscout (oscout client))
+                                          (client-id (id client))
+                                          (orgelno (1+ orgelidx)))
+                                      (incudine.util:msg :info "ref-cell-hook: sending to ~a: /orgelctlfader ~a ~a ~S ~a ~a"
+                                                         key  client-id (float orgelno 1.0)
+                                                         slot-key (float faderno 1.0) (float val 1.0))
+                                      (incudine.osc:message oscout
+                                                            (format nil "/orgelctlfader") "sfsff"
+                                                            client-id (float orgelno 1.0) (format nil "~a" slot-key)
+                                                            (float faderno 1.0) (float val 1.0)))))
                                 *clients*)
 ;;;                               (if val (fader-to-pd orgel-name slot-key (1+ faderidx) val))
                                (let ((val-string (format nil "~,3f" (if db (amp->ndb-slider val) val))))
@@ -162,7 +190,7 @@ events from the dsp engine)."
                     (lambda (key client)
                       (unless (equal key src)
   ;;                      (incudine.util:msg :info "set-cell-hook: to ~a: /~a/~a ~a" key orgel-name slot-key val)
-                        (incudine.osc:message (oscout client) (format nil "/~a/~a" orgel-name slot-key) "f")  (float val 1.0)))
+                        (incudine:at (incudine:now) #'incudine.osc:message (oscout client) (format nil "/~a/~a" orgel-name slot-key) "f"  (float val 1.0))))
                     *clients*)
                     (let ((meter-value (- (val (aref (aref *orgel-mlevel* orgelidx) faderidx)) 100)))
                       (maphash (lambda (connection-id connection-hash)
