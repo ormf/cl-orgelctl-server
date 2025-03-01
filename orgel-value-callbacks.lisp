@@ -59,6 +59,26 @@
 ;;;   route-presets (like controller actions and such with
 ;;;   digest-route-preset).
 
+(defparameter *osc-responder-registry*
+  (make-array *orgelcount*
+              :initial-contents (loop
+                                  for i below *orgelcount*
+                                  collect (make-instance 'orgel-registry))))
+
+(defmacro %clear-osc-responder-registry ()
+  "clear all function calls to be called on osc message receive."
+  `(loop
+     for orgelidx below *orgelcount*
+     do (progn
+          ,@(mapcar (lambda (sym) `(setf (slot-value (aref *osc-responder-registry* orgelidx) ',sym) nil)) *orgel-global-target-syms*)
+          ,@(mapcar (lambda (sym) `(dotimes (idx 16)
+                                (setf (aref (slot-value (aref *osc-responder-registry* orgelidx) ',sym) idx) nil)))
+                    (append '(bias-level mlevel) *orgel-fader-target-syms*)))))
+
+;;; (clear-osc-responder-registry)
+
+(defun clear-osc-responder-registry ()
+  (%clear-osc-responder-registry))
 (defun orgel-global-value-callback (orgelidx target value src)
   "callback function if a global value changes (either through gui
 interaction or by responding to osc events)."
@@ -105,6 +125,8 @@ events from the dsp engine)."
                  (lambda (val &key src)
                    (declare (ignorable src))
 ;;;                   (if val (global-to-pd orgel-name slot-key val))
+                   (dolist (fn (slot-value (aref *osc-responder-registry* orgelidx) slot-sym))
+                     (funcall fn val))
                    (maphash
                     (lambda (key client)
                       (unless (equal key src)
@@ -144,7 +166,11 @@ events from the dsp engine)."
                        (setf (set-cell-hook (aref (slot-value global-orgel slot-sym) faderidx))
                              (lambda (val &key src)
                                (declare (ignorable src))
+                               (dolist (fn (aref (slot-value (aref *osc-responder-registry* orgelidx) slot-sym) faderidx))
+                                 (funcall fn val))
 ;;;                               (format t "setup-ref-cell-hooks, slot-sym: ~a, fader-idx: ~a, val: ~a~%" slot-sym faderidx val)
+                               ;; (dolist (fn (slot-value (aref *osc-responder-registry* orgelidx) slot-sym))
+                               ;;   (funcall fn val))
                                (maphash
                                 (lambda (key client)
                                   (unless (equal key src)

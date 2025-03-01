@@ -40,4 +40,5 @@
                (:file "midi-notein-handler")
                (:file "midi-keymap-handler")
                (:file "osc-midi")
+               (:file "orgel-synth")
                (:file "cl-orgelctl-server")))
