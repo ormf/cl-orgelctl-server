@@ -89,15 +89,17 @@ interpolating all values between presets <num> and <next>."
 
 
 (defun recall-orgel-preset (num &optional next interp)
-  (when num
-    (loop for orgel below *orgelcount*
+  (if next
+    (loop for orgel below 1
           do (let ((orgel orgel))
                (recall-orgel orgel num next interp)))
     (let ((preset (elt *orgel-presets* num)))
-      (dotimes (idx *orgelcount*)
+      (dotimes (idx 1)
         (val-orgel->model-orgel (aref preset idx) (aref *curr-state* idx) )))))
 
 ;;; (recall-orgel-preset 0)
+
+(val-orgel->model-orgel (aref (elt *orgel-presets* 0) 0) (aref *curr-state* 0))
 
 (defun store-orgel-preset (num &key (presets *orgel-presets*))
   (let ((preset (aref presets num)))

@@ -21,6 +21,12 @@
 (ql:quickload "cl-orgelctl")
 (in-package :cl-orgelctl)
 
+(incudine.osc:message (oscout (gethash "client1" *clients*)) "/orgelctlfader" "sisif" "orgel-server" 1 "level" 1 0.2)
+
+(recall-orgel-preset 0)
+
+(setf (val (aref (orgel-delay (aref *curr-state* 0)) 1)) 0.4)
+
 (defparameter *test* (funcall (orgel-access-fn :delay) (aref *curr-state* 0)))
 
 (let ((arr (funcall (orgel-access-fn :delay) (aref *curr-state* 0))))
