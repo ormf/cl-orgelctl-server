@@ -111,7 +111,7 @@ events from the dsp engine)."
                         (let ((oscout (oscout client))
                               (orgelno (1+ orgelidx)))
                           (incudine.util:msg :info "set-cell-hook: sending to ~a: /orgelctl ~S ~a ~S ~a" key "orgel-server" orgelno slot-sym (float val 1.0))
-                          (incudine.osc:message oscout (format nil "/orgelctl") "sfsf" "orgel-server" (float orgelno 1.0) (format nil "~a" slot-sym) (float val 1.0)))))
+                          (incudine.osc:message oscout (format nil "/orgelctl") "sisf" "orgel-server" orgelno (format nil "~a" slot-sym) (float val 1.0)))))
                     *clients*)
                    (let ((val-string (format nil "~,3f" (if db (apply #'amp->ndb-slider val
                                                                       (if (numberp db) `(:min ,db)))
@@ -153,12 +153,12 @@ events from the dsp engine)."
                                           
                                           (orgelno (1+ orgelidx)))
                                       (incudine.util:msg :info "ref-cell-hook: sending to ~a: /orgelctlfader ~S ~a ~S ~a ~a"
-                                                         key "orgel-server" (float orgelno 1.0)
-                                                         slot-key (float faderno 1.0) (float val 1.0))
+                                                         key "orgel-server" orgelno
+                                                         slot-key faderno (float val 1.0))
                                       (incudine.osc:message oscout
-                                                            (format nil "/orgelctlfader") "sfsff"
-                                                            "orgel-server" (float orgelno 1.0) (format nil "~a" slot-key)
-                                                            (float faderno 1.0) (float val 1.0)))))
+                                                            (format nil "/orgelctlfader") "sisif"
+                                                            "orgel-server" orgelno (format nil "~a" slot-key)
+                                                            faderno (float val 1.0)))))
                                 *clients*)
 ;;;                               (if val (fader-to-pd orgel-name slot-key (1+ faderidx) val))
                                (let ((val-string (format nil "~,3f" (if db (amp->ndb-slider val) val))))
