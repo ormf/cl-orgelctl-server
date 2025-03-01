@@ -154,12 +154,12 @@
       (let ((orgelno (1+ orgelidx)))
         (dolist (target-sym *orgel-global-target-syms*)
           (let ((val (val (slot-value (aref *curr-state* orgelidx) target-sym))))
-            (incudine.osc:message oscout (format nil "/orgelctl") "sfsf" "orgel-server" (float orgelno 1.0) (format nil "~a" target-sym) (float val 1.0))))
+            (incudine.osc:message oscout (format nil "/orgelctl") "sisf" "orgel-server" orgelno (format nil "~a" target-sym) (float val 1.0))))
         (dolist (target-sym *orgel-fader-target-syms*)
           (dotimes (faderidx 16)
             (let ((val (val (aref (slot-value (aref *curr-state* orgelidx) target-sym) faderidx))))
               (incudine.osc:message oscout
-                                    (format nil "/orgelctlfader") "sfsff" "orgel-server" (float orgelno 1.0) (format nil "~a" target-sym) (float (1+ faderidx) 1.0) (float val 1.0)))))))))
+                                    (format nil "/orgelctlfader") "sisif" "orgel-server" orgelno (format nil "~a" target-sym) (1+ faderidx) (float val 1.0)))))))))
 
 
 
@@ -176,13 +176,13 @@
   "responder for the fader controllers of the 16 partials (level, delay,
 bp, gain, osc-level)."
   `(incudine::make-osc-responder
-    ,stream "/orgelctlfader" "sfsff"
+    ,stream "/orgelctlfader" "sisif"
     (lambda (src orgelno target faderno value)
-      (incudine.util:msg :info "orgelctlfader in: ~S ~a ~S ~a ~a" src (round orgelno)  target (round faderno) value)
+      (incudine.util:msg :info "orgelctlfader in: ~S ~a ~S ~a ~a" src orgelno  target faderno value)
       ;; defer action to the ref-listeners in the respective slot in
       ;; *curr-state* (set up in #'setup-ref-cell-hooks in
       ;; orgel-value-callbacks.lisp)
-      (set-cell (aref (slot-value (aref *curr-state* (round (1- orgelno))) (target-string->sym target)) (1- (round faderno))) value :src src))))
+      (set-cell (aref (slot-value (aref *curr-state* (1- orgelno)) (target-string->sym target)) (1- faderno)) value :src src))))
 
 #|
 (defmacro get-server-orgel-fader-responders (stream orgelidx targets)
@@ -195,14 +195,14 @@ bp, gain, osc-level)."
   "responder for the global parameters of the organ (ramps, base-freq,
 amps, etc.)"
   `(incudine::make-osc-responder
-    ,stream  "/orgelctl" "sfsf"
+    ,stream  "/orgelctl" "sisf"
     (lambda (src orgelno target value)
 ;;;      (incf *count*)
-      (incudine.util:msg :info "orgelctl in: ~S ~a ~S ~a"  src (round orgelno) target value)
+      (incudine.util:msg :info "orgelctl in: ~S ~a ~S ~a"  src orgelno target value)
       ;; defer action to the ref-listeners in the respective slot in
       ;; *curr-state* (set up in #'setup-ref-cell-hooks in
       ;; orgel-value-callbacks.lisp)
-      (set-cell (slot-value (aref *curr-state* (round (1- orgelno))) (target-string->sym target)) value :src src))))
+      (set-cell (slot-value (aref *curr-state* (1- orgelno)) (target-string->sym target)) value :src src))))
 
 ;;; (define-server-orgel-global-responder 'osc-stream)
 
@@ -234,7 +234,7 @@ amps, etc.)"
     "s"
     (lambda (client)
       ,fn
-      (incudine.util:msg :info "preset-ctl: ~S ~a~%" client ,path))))
+      (incudine.util:msg :info "preset-ctlin: ~S ~a~%" client ,path))))
 
 (defmacro define-server-orgel-ccin-responder (stream)
   "responder for external ccin."
