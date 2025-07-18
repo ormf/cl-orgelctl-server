@@ -198,7 +198,7 @@ amps, etc.)"
     ,stream  "/orgelctl" "sisf"
     (lambda (src orgelno target value)
 ;;;      (incf *count*)
-      (incudine.util:msg :info "orgelctl in: ~S ~a ~S ~a"  src orgelno target value)
+      (incudine.util:msg :info "orgelctl in: /orgelctl \"sisf\" ~S ~a ~S ~a"  src orgelno target value)
       ;; defer action to the ref-listeners in the respective slot in
       ;; *curr-state* (set up in #'setup-ref-cell-hooks in
       ;; orgel-value-callbacks.lisp)
