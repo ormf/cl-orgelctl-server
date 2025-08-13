@@ -1,8 +1,8 @@
 ;;;; package.lisp
 
 (defpackage #:cl-orgelctl
-  (:use #:cl #:incudine #:orm-utils #:cellctl #:cl-orgel-gui)
-  (:shadowing-import-from :incudine :group)
   (:shadowing-import-from :clog :background)
+  (:shadowing-import-from :incudine :group)
+  (:use #:cl #:incudine #:orm-utils #:cellctl #:cl-orgel-gui)
   (:export #:start-orgel-server)
   )

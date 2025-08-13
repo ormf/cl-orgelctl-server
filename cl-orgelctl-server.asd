@@ -16,9 +16,11 @@
 (asdf:defsystem #:cl-orgelctl-server
   :description "Controller für HfMDK Orgelprojekt 2022/23"
   :author "Orm Finnendahl <orm.finnendahl@selma.hfmdk-frankfurt.de>"
-  :depends-on (#:incudine
-               ;; #:cm-all
-               #:slynk #:cl-orgel-gui #:cellctl;;; #:ats-cuda
+  :depends-on (;; #:cm-all
+               #:slynk #:cl-orgel-gui #:cellctl
+                       #:incudine
+
+;;; #:ats-cuda
                           )
   :license  "GPL 2.0 or later"
   :version "0.0.1"
