@@ -19,12 +19,13 @@
 ;;; **********************************************************************
 
 ;;; The osc server is connected to the pd patch and to additional
-;;; optional registered clients like lisp clients etc. The protocol is
-;;; very simple: Connections are established with an osc message
-;;; "/register-client "si" <ip> <port>", <ip> and <port> are the
-;;; callback address of the client. The server then sends back an id
-;;; to the client using the osc-message "/client-id "s" <client-id>"
-;;; and then the complete current state of the papierrohrorgel.
+;;; optional registered clients like lisp clients etc. The protocol
+;;; for the clients is very simple: Connections are established with
+;;; an osc message "/register-client "si" <ip> <port>", <ip> and
+;;; <port> are the callback address of the client. The server then
+;;; sends back an id to the client using the osc-message "/client-id
+;;; "s" <client-id>" and then the complete current state of the
+;;; papierrohrorgel.
 ;;;
 ;;; The client-id is used used as first parameter when sending osc
 ;;; messages to the server to avoid feedbacks in state update.
